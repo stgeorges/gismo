@@ -31,8 +31,9 @@ https://github.com/MapWindow/MapWinGIS
 Gismo uses OpenStreetMap data from openstreetmap.org with the following acknowledgement:
 - "© OpenStreetMap contributors"
 
-OpenStreetMap data is licensed under the Open Database Licence:
+OpenStreetMap® is open data, licensed under the Open Data Commons Open Database License (ODbL) by the OpenStreetMap Foundation (OSMF):
 www.opendatacommons.org/licenses/odbl
+www.osmfoundation.org
 
 Please refer to openstreetmap.org copyright page for more information:
 http://www.openstreetmap.org/copyright
