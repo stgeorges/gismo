@@ -31,9 +31,9 @@ Gismo enables automatic generation of urban environment and terrain geometry bas
 - 1) Install the upper mentioned requirements (Rhino 5, Grasshopper, Ghpython, MapWinGIS).
 - 2) Download the latest Gismo plugin files as a single .zip file from here:
 https://github.com/stgeorges/gismo/zipball/master
-- 3) Check if downloaded .zip file has been blocked: right click on it, and choose "Properties". If there is an "Unblock" button click on it, and then click on "OK". If there is no "Unblock" button, just click on "OK".
+- 3) Check if downloaded .zip file has been blocked: right click on it, and choose ```Properties```. If there is an ```Unblock``` button click on it, and then click on ```OK```. If there is no ```Unblock``` button, just click on ```OK```.
 - 4) Unpack the .zip file.
-- 5) Copy the content of its "userObjects" folder file into your Grasshopper's: "File->Special Folders->User Object Folder" folder.
+- 5) Copy the content from ```userObjects``` folder to your Grasshopper's: ```File->Special Folders->User Object Folder``` folder.
 
 
 
