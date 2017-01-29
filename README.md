@@ -16,7 +16,7 @@ Gismo enables automatic generation of urban environment and terrain geometry bas
   <img src="https://github.com/stgeorges/gismo/blob/master/resources/images/3D_Acropolis.jpg" width="350"/>
 </p>
 
-[more screemshots...](https://github.com/stgeorges/gismo/tree/master/resources/images)
+[* more screenshots...](https://github.com/stgeorges/gismo/tree/master/resources/images)
 
 
 
