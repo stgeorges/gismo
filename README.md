@@ -42,8 +42,6 @@ https://github.com/stgeorges/gismo/zipball/master
 
 # Additional info
 - [Discussion group](http://www.grasshopper3d.com/group/gismo)
-- [Facebook](https://www.facebook.com/GismoTools)
-- [Twitter](https://www.twitter.com/gismo_tools)
 
 Gismo is heavily influenced by [Ladybug](https://github.com/mostaphaRoudsari/ladybug) a free and open source environmental plugin for Grasshopper. It is using its code template, and follows the Labybug code organization. Some methods from Ladybug may have also been copied.
 Gismo is [licensed](https://github.com/stgeorges/gismo/blob/master/LICENSE.md) under GPL-3.0+ license: <http://spdx.org/licenses/GPL-3.0+>
@@ -53,4 +51,4 @@ Gismo is [licensed](https://github.com/stgeorges/gismo/blob/master/LICENSE.md) u
 # Contributors
 [Djordje Spasic](https://github.com/stgeorges)
 
-Support on various issues and questions has been given by: Alec Bennett, Andrew T. Young, Christopher Crosby, Dragan Milenkovic, Even Rouault, Graham Dawson, Izabela Spasic, Jonathan de Ferranti, Menno Deij-van Rijswijk, Michal Migurski, Mostapha Sadeghipour Roudsari, Paul Meems, Ulrich Deuschle, Vladimir Elistratov, OSM and GDAL communities.
+Support on various issues and questions has been given by: Alec Bennett, Andrew T. Young, Christopher Crosby, Dragan Milenkovic, Even Rouault, Graham Dawson, Izabela Spasic, Jonathan de Ferranti, Menno Deij-van Rijswijk, Michal Migurski, Mostapha Sadeghipour Roudsari, Paul Meems, Sergei Leschinsky, Ulrich Deuschle, Vladimir Elistratov, OSM and GDAL communities.
