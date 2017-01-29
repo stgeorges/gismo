@@ -98,7 +98,7 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_OSM Shapes"
 ghenv.Component.NickName = "OSMshapes"
-ghenv.Component.Message = "VER 0.0.1\nJAN_29_2017"
+ghenv.Component.Message = "VER 0.0.1\nJAN_30_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -1069,33 +1069,29 @@ if sc.sticky.has_key("gismoGismo_released"):
         gismo_geometry = sc.sticky["gismo_CreateGeometry"]()
         gismo_osm = sc.sticky["gismo_OSM"]()
         
-        if _location:
-            locationName, locationLatitudeD, locationLongitudeD, timeZone, elevation, validLocationData, printMsg = gismo_preparation.checkLocationData(_location)
-            if validLocationData:
-                fileNameIncomplete = locationName + "_" + str(locationLatitudeD) + "_" + str(locationLongitudeD)  # incomplete due to missing "_radius=100KM" part
-                radiusM, northRad, northDeg, originPt, shapeType, shapeTypeLabel, requiredKeys, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, iteropMapWinGIS_dll_folderPath, unitConversionFactor, validInputData, printMsg = checkInputData(radius_, north_, origin_, shapeType_, requiredKeys_, onlyRemove_Ids_)
-                if validInputData:
-                    if _runIt:
-                        shapeFile_filePath, fullName_keys, valid_osm_or_shp_files, printMsg = checkOsmShpFiles(locationLatitudeD, locationLongitudeD, fileNameIncomplete, radiusM, requiredKeys, shapeType)
-                        if valid_osm_or_shp_files:
-                            shortenedName_keys, values, shapes, validShapes, printMsg = createShapesKeysValues(locationName, locationLatitudeD, locationLongitudeD, shapeFile_filePath, northRad, originPt, shapeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor)
-                            #keys = shortenedName_keys
-                            keys = fullName_keys
-                            if validShapes:
-                                title, titleOriginPt = titleAndBaking(locationName, locationLatitudeD, locationLongitudeD, radiusM, northDeg, originPt, shapeType, shapeTypeLabel, shapes)
-                                printOutput(locationName, locationLatitudeD, locationLongitudeD, radiusM, northDeg, originPt, requiredKeys, shapeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove)
-                                gc.collect()
-                            else:
-                                print printMsg
-                                ghenv.Component.AddRuntimeMessage(level, printMsg)
+        locationName, locationLatitudeD, locationLongitudeD, timeZone, elevation, validLocationData, printMsg = gismo_preparation.checkLocationData(_location)
+        if validLocationData:
+            fileNameIncomplete = locationName + "_" + str(locationLatitudeD) + "_" + str(locationLongitudeD)  # incomplete due to missing "_radius=100KM" part
+            radiusM, northRad, northDeg, originPt, shapeType, shapeTypeLabel, requiredKeys, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, iteropMapWinGIS_dll_folderPath, unitConversionFactor, validInputData, printMsg = checkInputData(radius_, north_, origin_, shapeType_, requiredKeys_, onlyRemove_Ids_)
+            if validInputData:
+                if _runIt:
+                    shapeFile_filePath, fullName_keys, valid_osm_or_shp_files, printMsg = checkOsmShpFiles(locationLatitudeD, locationLongitudeD, fileNameIncomplete, radiusM, requiredKeys, shapeType)
+                    if valid_osm_or_shp_files:
+                        shortenedName_keys, values, shapes, validShapes, printMsg = createShapesKeysValues(locationName, locationLatitudeD, locationLongitudeD, shapeFile_filePath, northRad, originPt, shapeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor)
+                        #keys = shortenedName_keys
+                        keys = fullName_keys
+                        if validShapes:
+                            title, titleOriginPt = titleAndBaking(locationName, locationLatitudeD, locationLongitudeD, radiusM, northDeg, originPt, shapeType, shapeTypeLabel, shapes)
+                            printOutput(locationName, locationLatitudeD, locationLongitudeD, radiusM, northDeg, originPt, requiredKeys, shapeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove)
+                            gc.collect()
                         else:
                             print printMsg
                             ghenv.Component.AddRuntimeMessage(level, printMsg)
                     else:
-                        print "All inputs are ok. Please set \"_runIt\" to True, in order to run the OSM Shapes component"
+                        print printMsg
+                        ghenv.Component.AddRuntimeMessage(level, printMsg)
                 else:
-                    print printMsg
-                    ghenv.Component.AddRuntimeMessage(level, printMsg)
+                    print "All inputs are ok. Please set \"_runIt\" to True, in order to run the OSM Shapes component"
             else:
                 print printMsg
                 ghenv.Component.AddRuntimeMessage(level, printMsg)
@@ -1109,4 +1105,3 @@ else:
     printMsg = "First please run the Gismo Gismo component."
     print printMsg
     ghenv.Component.AddRuntimeMessage(level, printMsg)
-
