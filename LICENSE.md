@@ -15,6 +15,9 @@ The GPL-3.0+ license http://spdx.org/licenses/GPL-3.0+
 Additional permission under GNU GPL version 3 section 7:
 
 
+
+
+
 Gismo uses the Rhinoceros RhinoCommon and Grasshopper libraries, which come with/for Rhinoceros 5.0. Gismo depends fundamentally on the use of Rhinoceros and Grasshopper, and so Rhinocommon, Grasshopper and all associated libraries are assumed to be "System Libraries" as defined by the GPL, and thus are excluded from this license.
 Please contact McNeel & Associates for further information.
 
@@ -22,7 +25,7 @@ http://www.en.na.mcneel.com/
 
 ===============
 
-Gismo uses MapWinGIS, free and open soource C++ based geographic information system programming ActiveX Control and application programmer interface (API), which is distributed under the terms of Mozilla Public License Version 2.0 License. Some external libraries which can be optionally used by MapWinGIS are subject to their own licensing conditions. MapWinGIS is developed by Paul Meems and Sergei Leschinsky. Please refer to its source code repository for more information:
+Gismo uses MapWinGIS, free and open source C++ based geographic information system programming ActiveX Control and application programmer interface (API), which is distributed under the terms of Mozilla Public License Version 2.0 License. Some external libraries which can be optionally used by MapWinGIS are subject to their own licensing conditions. MapWinGIS is developed by Paul Meems and Sergei Leschinsky. Please refer to its source code repository for more information:
 
 https://github.com/MapWindow/MapWinGIS
 
