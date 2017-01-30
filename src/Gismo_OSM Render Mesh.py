@@ -49,7 +49,7 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_OSM Render Mesh"
 ghenv.Component.NickName = "OSMrenderMesh"
-ghenv.Component.Message = "VER 0.0.1\nJAN_29_2017"
+ghenv.Component.Message = "VER 0.0.1\nJAN_30_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -181,6 +181,13 @@ def checkInputData(threeDeeShapes, threeDeeKeys, threeDeeValues, defaultColor, t
     return OSM3DrenderMesh, defaultColor, textureImageName, textureImageFolder, textureImage_filePath, validInputData, printMsg
 
 
+def US_vs_UK_englishNames(name):
+    if name == "grey":
+        return "gray"
+    else:
+        return name
+
+
 def main(shapesDataTree, keys, valuesDataTree, OSM3DrenderMesh, defaultColor, textureImageName, textureImage_filePath):
     
     meshParam = Rhino.Geometry.MeshingParameters()
@@ -228,7 +235,8 @@ def main(shapesDataTree, keys, valuesDataTree, OSM3DrenderMesh, defaultColor, te
                         valueGrass = valuesLL[branchIndex][grassColor_keyIndex]
                     
                     if (valueBuildingColor != ""):
-                        shapesLColor = System.Drawing.ColorTranslator.FromHtml(valueBuildingColor)  # if building:color is in Hexadecimal format, convert it to RGB
+                        valueBuildingColor_corrected = US_vs_UK_englishNames(valueBuildingColor)
+                        shapesLColor = System.Drawing.ColorTranslator.FromHtml(valueBuildingColor_corrected)  # if building:color is in Hexadecimal format, convert it to RGB
                     elif (valueTree == "tree"):
                         randomGreenColor = random.randint(75,140)
                         shapesLColor = System.Drawing.Color.FromArgb(0,randomGreenColor,0)
@@ -240,7 +248,8 @@ def main(shapesDataTree, keys, valuesDataTree, OSM3DrenderMesh, defaultColor, te
                         shapesLColor = defaultColor
                     
                     if (valueRoofColor != ""):
-                        roofColor = System.Drawing.ColorTranslator.FromHtml(valueRoofColor)  # if roof:color is in Hexadecimal format, convert it to RGB
+                        valueRoofColor_corrected = US_vs_UK_englishNames(valueRoofColor)
+                        roofColor = System.Drawing.ColorTranslator.FromHtml(valueRoofColor_corrected)  # if roof:color is in Hexadecimal format, convert it to RGB
                     elif (valueRoofColor == "") and (valueBuildingColor != ""):
                         # if there is no valid "roof:colour", but there is "building:colour", then use the "building:colour" value as "roof:colour" value
                         roofColor = shapesLColor
