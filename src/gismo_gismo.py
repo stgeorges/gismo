@@ -33,7 +33,7 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.1\nJAN_29_2017"
+ghenv.Component.Message = "VER 0.0.1\nJAN_30_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
@@ -187,7 +187,7 @@ class mainComponent(object):
             return False, printMsg
     
     
-    def mapWinGIS(self, installFolder=None):
+    def mapWinGIS(self, mapFolder=None):
         """
         check if mapWinGIS is installed
         """
@@ -197,7 +197,7 @@ class mainComponent(object):
         elif System.Environment.Is64BitProcess == True:
             bitVersion = "x64"
         
-        if installFolder == None:
+        if mapFolder == None:
             # check if there is a "MapWinGIS" folder present in some well known places
             iteropMapWinGIS_dll_folderPathLL = [
             "C:\\MapWindow",
@@ -217,7 +217,7 @@ class mainComponent(object):
             "D:\\Program Files\\MapWinGIS", 
             "D:\\Program Files (x86)\\MapWinGIS"]
         else:
-            iteropMapWinGIS_dll_folderPathLL = [installFolder]
+            iteropMapWinGIS_dll_folderPathLL = [mapFolder]
         
         iteropMapWinGIS_dll_fileName = "Interop.MapWinGIS.dll"
         
@@ -231,20 +231,20 @@ class mainComponent(object):
         else:
             # "Interop.MapWinGIS.dll" file was found in the "iteropMapWinGIS_dll_folderPathLL" folders
             #InteropMapWinGISDll_present = False
-            if installFolder == None:
-                # nothing inputted into the "installFolder_"
+            if mapFolder == None:
+                # nothing inputted into the "mapFolder_"
                 printMsg = "This component requires the \"MapWinGIS\" application to be installed in order for it to work.\n" + \
                            "The component could not find the installation folder of the \"MapWinGIS\" application.\n" + \
                            "-\n" + \
                            "If you haven't installed the \"MapWinGIS\" application, download its %s version from the link below, and install it:\n" % bitVersion + \
                            "https://github.com/MapWindow/MapWinGIS/releases\n" + \
                            "-\n" + \
-                           "If you already downloaded and installed the \"MapWinGIS\" application, then supply its installation folder path to the \"installFolder_\" input."
+                           "If you already downloaded and installed the \"MapWinGIS\" application, then supply its installation folder path to the \"mapFolder_\" input."
             else:
-                # some folder path inputted into the "installFolder_"
-                printMsg = "The folder path you inputted to \"installFolder_\" input is invalid: meaning this is not the MapWinGIS application install folder.\n" + \
+                # some folder path inputted into the "mapFolder_"
+                printMsg = "The folder path you added to Gismo_Gismo component's \"mapFolder_\" input is invalid: meaning this is not the MapWinGIS application install folder.\n" + \
                            "-\n" + \
-                           "You can find the valid \"installFolder_\" path by using the Start Menu -> Search function (and search for \"MapWinGIS\").\n" + \
+                           "You can find the valid \"mapFolder_\" path by using the Start Menu -> Search function (and search for \"MapWinGIS\").\n" + \
                            "If you do not input the correct folder path to \"mapWindow\" some Gismo components might not be able to work."
             iteropMapWinGIS_dll_folderPath = gdalDataPath_folderPath = None
             validInputData = False
@@ -262,11 +262,11 @@ class mainComponent(object):
             # import GDAL libraries and register GDAL drivers
             global MapWinGIS  # so that other methods in this Gismo Gismo component could use the MapWinGIS module
             import MapWinGIS
-            sc.sticky["MapWinGIS"] = MapWinGIS  # so that components other than Gismo Gismo could use the MapWinGIS module
             
             # testing if the "Retrieving the COM class factory for component with CLSID" error will appear
             try:
                 dummyShape = MapWinGIS.ShapeClass()
+                sc.sticky["MapWinGIS"] = ""  # "" is dummy value. Only the key name "MapWinGIS" is important
             except Exception, e:
                 # the "Retrieving the COM class factory for component with CLSID" error appeared
                 iteropMapWinGIS_dll_folderPath = gdalDataPath_folderPath = None
