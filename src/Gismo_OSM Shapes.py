@@ -98,7 +98,7 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_OSM Shapes"
 ghenv.Component.NickName = "OSMshapes"
-ghenv.Component.Message = "VER 0.0.1\nJAN_30_2017"
+ghenv.Component.Message = "VER 0.0.1\nFEB_01_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -110,6 +110,7 @@ import rhinoscriptsyntax as rs
 import scriptcontext as sc
 import Grasshopper
 import System
+import shutil
 import Rhino
 import math
 import time
@@ -382,29 +383,32 @@ def setupOsmconf_ini_File(requiredKeys, shapeType, overpassFile_filePathL, osmco
         for overpassFile_filePath in overpassFile_filePathL:
             requiredKeys = []
             
-            overpassFile = open(overpassFile_filePath,"r")
-            foundTags = False
-            for line in overpassFile.xreadlines():
-                if "tags" in line:
-                    # "  "tags": {" line found
-                    foundTags = True
-                    continue  # start extracting the tags below it
-                if (foundTags == True) and ("}" not in line):
-                    strippedLine = line.strip()
-                    splittedLine = strippedLine.split(": ")
-                    fieldName = splittedLine[0].replace("\"", "")
-                    requiredKeys.append(fieldName)
-                else:
-                    foundTags = False
+            #overpassFile = open(overpassFile_filePath,"r")
+            with open(overpassFile_filePath) as overpassFile:
+                foundTags = False
+                lines = overpassFile.readlines()
+                #for line in overpassFile.xreadlines():
+                for line in lines:
+                    if "tags" in line:
+                        # "  "tags": {" line found
+                        foundTags = True
+                        continue  # start extracting the tags below it
+                    if (foundTags == True) and ("}" not in line):
+                        strippedLine = line.strip()
+                        splittedLine = strippedLine.split(": ")
+                        fieldName = splittedLine[0].replace("\"", "")
+                        requiredKeys.append(fieldName)
+                    else:
+                        foundTags = False
+                    
+                foundTags = False
+                overpassFile.close()
                 
-            foundTags = False
-            overpassFile.close()
-            
-            #print "requiredKeys: ", requiredKeys
-            requiredKeysSet = set(requiredKeys)
-            uniqueKeys = list(requiredKeysSet)
-            uniqueKeys.sort()  # sort the keys alphabetically
-            fullName_keysL.append(uniqueKeys)
+                #print "requiredKeys: ", requiredKeys
+                requiredKeysSet = set(requiredKeys)
+                uniqueKeys = list(requiredKeysSet)
+                uniqueKeys.sort()  # sort the keys alphabetically
+                fullName_keysL.append(uniqueKeys)
     
     elif (len(requiredKeys) != 0):
         # something supplied to "requiredKeys_" input. Use those keys
@@ -415,97 +419,102 @@ def setupOsmconf_ini_File(requiredKeys, shapeType, overpassFile_filePathL, osmco
     # create lines for the new osmconf.ini file by inserting the fullName_keysL to each section ([points], [lines], [multipolygons], [multilinestrings], [other_relations])
     osmconf_ini_newFileLines = []
     points_tagPassed = lines_tagPassed = multipolygons_tagPassed = multilinestrings_tagPassed = other_relations_tagPassed = False  # initial values
-    overpassFile = open(osmconf_ini_filePath,"r")
-    for line in overpassFile.xreadlines():
-        # setting keys are considered to be polygons. This puts all shapes with these keys into the multipolygons.shp file. Otherwise (their key is not listed in this line) if they are closed ways, they will be put into the lines.shp file
-        if line.startswith("closed_ways_are_polygons="):
-            line = "closed_ways_are_polygons=aeroway,amenity,boundary,building,building:levels,building:part,craft,geological,historic,landuse,leisure,military,natural,office,place,shop,sport,tourism\n"
-        
-        # checking for switches
-        if (line == "[points]\n"):
-            points_tagPassed = True
-        elif (line == "[lines]\n"):
-            lines_tagPassed = True
-        elif (line == "[multipolygons]\n"):
-            multipolygons_tagPassed = True
-        elif (line == "[multilinestrings]\n"):
-            multilinestrings_tagPassed = True
-        elif (line == "[other_relations]\n"):
-            other_relations_tagPassed = True
-        
-        # set "other_tags" and "all_tags" to "no"
-        if (line == "#other_tags=no\n") or (line == "#other_tags=yes\n") or (line == "other_tags=yes\n"):
-            line = "other_tags=no\n"
-        if (line == "#all_tags=no\n") or (line == "#all_tags=yes\n") or (line == "all_tags=yes\n"):
-            line = "all_tags=no\n"
-        # set "attribute_name_laundering" to "no" (do not change ":" to "_" in key names)
-        if (line == "#attribute_name_laundering=yes\n") or (line == "attribute_name_laundering=no\n") or (line == "attribute_name_laundering=yes\n"):
-            line = "#attribute_name_laundering=no\n"
-        # comment-out certain 3 lines to remove the "z_order" key from [lines].
-        if line.startswith("computed_attributes="):
-            line = "#" + line
-        if line.startswith("z_order_type="):
-            line = "#" + line
-        if line.startswith("z_order_sql="):
-            line = "#" + line
-        
-        if (points_tagPassed == True) and (lines_tagPassed == False) and (multipolygons_tagPassed == False) and (multilinestrings_tagPassed == False) and (other_relations_tagPassed == False):
-            if line.startswith("attributes="):
-                line = "attributes="
-                for index, key in enumerate(fullName_keysL[2]):  # [points] (points) keys
-                    if index != len(fullName_keysL[2])-1:
-                        line = line + key + ","
-                    else:
-                        # last key in fullName_keysL[1]
-                        line = line + key + "\n"
-        elif (points_tagPassed == True) and (lines_tagPassed == True) and (multipolygons_tagPassed == False) and (multilinestrings_tagPassed == False) and (other_relations_tagPassed == False):
-            if line.startswith("attributes="):
-                line = "attributes="
-                for index, key in enumerate(fullName_keysL[1]):  # [lines] (polylines) keys
-                    if index != len(fullName_keysL[1])-1:
-                        line = line + key + ","
-                    else:
-                        # last key in fullName_keysL[2]
-                        line = line + key + "\n"
-        elif (points_tagPassed == True) and (lines_tagPassed == True) and (multipolygons_tagPassed == True) and (multilinestrings_tagPassed == False) and (other_relations_tagPassed == False):
-            if line.startswith("attributes="):
-                line = "attributes="
-                for index, key in enumerate(fullName_keysL[0]):  # [multipolygons] (polygons) keys
-                    if index != len(fullName_keysL[0])-1:
-                        line = line + key + ","
-                    else:
-                        # last key in fullName_keysL[0]
-                        line = line + key + "\n"
-        elif (points_tagPassed == True) and (lines_tagPassed == True) and (multipolygons_tagPassed == True) and (multilinestrings_tagPassed == True) and (other_relations_tagPassed == False):
-            if line.startswith("attributes="):
-                line = "attributes="
-                for index, key in enumerate(fullName_keysL[3]):  # [multilinestrings] (polylines2) keys
-                    if index != len(fullName_keysL[3])-1:
-                        line = line + key + ","
-                    else:
-                        # last key in fullName_keysL[3]
-                        line = line + key + "\n"
-        elif (points_tagPassed == True) and (lines_tagPassed == True) and (multipolygons_tagPassed == True) and (multilinestrings_tagPassed == True) and (other_relations_tagPassed == True):
-            if line.startswith("attributes="):
-                line = "attributes="
-                for index, key in enumerate(fullName_keysL[4]):  # [other_relations] keys
-                    if index != len(fullName_keysL[4])-1:
-                        line = line + key + ","
-                    else:
-                        # last key in fullName_keysL[4]
-                        line = line + key + "\n"
-        osmconf_ini_newFileLines.append(line)
+    
+    #overpassFile = open(osmconf_ini_filePath,"r")  # results in a resource leak (http://stackoverflow.com/questions/28396759/os-remove-in-windows-gives-error-32-being-used-by-another-process). Reported at: http://www.grasshopper3d.com/xn/detail/2985220:Comment:1682182
+    with open(osmconf_ini_filePath) as overpassFile:
+        lines = overpassFile.readlines()
+        for line in lines:
+            # setting keys are considered to be polygons. This puts all shapes with these keys into the multipolygons.shp file. Otherwise (their key is not listed in this line) if they are closed ways, they will be put into the lines.shp file
+            if line.startswith("closed_ways_are_polygons="):
+                line = "closed_ways_are_polygons=aeroway,amenity,boundary,building,building:levels,building:part,craft,geological,historic,landuse,leisure,military,natural,office,place,shop,sport,tourism\n"
+            
+            # checking for switches
+            if (line == "[points]\n"):
+                points_tagPassed = True
+            elif (line == "[lines]\n"):
+                lines_tagPassed = True
+            elif (line == "[multipolygons]\n"):
+                multipolygons_tagPassed = True
+            elif (line == "[multilinestrings]\n"):
+                multilinestrings_tagPassed = True
+            elif (line == "[other_relations]\n"):
+                other_relations_tagPassed = True
+            
+            # set "other_tags" and "all_tags" to "no"
+            if (line == "#other_tags=no\n") or (line == "#other_tags=yes\n") or (line == "other_tags=yes\n"):
+                line = "other_tags=no\n"
+            if (line == "#all_tags=no\n") or (line == "#all_tags=yes\n") or (line == "all_tags=yes\n"):
+                line = "all_tags=no\n"
+            # set "attribute_name_laundering" to "no" (do not change ":" to "_" in key names)
+            if (line == "#attribute_name_laundering=yes\n") or (line == "attribute_name_laundering=no\n") or (line == "attribute_name_laundering=yes\n"):
+                line = "#attribute_name_laundering=no\n"
+            # comment-out certain 3 lines to remove the "z_order" key from [lines].
+            if line.startswith("computed_attributes="):
+                line = "#" + line
+            if line.startswith("z_order_type="):
+                line = "#" + line
+            if line.startswith("z_order_sql="):
+                line = "#" + line
+            
+            if (points_tagPassed == True) and (lines_tagPassed == False) and (multipolygons_tagPassed == False) and (multilinestrings_tagPassed == False) and (other_relations_tagPassed == False):
+                if line.startswith("attributes="):
+                    line = "attributes="
+                    for index, key in enumerate(fullName_keysL[2]):  # [points] (points) keys
+                        if index != len(fullName_keysL[2])-1:
+                            line = line + key + ","
+                        else:
+                            # last key in fullName_keysL[1]
+                            line = line + key + "\n"
+            elif (points_tagPassed == True) and (lines_tagPassed == True) and (multipolygons_tagPassed == False) and (multilinestrings_tagPassed == False) and (other_relations_tagPassed == False):
+                if line.startswith("attributes="):
+                    line = "attributes="
+                    for index, key in enumerate(fullName_keysL[1]):  # [lines] (polylines) keys
+                        if index != len(fullName_keysL[1])-1:
+                            line = line + key + ","
+                        else:
+                            # last key in fullName_keysL[2]
+                            line = line + key + "\n"
+            elif (points_tagPassed == True) and (lines_tagPassed == True) and (multipolygons_tagPassed == True) and (multilinestrings_tagPassed == False) and (other_relations_tagPassed == False):
+                if line.startswith("attributes="):
+                    line = "attributes="
+                    for index, key in enumerate(fullName_keysL[0]):  # [multipolygons] (polygons) keys
+                        if index != len(fullName_keysL[0])-1:
+                            line = line + key + ","
+                        else:
+                            # last key in fullName_keysL[0]
+                            line = line + key + "\n"
+            elif (points_tagPassed == True) and (lines_tagPassed == True) and (multipolygons_tagPassed == True) and (multilinestrings_tagPassed == True) and (other_relations_tagPassed == False):
+                if line.startswith("attributes="):
+                    line = "attributes="
+                    for index, key in enumerate(fullName_keysL[3]):  # [multilinestrings] (polylines2) keys
+                        if index != len(fullName_keysL[3])-1:
+                            line = line + key + ","
+                        else:
+                            # last key in fullName_keysL[3]
+                            line = line + key + "\n"
+            elif (points_tagPassed == True) and (lines_tagPassed == True) and (multipolygons_tagPassed == True) and (multilinestrings_tagPassed == True) and (other_relations_tagPassed == True):
+                if line.startswith("attributes="):
+                    line = "attributes="
+                    for index, key in enumerate(fullName_keysL[4]):  # [other_relations] keys
+                        if index != len(fullName_keysL[4])-1:
+                            line = line + key + ","
+                        else:
+                            # last key in fullName_keysL[4]
+                            line = line + key + "\n"
+            osmconf_ini_newFileLines.append(line)
     
     points_tagPassed = lines_tagPassed = multipolygons_tagPassed = multilinestrings_tagPassed = other_relations_tagPassed = False  # setting them back to "False" values
-    overpassFile.close()
-    os.remove(osmconf_ini_filePath)  # delete the original "osmconf.ini" file
+    overpassFile.close()  # results in a resource leak (http://stackoverflow.com/questions/28396759/os-remove-in-windows-gives-error-32-being-used-by-another-process). Reported at: http://www.grasshopper3d.com/xn/detail/2985220:Comment:1682182
+    #os.remove(osmconf_ini_filePath)  # delete the original "osmconf.ini" file
+    shutil.rmtree(osmconf_ini_filePath, ignore_errors=True)  # delete the original "osmconf.ini" file
     
     # create the new osmconf.ini file
     osmconf_ini_newFilePath = osmconf_ini_filePath
-    new_overpassFile_file = open(osmconf_ini_newFilePath,"w")
-    for line in osmconf_ini_newFileLines:
-        new_overpassFile_file.write(line)
-    new_overpassFile_file.close()
+    #new_overpassFile_file = open(osmconf_ini_newFilePath,"w")  # results in a resource leak (http://stackoverflow.com/questions/28396759/os-remove-in-windows-gives-error-32-being-used-by-another-process). Reported at: http://www.grasshopper3d.com/xn/detail/2985220:Comment:1682182
+    with open(osmconf_ini_newFilePath, "w") as new_overpassFile_file:
+        for line in osmconf_ini_newFileLines:
+            new_overpassFile_file.write(line)
+    new_overpassFile_file.close()  # results in a resource leak (http://stackoverflow.com/questions/28396759/os-remove-in-windows-gives-error-32-being-used-by-another-process). Reported at: http://www.grasshopper3d.com/xn/detail/2985220:Comment:1682182
     
     # deleting
     del overpassFile
@@ -599,7 +608,8 @@ def checkOsmShpFiles(locationLatitudeD, locationLongitudeD, fileNameIncomplete, 
             fileExtension = fileNameWithExtension[-4:]
             if (fileExtension != ".osm") and (fileExtension != ".txt"):  # delete only .shp/.shx/.dbf/.prj files
                 filePath = os.path.join(osm_shp_file_folderPath, fileNameWithExtension)
-                os.remove(filePath)
+                #os.remove(filePath)
+                shutil.rmtree(filePath, ignore_errors=True)
         # and set the sc.sticky["requiredKeys_wasInputted"] to False
         sc.sticky["requiredKeys_wasInputted"] = False
     else:
@@ -1105,3 +1115,4 @@ else:
     printMsg = "First please run the Gismo Gismo component."
     print printMsg
     ghenv.Component.AddRuntimeMessage(level, printMsg)
+
