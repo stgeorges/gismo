@@ -1,4 +1,11 @@
-edistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+# this is Gismo's main component
+#
+# Gismo is a plugin for GIS Environmental Analysis (GPL) started by Djordje Spasic.
+# 
+# This file is part of Gismo.
+# 
+# Copyright (c) 2017, Djordje Spasic <djordjedspasic@gmail.com>
+# Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
 # Gismo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 # 
