@@ -49,11 +49,11 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_OSM Render Mesh"
 ghenv.Component.NickName = "OSMrenderMesh"
-ghenv.Component.Message = "VER 0.0.1\nJAN_30_2017"
+ghenv.Component.Message = "VER 0.0.1\nFEB_09_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.1\nJAN_29_2017
+#compatibleGismoVersion = VER 0.0.1\nFEB_09_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "3"
 except: pass
 
@@ -139,7 +139,7 @@ def checkInputData(threeDeeShapes, threeDeeKeys, threeDeeValues, defaultColor, t
                        "\"threeDeeShapes\" output from Gismo \"OSM 3D\" component to this component's \"_threeDeeShapes\" input. And:\n" + \
                        "\"threeDeeValues\" output from Gismo \"OSM 3D\" component to this component's \"_threeDeeValues\" input."
             return OSM3DrenderMesh, defaultColor, textureImageName, textureImageFolder, textureImage_filePath, validInputData, printMsg
-        
+    
     
     if (defaultColor == None):
         defaultColor = System.Drawing.Color.FromArgb(217,217,217)
@@ -165,15 +165,6 @@ def checkInputData(threeDeeShapes, threeDeeKeys, threeDeeValues, defaultColor, t
     textureImage_filePath = os.path.join(textureImageFolder, textureImageName + ".png")  # material diffuse map file
     
     
-    # check the "shapeType_" input value set in the "OSM 3D" component. This value will always exist, as "OSM 3D" component will be ran before the "OSM 3d" component
-    shapeType = sc.sticky["OSMshapes_shapeType"]
-    if shapeType == 1:
-        OSM3DrenderMesh = defaultColor = textureImageName = textureImageFolder = textureImage_filePath = None
-        validInputData = False
-        printMsg = "This component supports only creation of 3d buildings and trees. So \"shapeType_\" input of \"OSM 3D\" component needs to be set to either 0 or 2."
-        return OSM3DrenderMesh, defaultColor, textureImageName, textureImageFolder, textureImage_filePath, validInputData, printMsg
-    
-    
     del threeDeeShapes; del threeDeeKeys; del threeDeeValues  # delete local variables
     validInputData = True
     printMsg = "ok"
@@ -182,6 +173,7 @@ def checkInputData(threeDeeShapes, threeDeeKeys, threeDeeValues, defaultColor, t
 
 
 def US_vs_UK_englishNames(name):
+    # System.Drawing.ColorTranslator.FromHtml function seem to support US over UK English spelling
     if name == "grey":
         return "gray"
     else:
