@@ -44,10 +44,10 @@ Provided by Gismo 0.0.1
                            This input is irrelevant if you are performing search of 3D OSM shapes (if data is supplied to "threeDeeShapes_" and "threeDeeValues_" inputs).
                            -
                            If not supplied, default value "False" will be used.
-        groundTerrain_: The ground terrain on which the "foundShapes" will be layed onto.
-                        Supply it by using "terrain" output of the Gismo "Terrain Generator" or "Terrain Generator 2" components.
+        groundTerrain_: The ground terrain surface on which the "foundShapes" will be laid onto.
+                        Supply it by using "terrain" output of the Ladybug "Terrain Generator" (type_ = 1) or Gismo "Terrain Generator" (type_ = 2 or type_ = 3) components.
                         -
-                        If nothing supplied, the "foundShapes" will always be layed flat onto a horizontal plane, with plane origin being the "origin" input of the "OSM shapes" component.
+                        If nothing supplied, the "foundShapes" will always be laid flat onto a horizontal plane, with plane origin being the "origin" input of the "OSM shapes" component.
         bakeIt_: Set to "True" to bake the extruded _shape geometry into the Rhino scene.
                  The geometry will be grouped. To ungroup it, select it and call the "Ungroup" Rhino command.
                  -
@@ -77,11 +77,11 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_OSM Search"
 ghenv.Component.NickName = "OSMsearch"
-ghenv.Component.Message = "VER 0.0.1\nJAN_29_2017"
+ghenv.Component.Message = "VER 0.0.1\nFEB_09_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.1\nJAN_29_2017
+#compatibleGismoVersion = VER 0.0.1\nFEB_09_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
@@ -245,8 +245,8 @@ def checkInputData(requiredTag, shapes, keys, values, threeDeeShapes, threeDeeVa
         createFootprints = True  # default
     
     
-    # check the "shapeType_" input value set in the "OSM shapes" component. This value will always exist, as "OSM shapes" component will be ran before the "OSM 3d" component
-    shapeType = sc.sticky["OSMshapes_shapeType"]
+    # check the "shapeType_" input value set in the "OSM shapes" component.
+    shapeType = gismo_preparation.checkShapeType(shapes.Branches)
     if (perform_searchThreeDeeShapes == True)  and  ((shapeType == 1) or (shapeType == 2)):
         OSMobjectName = requiredKey = requiredValues = createFootprints = perform_searchThreeDeeShapes = shapeType = None
         validInputData = False
@@ -256,9 +256,8 @@ def checkInputData(requiredTag, shapes, keys, values, threeDeeShapes, threeDeeVa
                    "In this way, 2D shapes will be successfully searched."
         return OSMobjectName, requiredKey, requiredValues, createFootprints, perform_searchThreeDeeShapes, shapeType, validInputData, printMsg
     elif (perform_searchThreeDeeShapes == True)  and  (shapeType == 0):
-        # this component can be used to find only 3d shapes for shapeType == 0
+        # everything is ok, as this component can be used to find only 3d shapes for shapeType == 0, which currently is the case.
         pass
-    
     
     
     del shapes; del keys; del values; del threeDeeShapes; del threeDeeValues  # delete local variables
