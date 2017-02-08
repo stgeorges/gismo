@@ -1,11 +1,4 @@
-# this is Gismo's main component
-#
-# Gismo is a plugin for GIS Environmental Analysis (GPL) started by Djordje Spasic.
-# 
-# This file is part of Gismo.
-# 
-# Copyright (c) 2017, Djordje Spasic <djordjedspasic@gmail.com>
-# Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+edistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
 # Gismo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 # 
@@ -33,7 +26,7 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.1\nJAN_30_2017"
+ghenv.Component.Message = "VER 0.0.1\nFEB_09_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
@@ -55,7 +48,9 @@ import os
 
 
 class Check(object):
-    
+    """
+    check component's version and date
+    """
     def deconstructComponents_versionDate(self, componentMessage):
         """
         deconstruct the "ghenv.Component.Message" string to a version and date
@@ -67,9 +62,10 @@ class Check(object):
         
         # date
         date = dateIncomplete.replace("_","/")  # example: JUN/09/2020
-        date_timeStruct = time.strptime(date, "%m/%d/%Y")
+        date_timeStruct = time.strptime(date, "%b/%d/%Y")
         
         return version, date_timeStruct
+    
     
     def normalizeVersion(self, v):
         """
@@ -80,6 +76,7 @@ class Check(object):
         while parts[-1] == 0:
             parts.pop()
         return parts
+    
     
     def versionDate(self, component):
         """
@@ -169,9 +166,12 @@ class Check(object):
 
 class mainComponent(object):
     """
-    check gismoFolder_
+    check gismoFolder_ and mapFolder_ inputs of "Gismo Gismo" component
     """
     def gismoWorkingFolder(self, gismoFolder):
+        """
+        check gismoFolder_ of Gismo Gismo component
+        """
         if (gismoFolder == None):
             gismoFolder = "c:\gismo"
         
@@ -315,6 +315,9 @@ class Preparation(object):
     methods used to prepare components before performing analysis/running results
     """
     def cleanString(self, string):
+        """
+        for a given string, replace "/" and "\" with "-". replace " " with "_"
+        """
         stringCorrected = System.String.Replace(  System.String.strip(System.String.Replace(System.String.Replace(string,"\\","-"), "/", "-") )  ," ", "_")  # removing "/", "\", " "
         return stringCorrected
     
@@ -353,6 +356,10 @@ class Preparation(object):
     
     
     def createFolder(self, folderPath):
+        """
+        creates a folder for a given folderPath.
+        Returns "True" if folder is created or it it already exists. And "False" if folderPath is invalid
+        """
         if os.path.isdir(folderPath):
             # "folderPath" exists
             folderCreated = True
@@ -362,6 +369,8 @@ class Preparation(object):
             try:
                 # try creating the folder according to "folderPath"
                 os.mkdir(folderPath)
+                folderCreated = True
+                return folderCreated
             except Exception, e:
                 # invalid folderPath
                 folderCreated = False
@@ -369,7 +378,10 @@ class Preparation(object):
     
     
     def downloadFile(self, downloadLink, downloadedFilePath):
-        
+        """
+        downloading a file for the given link and filepath location.
+        Returns "True" is file is successfully downloaded and "False" if download fails
+        """
         try:
             # try "secure http" download
             client = System.Net.WebClient()
@@ -452,6 +464,67 @@ class Preparation(object):
                 return Rhino.Geometry.Vector3d.VectorAngle(Rhino.Geometry.Vector3d.YAxis, northVec, Rhino.Geometry.Plane.WorldXY), northVec
             except Exception, e:
                 return 0, Rhino.Geometry.Vector3d.YAxis
+    
+    
+    def checkShapeType(self, shapesLL):
+        """
+        determine which shapeType_ input has been used for "OSM Shapes" component based on its "shapes" output
+        """
+        numOfShapes = 0
+        numOfShapesClosed = 0
+        for shapesL in shapesLL:
+            if (len(shapesL) != 0):
+                # if branch is not empty
+                numOfShapes += 1
+                for shape in shapesL:
+                    if isinstance(shape, Rhino.Geometry.Point):
+                        # shapes_ are points
+                        shapeType = 2
+                        del shapesLL
+                        return shapeType
+                    else:
+                        # check if shapeType = 0 (closed polygon) or 1 (polyline)
+                        if shape.IsClosed:
+                            numOfShapesClosed += 1
+        
+        if numOfShapes == numOfShapesClosed:
+            # shapeType = 0 will always have closed polygons!
+            shapeType = 0
+        elif numOfShapes != numOfShapesClosed:
+            # it may happen that shapeType = 1 will sometimes have a couple of closed polygons (those that are not added to "closed_ways_are_polygons=" line in osmconf.ini)
+            shapeType = 1
+        
+        del shapesLL
+        return shapeType
+    
+    
+    def getListOfConnectedComponents(self, component, componentInputParamIndex, onlyGHPython = True):
+        """
+        get an id of an external component from which data has been plugged to particular input of this component
+        this method is entirely copied from Ladybug_Export Ladybug component:
+        https://github.com/mostaphaRoudsari/ladybug/blob/master/src/Ladybug_Export%20Ladybug.py
+        """
+        
+        componentsComingToInput = []
+        
+        param = component.Params.Input[componentInputParamIndex]
+        sources = param.Sources
+        if sources.Count == 0: return componentsComingToInput
+        
+        for source in sources:
+            attr = source.Attributes
+            if (attr is None) or (attr.GetTopLevel is None):
+                pass
+            else:
+                componentComingToInput = attr.GetTopLevel.DocObject
+        
+        if componentComingToInput == None or (onlyGHPython and type(componentComingToInput) != type(component)):
+            # collect only python componentsComingToInput
+            pass
+        else:
+            componentsComingToInput.append(component)
+        
+        return componentsComingToInput
     
     
     def modify_dataTree(self, oldDataTree, newBranchIndex, newBranchList):
@@ -627,16 +700,6 @@ class Preparation(object):
             minValue = None  # pick the smallest value
             
             customColors = []
-            """
-            customColors = [
-            System.Drawing.Color.FromArgb(2,83,250),
-            System.Drawing.Color.FromArgb(68,219,226),
-            System.Drawing.Color.FromArgb(155,253,126),
-            System.Drawing.Color.FromArgb(173,255,25),
-            System.Drawing.Color.FromArgb(253,255,16),
-            System.Drawing.Color.FromArgb(251,192,31),
-            System.Drawing.Color.FromArgb(248,64,74)]
-            """
             
             numLegendCells = 12
             fontName = "Verdana"
