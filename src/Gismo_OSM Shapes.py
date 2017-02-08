@@ -31,9 +31,7 @@ If you are using Rhino 5 x64, then download the "x64" version.
 Provided by Gismo 0.0.1
     
     input:
-        _location: The output from the "importEPW" or "constructLocation" component.  This is essentially a list of text summarizing a location on the Earth.
-                   -
-                   "timeZone" and "elevation" data from the location, are not important for the this input.
+        _location: Output from Gismo's \"Create Location\" component. This is essentially a text containing information (latitude, longitude, name...) about a location on the Earth.
         radius_: Horizontal distance to which the surrounding terrain will be taken into account.
                  -
                  It can not be shorter than 50 meters or longer than 20 000 meters.
@@ -98,11 +96,11 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_OSM Shapes"
 ghenv.Component.NickName = "OSMshapes"
-ghenv.Component.Message = "VER 0.0.1\nFEB_01_2017"
+ghenv.Component.Message = "VER 0.0.1\nFEB_09_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.1\nJAN_29_2017
+#compatibleGismoVersion = VER 0.0.1\nFEB_09_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "1"
 except: pass
 
@@ -234,9 +232,6 @@ def checkInputData(radiusM, north, originPt, shapeType, requiredKeys, onlyRemove
         osm_id_Remove = list(onlyRemove_IdsLL[2])
         osm_way_id_Remove = list(onlyRemove_IdsLL[3])
     
-    
-    # send the "shapeType_" input value to sc.sticky so that it can be used by "OSM 3D" component
-    sc.sticky["OSMshapes_shapeType"] = shapeType
     
     unitConversionFactor, unitSystemLabel = gismo_preparation.checkUnits()
     
@@ -1115,4 +1110,3 @@ else:
     printMsg = "First please run the Gismo Gismo component."
     print printMsg
     ghenv.Component.AddRuntimeMessage(level, printMsg)
-
