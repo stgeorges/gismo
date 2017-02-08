@@ -57,10 +57,10 @@ Provided by Gismo 0.0.1
                    If nothing supplied, the default type 2 type (random) will be used.
                    -
                    Integer.
-        groundTerrain_: The ground terrain on which the "threeDeeShapes" will be layed onto.
-                        Supply it by using "terrain" output of the Ladybug "Terrain Generator" or Gismo "Terrain Generator" components.
+        groundTerrain_: The ground terrain surface on which the "threeDeeShapes" will be laid onto.
+                        Supply it by using "terrain" output of the Ladybug "Terrain Generator" (type_ = 1) or Gismo "Terrain Generator" (type_ = 2 or type_ = 3) components.
                         -
-                        If nothing supplied, the "threeDeeShapes" will always be layed flat onto a horizontal plane, with plane origin being the "origin" input of the "OSM shapes" component.
+                        If nothing supplied, the "threeDeeShapes" will always be laid flat onto a horizontal plane, with plane origin being the "origin" input of the "OSM shapes" component.
         bakeIt_: Set to "True" to bake the extruded _shape geometry into the Rhino scene.
                  The geometry will be grouped. To ungroup it, select it and call the "Ungroup" Rhino command.
                  -
@@ -87,11 +87,11 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_OSM 3D"
 ghenv.Component.NickName = "OSM3D"
-ghenv.Component.Message = "VER 0.0.1\nJAN_29_2017"
+ghenv.Component.Message = "VER 0.0.1\nFEB_09_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.1\nJAN_29_2017
+#compatibleGismoVersion = VER 0.0.1\nFEB_09_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "3"
 except: pass
 
@@ -111,75 +111,75 @@ def checkInputData(shapes, keys, values, heightPerLevel, randomHeightRange, tree
     
     # check inputs
     if (shapes.DataCount == 0):
-        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = None
+        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = shapeType = None
         validInputData = False
         printMsg = "Please connect the \"shapes\" output from Gismo \"OSM shapes\" component to this component's \"_shapes\" input."
-        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor, validInputData, printMsg
+        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg
     
     elif (len(shapes.Branches) == 1) and (shapes.Branches[0][0] == None):
         # this happens when "OSM shapes" component's "_runIt" input is set to "False"
-        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = None
+        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = shapeType = None
         validInputData = False
         printMsg = "There is no data supplied to the \"_shapes\" input.\n" + \
                    " \n" + \
                    "Please connect the \"shapes\" output from Gismo \"OSM shapes\" component to this component's \"_shapes\" input.\n" + \
                    "And make sure that you set the \"OSM shapes\" \"_runIt\" input to \"True\"."
-        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor, validInputData, printMsg
+        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg
     
     
     if (len(keys) == 0):
-        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = None
+        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = shapeType = None
         validInputData = False
         printMsg = "Please connect the \"keys\" output from Gismo \"OSM shapes\" component to this component's \"_keys\" input."
-        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor, validInputData, printMsg
+        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg
     elif (len(keys) == 1) and (keys[0] == None):
         # this happens when "OSM shapes" component's "_runIt" input is set to "False"
-        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = None
+        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = shapeType = None
         validInputData = False
         printMsg = "There is no data supplied to the \"_keys\" input.\n" + \
                    " \n" + \
                    "Please connect the \"keys\" output from Gismo \"OSM shapes\" component to this component's \"_keys\" input.\n" + \
                    "And make sure that you set the \"OSM shapes\" \"_runIt\" input to \"True\"."
-        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor, validInputData, printMsg
+        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg
     
     
     if (values.DataCount == 0):
-        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = None
+        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = shapeType = None
         validInputData = False
         printMsg = "Please connect the \"values\" output from Gismo \"OSM shapes\" component to this component's \"_values\" input."
-        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor, validInputData, printMsg
+        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg
     
     elif (len(values.Branches) == 1) and (values.Branches[0][0] == None):
         # this happens when "OSM shapes" component's "_runIt" input is set to "False"
-        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = None
+        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = shapeType = None
         validInputData = False
         printMsg = "There is no data supplied to the \"_values\" input.\n" + \
                    " \n" + \
                    "Please connect the \"values\" output from Gismo \"OSM shapes\" component to this component's \"_values\" input.\n" + \
                    "And make sure that you set the \"OSM shapes\" \"_runIt\" input to \"True\"."
-        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor, validInputData, printMsg
+        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg
     
     
     if len(shapes.Paths) != len(values.Paths):
-        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = None
+        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = shapeType = None
         validInputData = False
         printMsg = "The number of tree branches inputted to the \"_shapes\" and \"_values\" inputs do not match.\n" + \
                    " \n" + \
                    "Make sure that you connected:\n" + \
                    "\"keys\" output from Gismo \"OSM shapes\" component to this component's \"_keys\" input. And:\n" + \
                    "\"values\" output from Gismo \"OSM shapes\" component to this component's \"_values\" input."
-        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor, validInputData, printMsg
+        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg
     
     
     # heightPerLevel_ is always in Rhino document units
     if (heightPerLevel == None):
         heightPerLevel = 3/unitConversionFactor  # 3 meters (10 feet)
     elif (heightPerLevel <= 0):
-        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = None
+        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = shapeType = None
         validInputData = False
         printMsg = "heightPerLevel_ input must be larger than 0.\n" + \
                    "Please supply a value larger than 0."
-        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor, validInputData, printMsg
+        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg
     
     
     # randomHeightRange_ is always in Rhino document units
@@ -195,7 +195,7 @@ def checkInputData(shapes, keys, values, heightPerLevel, randomHeightRange, tree
     if (treeType == None):
         treeType = 2  # default (random)
     elif (treeType < 0) or (treeType > 2):
-        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = None
+        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = shapeType = None
         validInputData = False
         printMsg = "treeType_ input must can only have one of the following values:\n" + \
                    "0 - round tree\n" + \
@@ -203,15 +203,15 @@ def checkInputData(shapes, keys, values, heightPerLevel, randomHeightRange, tree
                    "2 - random shaped tree\n" + \
                    " \n" + \
                    "Please supply one of these values."
-        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor, validInputData, printMsg
+        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg
     
     
     if (onlyRemove_Ids.BranchCount == 1) and (onlyRemove_Ids.Branches[0][0] == None):
         # in "OSM ids" component, an id exists both in "osm_id_Only_" and "osm_id_Remove_" inputs,  or an id exists both in "osm_way_id_Only_" and "osm_way_id_Remove_" inputs
-        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = None
+        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = shapeType = None
         validInputData = False
         printMsg = "Your \"_onlyRemove_Ids\" input is invalid. Check the \"readMe!\" output of \"OSM ids\" component to see what's wrong with it."
-        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor, validInputData, printMsg
+        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg
     elif (onlyRemove_Ids.BranchCount == 0):
         # nothing inputted to "OSM ids" component's four inputs
         osm_id_Only = [];  osm_way_id_Only = [];  osm_id_Remove = [];  osm_way_id_Remove = []
@@ -224,20 +224,20 @@ def checkInputData(shapes, keys, values, heightPerLevel, randomHeightRange, tree
         osm_way_id_Remove = list(onlyRemove_IdsLL[3])
     
     
-    # check the "shapeType_" input value set in the "OSM shapes" component. This value will always exist, as "OSM shapes" component will be ran before the "OSM 3d" component
-    shapeType = sc.sticky["OSMshapes_shapeType"]
+    # check the "shapeType_" input value set in the "OSM shapes" component.
+    shapeType = gismo_preparation.checkShapeType(shapes.Branches)
     if shapeType == 1:
-        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = None
+        heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = shapeType = None
         validInputData = False
         printMsg = "This component supports only creation of 3d buildings and trees. So \"shapeType_\" input of \"OSM shapes\" component needs to be set to either 0 or 2."
-        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor, validInputData, printMsg
+        return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg
     
     
     del shapes; del keys; del values  # delete local variables
     validInputData = True
     printMsg = "ok"
     
-    return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor, validInputData, printMsg
+    return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg
 
 
 def isNumber(string):
@@ -251,10 +251,7 @@ def isNumber(string):
         return False
 
 
-def createThreeDeeShapes(shapesDataTree, keys, valuesDataTree, heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, groundTerrain, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor):
-    
-    # check the "shapeType_" input value set in the "OSM shapes" component. This value will always exist, as "OSM shapes" component will be ran before the "OSM 3d" component
-    shapeType = sc.sticky["OSMshapes_shapeType"]
+def createThreeDeeShapes(shapesDataTree, keys, valuesDataTree, heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, groundTerrain, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor):
     
     # use the Z coordinate of the origin_ input from "OSM shapes"
     OSMshapesComp_origin = sc.sticky["gismo_OSMshapesComp_origin"]
@@ -355,7 +352,7 @@ def createThreeDeeShapes(shapesDataTree, keys, valuesDataTree, heightPerLevel, r
     elif (groundTerrain == None):
         groundBrep_singleBrepFace = None
         bb_height = 10  # dummy value
-    
+    bb_height = 3000  # dummy large value (until "Ladybug Terrain Generator" starts support "origin_" input to be on the terrain)
     
     
     
@@ -781,10 +778,10 @@ if sc.sticky.has_key("gismoGismo_released"):
         gismo_createGeometry = sc.sticky["gismo_CreateGeometry"]()
         gismo_osm = sc.sticky["gismo_OSM"]()
         
-        heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor, validInputData, printMsg = checkInputData(_shapes, _keys, _values, heightPerLevel_, randomHeightRange_, treeType_, onlyRemove_Ids_)
+        heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg = checkInputData(_shapes, _keys, _values, heightPerLevel_, randomHeightRange_, treeType_, onlyRemove_Ids_)
         if validInputData:
             if _runIt:
-                threeDeeShapes, threeDeeValues, height, valid_onlyRemove_Ids_or_shapes, printMsg = createThreeDeeShapes(_shapes, _keys, _values, heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, groundTerrain_, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor)
+                threeDeeShapes, threeDeeValues, height, valid_onlyRemove_Ids_or_shapes, printMsg = createThreeDeeShapes(_shapes, _keys, _values, heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, groundTerrain_, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor)
                 if valid_onlyRemove_Ids_or_shapes:
                     printOutput(osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, heightPerLevel, randomHeightRangeStart, randomHeightRangeEnd, treeType)
                     threeDeeKeys = _keys
