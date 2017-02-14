@@ -33,7 +33,7 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.1\nFEB_09_2017"
+ghenv.Component.Message = "VER 0.0.1\nFEB_14_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
@@ -44,8 +44,9 @@ import rhinoscriptsyntax as rs
 import scriptcontext as sc
 import Grasshopper
 import datetime
-import shutil
 import System
+import shutil
+import urllib
 import Rhino
 import time
 import math
@@ -394,16 +395,32 @@ class Preparation(object):
             client = System.Net.WebClient()
             client.DownloadFile(downloadLink, downloadedFilePath)
         except Exception, e:
+            print "downloadFile_e1: ", e
             try:
                 # "secure http" failed, try "http" download:
                 filePathDummy, infoHeader = urllib.urlretrieve(downloadLink, downloadedFilePath)
             except Exception, e:
+                print "downloadFile_e2: ", e
                 # downloading of file failed
                 fileDownloaded_success = False
                 return fileDownloaded_success
         
         fileDownloaded_success = True
         return fileDownloaded_success
+    
+    
+    def constructLocation(self, locationName, latitude, longitude, timeZone = 0, elevation = 0):
+        """
+        construct .epw file location
+        """
+        locationString = "Site:Location,\n" + \
+                   "%s,\n" % locationName + \
+                   "%s,      !Latitude\n" % latitude + \
+                   "%s,     !Longitude\n" % longitude + \
+                   "%s,     !Time Zone\n" % timeZone + \
+                   "%s;       !Elevation" % elevation
+        
+        return locationString
     
     
     def deconstructLocation(self, location):
@@ -503,35 +520,6 @@ class Preparation(object):
         
         del shapesLL
         return shapeType
-    
-    
-    def getListOfConnectedComponents(self, component, componentInputParamIndex, onlyGHPython = True):
-        """
-        get an id of an external component from which data has been plugged to particular input of this component
-        this method is entirely copied from Ladybug_Export Ladybug component:
-        https://github.com/mostaphaRoudsari/ladybug/blob/master/src/Ladybug_Export%20Ladybug.py
-        """
-        
-        componentsComingToInput = []
-        
-        param = component.Params.Input[componentInputParamIndex]
-        sources = param.Sources
-        if sources.Count == 0: return componentsComingToInput
-        
-        for source in sources:
-            attr = source.Attributes
-            if (attr is None) or (attr.GetTopLevel is None):
-                pass
-            else:
-                componentComingToInput = attr.GetTopLevel.DocObject
-        
-        if componentComingToInput == None or (onlyGHPython and type(componentComingToInput) != type(component)):
-            # collect only python componentsComingToInput
-            pass
-        else:
-            componentsComingToInput.append(component)
-        
-        return componentsComingToInput
     
     
     def modify_dataTree(self, oldDataTree, newBranchIndex, newBranchList):
@@ -1582,6 +1570,73 @@ class OSM():
     """
     methods for manipulation of OSM data
     """
+    def calculateCRS_UTMzone(self, locationLatitudeD, locationLongitudeD):
+        # calculate CRS data: CRS_UTMzone, northOrsouth
+        # by http://stackoverflow.com/a/9188972/3137724 (link given by Even Rouault)
+        CRS_UTMzone = (math.floor((locationLongitudeD + 180)/6) % 60) + 1
+        if locationLatitudeD >= 0:
+            # for northern hemisphere
+            northOrsouth = "north"
+        elif locationLatitudeD < 0:
+            # for southern hemisphere
+            northOrsouth = "south"
+        
+        return int(CRS_UTMzone), northOrsouth
+    
+    
+    def UTM_CRS_from_latitude(self, locationLatitudeD, locationLongitudeD, originLatitudeD = 0, originLongitudeD = 0):
+        """
+        create UTM CRS from latitude, longitude and anchor latitude, anchor longitude
+        """
+        CRS = MapWinGIS.GeoProjectionClass()
+        CRS_UTMzone, northOrsouth = self.calculateCRS_UTMzone(locationLatitudeD, locationLongitudeD)
+        proj4_string = "+proj=utm +zone=%s +%s +datum=WGS84 +ellps=WGS84 +lat_0=%s +lon_0=%s" % (CRS_UTMzone, northOrsouth, originLatitudeD, originLongitudeD)#, resamplingMethod)
+        CRS.ImportFromProj4(proj4_string)
+        
+        return CRS
+    
+    
+    def CRS_from_EPSGcode(self, EPSGcode):
+        """
+        create CRS from EPSG code
+        """
+        CRS = MapWinGIS.GeoProjectionClass()
+        CRS.ImportFromEPSG(EPSGcode)
+        
+        return CRS
+    
+    
+    def convertBetweenTwoCRS(self, inputCRS, outputCRS, firstCoordinate, secondCoordinate):
+        
+        """
+        shapefile = MapWinGIS.ShapefileClass()
+        openShapefileSuccess = MapWinGIS.ShapefileClass.Open(shapefile, shapeFile_filePath, None)
+        if openShapefileSuccess:
+            pass
+        """
+        #print "__inputCRS_EPSG: ", inputCRS_EPSG
+        # set the input CRS
+        #inputCRS = MapWinGIS.GeoProjectionClass()
+        #MapWinGIS.GeoProjectionClass.ImportFromEPSG(inputCRS, inputCRS_EPSG)
+        #inputCRS.ImportFromEPSG(inputCRS_EPSG)
+        
+        # set the output CRS
+        #outputCRS = MapWinGIS.GeoProjectionClass()
+        #outputCRS.ImportFromEPSG(outputCRS_EPSG)
+        
+        successStartTransform = inputCRS.StartTransform(outputCRS)
+        
+        secondCoordinate_ref = clr.StrongBox[System.Double](secondCoordinate)
+        firstCoordinate_ref = clr.StrongBox[System.Double](firstCoordinate)
+        successTransform = MapWinGIS.GeoProjectionClass.Transform(inputCRS, firstCoordinate_ref, secondCoordinate_ref)
+        
+        inputCRS.StopTransform()
+        
+        originPtProjected = Rhino.Geometry.Point3d(firstCoordinate_ref.Value, secondCoordinate_ref.Value, 0)
+        
+        return originPtProjected
+    
+    
     def projectedLocationCoordinates(self, locationLatitudeD, locationLongitudeD):
         """
         convert latitude,longitude coordinates to x,y projected coordinates
