@@ -31,15 +31,18 @@ https://github.com/MapWindow/MapWinGIS
 
 ===============
 
-Gismo uses OpenStreetMap data from openstreetmap.org with the following acknowledgement:
+Gismo uses OpenStreetMap data with the following acknowledgement:
 - "© OpenStreetMap contributors"
 
+The data is retrieved via Overpass API. The Overpass API (formerly known as OSM Server Side Scripting, or OSM3S before 2011) is a read-only API that serves up custom selected parts of the OSM map data.
 OpenStreetMap® is open data, licensed under the Open Data Commons Open Database License (ODbL) by the OpenStreetMap Foundation (OSMF):
 www.opendatacommons.org/licenses/odbl
 www.osmfoundation.org
 
 Please refer to openstreetmap.org copyright page for more information:
 http://www.openstreetmap.org/copyright
+And openstreetmap.org wiki page for more information on Overpass API:
+http://wiki.openstreetmap.org/wiki/Overpass_API
 
 ===============
 
