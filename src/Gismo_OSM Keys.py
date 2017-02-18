@@ -34,7 +34,7 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_OSM Keys"
 ghenv.Component.NickName = "OSMKeys"
-ghenv.Component.Message = "VER 0.0.1\nJAN_29_2017"
+ghenv.Component.Message = "VER 0.0.1\nFEB_18_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -148,6 +148,7 @@ def main(OSMobjectName):
     "phone",
     "height",
     "building:levels",
+    "min_height",
     "building",
     "entrance",
     "roof:shape",
@@ -169,6 +170,7 @@ def main(OSMobjectName):
     "phone",
     "height",
     "building:levels",
+    "min_height",
     "building",
     "entrance",
     "source",
@@ -742,6 +744,7 @@ def main(OSMobjectName):
     "lacounty:bld_id",
     "height",
     "building:levels",
+    "min_height",
     "building",
     "ruian:building",
     "building:ruian:type",
@@ -775,6 +778,7 @@ def main(OSMobjectName):
     "lacounty:bld_id",
     "height",
     "building:levels",
+    "min_height",
     "building",
     "ruian:building",
     "building:ruian:type",
@@ -1268,6 +1272,7 @@ def main(OSMobjectName):
     "building:levels",
     "building:min_level",
     "building:part",
+    "min_height",
     "roof:height",
     "roof:shape",
     "roof:angle",
