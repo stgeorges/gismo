@@ -96,7 +96,7 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_OSM Shapes"
 ghenv.Component.NickName = "OSMshapes"
-ghenv.Component.Message = "VER 0.0.1\nFEB_09_2017"
+ghenv.Component.Message = "VER 0.0.1\nFEB_18_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -500,8 +500,7 @@ def setupOsmconf_ini_File(requiredKeys, shapeType, overpassFile_filePathL, osmco
     
     points_tagPassed = lines_tagPassed = multipolygons_tagPassed = multilinestrings_tagPassed = other_relations_tagPassed = False  # setting them back to "False" values
     overpassFile.close()  # results in a resource leak (http://stackoverflow.com/questions/28396759/os-remove-in-windows-gives-error-32-being-used-by-another-process). Reported at: http://www.grasshopper3d.com/xn/detail/2985220:Comment:1682182
-    #os.remove(osmconf_ini_filePath)  # delete the original "osmconf.ini" file
-    shutil.rmtree(osmconf_ini_filePath, ignore_errors=True)  # delete the original "osmconf.ini" file
+    os.remove(osmconf_ini_filePath)  # delete the original "osmconf.ini" file
     
     # create the new osmconf.ini file
     osmconf_ini_newFilePath = osmconf_ini_filePath
@@ -588,28 +587,13 @@ def checkOsmShpFiles(locationLatitudeD, locationLongitudeD, fileNameIncomplete, 
         connectedToInternet = True
     
     
-    # if data is supplied to the "requiredKeys_" input delete the: lines.shp/.shx/.dbf/.prj, multilinestrings.shp/.shx/.dbf/.prj, multipolygons.shp/.shx/.dbf/.prj, points.shp/.shx/.dbf/.prj files (due to them being generated with different keys)
-    if (len(requiredKeys) == 0):
-        # NOTHING inputted into "requiredKeys_"
-        sc.sticky["requiredKeys_wasInputted"] = False
-    else:
-        # something inputted into "requiredKeys_"
-        sc.sticky["requiredKeys_wasInputted"] = True
-    
-    if sc.sticky["requiredKeys_wasInputted"] == True:
-        # delete the .shp/.shx/.dbg/.prj files
-        files = os.listdir(osm_shp_file_folderPath)
-        for fileNameWithExtension in files:
-            fileExtension = fileNameWithExtension[-4:]
-            if (fileExtension != ".osm") and (fileExtension != ".txt"):  # delete only .shp/.shx/.dbf/.prj files
-                filePath = os.path.join(osm_shp_file_folderPath, fileNameWithExtension)
-                #os.remove(filePath)
-                shutil.rmtree(filePath, ignore_errors=True)
-        # and set the sc.sticky["requiredKeys_wasInputted"] to False
-        sc.sticky["requiredKeys_wasInputted"] = False
-    else:
-        # there is no "requiredKeys_wasInputted" key u sc.sticky
-        pass
+    # always delete the .shp/.shx/.dbg/.prj files, whenever the "OSM Shapes" component is run
+    files = os.listdir(osm_shp_file_folderPath)
+    for fileNameWithExtension in files:
+        fileExtension = fileNameWithExtension[-4:]
+        if (fileExtension != ".osm") and (fileExtension != ".txt"):  # delete only .shp/.shx/.dbf/.prj files
+            filePath = os.path.join(osm_shp_file_folderPath, fileNameWithExtension)
+            os.remove(filePath)
     
     
     if len(requiredKeys) != 0:
@@ -644,6 +628,7 @@ def checkOsmShpFiles(locationLatitudeD, locationLongitudeD, fileNameIncomplete, 
                                 "addr:housenumber",
                                 "height",
                                 "building:levels",
+                                "min_height",
                                 "building",
                                 "natural",
                                 "leaf_type",
