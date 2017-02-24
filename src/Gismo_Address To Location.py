@@ -45,17 +45,15 @@ import urllib
 import json
 import httplib
 
-
 def main(address):
-    
     timeZone = 0; elevation = 0  # default. These two inputs are not important for OSM and terrain components
     url = "http://nominatim.openstreetmap.org/search"
-    address = address.replace(" ","+")
+    address = urllib.quote_plus(address)
     format="jsonv2"
     addressdetails="0"
     polygon_="0"
     limit="1"
-    url_totale = url+"?q="+address+"&format="+format+"&addressdetails="+addressdetails+"&polygon_="+polygon_+"&limit="+limit
+    url_totale = url+"?q="+address+"&format="+format+"&addressdetails="+addressdetails+"&polygon_="+polygon_+"&limit="+limit+"&email=https://github.com/Alliages"
     url_check = url+".php?q="+address+"&polygon=1&viewbox="
     try:
         request = urllib.urlopen(url_totale)
