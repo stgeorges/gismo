@@ -30,7 +30,8 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Address To Location"
 ghenv.Component.NickName = "AddressToLocation"
-ghenv.Component.Message = "VER 0.0.2\nFEB_17_2017"
+#ghenv.Component.Message = "VER 0.0.2\nFEB_17_2017"
+ghenv.Component.Message = "VER 0.0.1\nFEB_22_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | Gismo"
@@ -87,14 +88,16 @@ def main(address):
 
 level = Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning
 if sc.sticky.has_key("gismoGismo_released"):
-    #validVersionDate, printMsg = sc.sticky["gismo_check"].versionDate(ghenv.Component)
-    validVersionDate = True
+    validVersionDate, printMsg = sc.sticky["gismo_check"].versionDate(ghenv.Component)
     if validVersionDate:
         gismo_preparation = sc.sticky["gismo_Preparation"]()
-        location, validInputData, printMsg = main(_address)
+        if _address:
+            location, validInputData, printMsg = main(_address)
+        else:
+            printMsg = "Please add an address as a string panel"
+            validInputData = False
         print printMsg
         if not validInputData:
-            print printMsg
             ghenv.Component.AddRuntimeMessage(level, printMsg)
     else:
         print printMsg
