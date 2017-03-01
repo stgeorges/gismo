@@ -16,9 +16,9 @@
 # The GPL-3.0+ license <http://spdx.org/licenses/GPL-3.0+>
 
 """
-Use this component to chose an OSM object
+Use this component to chose an OSM object.
 -
-Provided by Gismo 0.0.1
+Provided by Gismo 0.0.2
     
     input:
     
@@ -28,11 +28,11 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_OSM Objects"
 ghenv.Component.NickName = "OSMObjects"
-ghenv.Component.Message = "VER 0.0.1\nJAN_29_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.1\nJAN_29_2017
+#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
