@@ -5,7 +5,6 @@
 # This file is part of Gismo.
 # 
 # Copyright (c) 2017, Djordje Spasic <djordjedspasic@gmail.com>
-# with assistance of Dr. Bojan Savric <savricb@geo.oregonstate.edu>
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
 # Gismo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -18,7 +17,7 @@
 Use this component to define the parameters important for legend and baking.
 Any component which has a "legendBakePar_" input can be used to define these.
 -
-Provided by Gismo 0.0.1
+Provided by Gismo 0.0.2
     input:
         legendStyle_: The following legend cell styles are supported:
                       -
@@ -81,12 +80,12 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_Legend Bake Parameters"
 ghenv.Component.NickName = "LegendBakeParameters"
-ghenv.Component.Message = "VER 0.0.1\nJAN_29_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "3 | More"
-#compatibleGismoVersion = VER 0.0.1\nJAN_29_2017
-try: ghenv.Component.AdditionalHelpFromDocStrings = "1"
+#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
+try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
 import scriptcontext as sc
