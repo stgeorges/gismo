@@ -20,7 +20,7 @@ Use this component to generate "requiredTag" output. This output is used as inpu
 -
 Search for any OSM tag at: http://taginfo.openstreetmap.org/tags
 -
-Provided by Gismo 0.0.1
+Provided by Gismo 0.0.2
     
     input:
         _OSMobjectName: OSM object name.
@@ -48,11 +48,11 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_OSM Tag"
 ghenv.Component.NickName = "OSMtag"
-ghenv.Component.Message = "VER 0.0.1\nJAN_29_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.1\nJAN_29_2017
+#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
