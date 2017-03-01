@@ -16,7 +16,7 @@
 
 """
 Use this component to create a geometry of the terrain surrounding the chosen location.
-Terrain will be created with SRTM 1 arc-second (20 to 30 meters depending on the latitude) grid precision.
+Terrain will be created with ALOS 1 arc-second (20 to 30 meters depending on the latitude) grid precision.
 -
 Component requires that you are connected to the Internet, as it has to download the topography data.
 It also requires MapWinGIS application to be installed.
@@ -30,7 +30,7 @@ Component mainly based on:
 https://books.google.rs/books/about/Matemati%C4%8Dka_kartografija.html?id=GcXEMgEACAAJ&redir_esc=y
 http://www.movable-type.co.uk/scripts/latlong-vincenty.html
 -
-Provided by Gismo 0.0.1
+Provided by Gismo 0.0.2
     
     input:
         _location: The output from the "importEPW" or "constructLocation" component.  This is essentially a list of text summarizing a location on the Earth.
@@ -46,9 +46,13 @@ Provided by Gismo 0.0.1
                  If not supplied, default value of 100 meters will be used.
                  -
                  In meters.
-        north_: Input a vector to be used as a true North direction, or a number between 0 and 360 that represents the clockwise degrees off from the Y-axis.
-                -
-                If not supplied, default North direction will be set to the Y-axis (0 degrees).
+        source_: There are currently three terrain sources available:
+               -
+               0 - SRTMGL1: only terrain from -55 to 59 latitude! Terrain ends at the sea level (no sea/river/lake floor terrain). Terrain resolution varies from 20 to 30 meters.
+               1 - AW3D30: only terrain! Terrain ends at the sea level (no sea/river/lake floor terrain). Terrain resolution varies from 20 to 30 meters.
+               2 - GMRT: terrain and underwater (sea/river/lake floor) terrain. Sea level is not presented. Terrain and underwater terrain resolution varies from 50 meter to 2000 meters.
+               -
+               If nothing supplied, 0 will be used as a default (SRTMGL1 terrain only).
         type_: There are four terrain types:
                -
                0 - terrain will be created as a mesh with rectangular edges
@@ -60,6 +64,9 @@ Provided by Gismo 0.0.1
         origin_: Origin for the final "terrain" output.
                  -
                  If not supplied, default point of (0,0,0) will be used.
+        north_: Input a vector to be used as a true North direction, or a number between 0 and 360 that represents the clockwise degrees off from the Y-axis.
+                -
+                If not supplied, default North direction will be set to the Y-axis (0 degrees).
         standThickness_: Thickness of the stand.
                          A stand is a basically a base constructed below the terrain mesh/surface. It can be used to create a terrain for cfd analysis or visualization purposes.
                          -
@@ -99,11 +106,11 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_Terrain Generator"
 ghenv.Component.NickName = "TerrainGenerator"
-ghenv.Component.Message = "VER 0.0.1\nJAN_29_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
-#compatibleGismoVersion = VER 0.0.1\nJAN_29_2017
+#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "1"
 except: pass
 
@@ -122,7 +129,7 @@ import os
 import gc
 
 
-def checkInputData(maxVisibilityRadiusM, gridSize, source, _type, origin, north, standThickness, numOfContours, downloadTSVLink):
+def checkInputData(locationLatitudeD, maxVisibilityRadiusM, gridSize, source, _type, origin, north, standThickness, numOfContours, downloadTSVLink):
     
     # check if MapWinGIS is properly installed
     gismoGismoComponentNotRan = False  # initial value
@@ -148,7 +155,24 @@ def checkInputData(maxVisibilityRadiusM, gridSize, source, _type, origin, north,
     
     
     # check inputs
-    sourceLabel = "OpenTopography"
+    if (source == None):
+        source = 0  # default
+        sourceLabel = "SRTMGL1"  # default
+    elif (source == 0):
+        # SRTM 1 arc second: only terrain
+        sourceLabel = "SRTMGL1"
+    elif (source == 1):
+        # ALOS 1 arc second (AW3D30): only terrain
+        sourceLabel = "AW3D30"
+    elif (source == 2):
+        # GMRT from 10 meter (0.33 arc-second) to 2000 meter (66.66 arc second): terrain and underwater terrain
+        sourceLabel = "GMRT"
+    elif (source < 0) or (source > 2):
+        source = 0
+        sourceLabel = "SRTMGL1"
+        print "source_ input only supports values 0 to 2.\n" + \
+              "source_ input set to 0 (SRTMGL1 = terrain only)."
+    
     
     if (_type == None):  # "type" is a reserved python word. Use "_type" instead
         _type = 1  # default
@@ -212,6 +236,17 @@ def checkInputData(maxVisibilityRadiusM, gridSize, source, _type, origin, north,
     # correction of maxVisibilityRadiusM length due to light refraction can not be calculated, so it is assumed that arcLength = maxVisibilityRadiusM. maxVisibilityRadiusM variable will be used from now on instead of arcLength.
     
     
+    if (source == 2)  and  ((locationLatitudeD < -55) or (locationLatitudeD > 59)):
+        # SRTMGL1 is limited to -56 to 60 latitude
+        maxVisibilityRadiusM = gridSize = source = sourceLabel = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
+        validInputData = False
+        printMsg = "The \"source_ = 2\" input (SRTMGL1) has range limits: from -55 South to 59 North latitude.\n" + \
+                   "\"location_\" you chose exceeds these limits.\n" + \
+                   "Try using either \"source_ = 0\" input or \"source_ = 1\" inputs, which have higher range limits (both from -81 South to 81 North latitude)."
+        return maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
+    
+    
+    
     if (north == None):
         northRad = 0  # default, in radians
         northVec = Rhino.Geometry.Vector3d(0,1,0)
@@ -264,13 +299,13 @@ def distanceBetweenTwoPoints(latitude1D, longitude1D, maxVisibilityRadiusM):
     # based on JavaScript code made by Chris Veness
     # http://www.movable-type.co.uk/scripts/latlong-vincenty.html
     
-    # setting the latitude2D, longitude2D according to SRTM latitude range boundaries (-56 to 60)
+    # setting the latitude2D, longitude2D according to ALOS latitude range boundaries (approx. -82 to 82): http://opentopo.sdsc.edu/raster?opentopoID=OTALOS.112016.4326.2 
     if latitude1D >= 0:
         # northern hemishere:
-        latitude2D = 60
+        latitude2D = 81  
     elif latitude1D < 0:
         # southern hemishere:
-        latitude2D = -56
+        latitude2D = -82
     longitude2D = longitude1D
     
     # for WGS84:
@@ -326,28 +361,28 @@ def distanceBetweenTwoPoints(latitude1D, longitude1D, maxVisibilityRadiusM):
     
     
     if latitude1D >= 0:
-        SRTMlimit = "60 North"
+        SRTMlimit = "81 North"
     elif latitude1D < 0:
-        SRTMlimit = "-56 South"
+        SRTMlimit = "-81 South"
     
     if distanceM < 200:
         correctedMaskRadiusM = "dummy"
         validVisibilityRadiusM = False
         printMsg = "This component dowloads free topography data from opentopography.org in order to create a terrain for the chosen _location.\n" + \
-                   "But mentioned free topography data has limits: from -56 South to 60 North latitude.\n" + \
+                   "But mentioned free topography data has limits: from -81 South to 81 North latitude.\n" + \
                    "The closer the location is to upper mentioned boundaries, the inputted \"radius_\" value may have be shrank to make sure that the boundaries are not exceeded.\n" + \
-                   "In this case the _location you chose is very close (less than 20 meters) to the %s latitude boundary.\n" % SRTMlimit + \
+                   "In this case the _location you chose is very close (less than 200 meters) to the %s latitude boundary.\n" % SRTMlimit + \
                    "It is not possible to create a terrain for locations less than 200 meters close to mentioned boundary, as this _location is.\n" + \
                    "Try using the Ladybug \"Terrain Generator\" component instead."
     else:
-        # shortening the maxVisibilityRadiusM according to the distance remained to the SRTM latitude range boundaries (-56 to 60)
+        # shortening the maxVisibilityRadiusM according to the distance remained to the ALOS latitude range boundaries (-81 to 81)
         if distanceM < maxVisibilityRadiusM:
             print "distanceM < maxVisibilityRadiusM: ", distanceM < maxVisibilityRadiusM
             print "distanceM, maxVisibilityRadiusM: ", distanceM, maxVisibilityRadiusM
             correctedMaskRadiusM = int(distanceM)  # int(distanceM) will always perform the math.floor(distanceM)
             validVisibilityRadiusM = False
             printMsg = "This component downloads free topography data from opentopography.org in order to create a terrain for the chosen _location.\n" + \
-                       "But mentioned free topography data has limits: from -56 South to 60 North latitude.\n" + \
+                       "But mentioned free topography data has limits: from -81 South to 81 North latitude.\n" + \
                        "The closer the location is to upper mentioned boundaries, the inputted \"radius_\" value may have to be shrank to make sure that the boundaries are not exceeded.\n" + \
                        "In this case the _location you chose is %s meters away from the %s latitude boundary.\n" % (correctedMaskRadiusM, SRTMlimit) + \
                        " \n" + \
@@ -473,7 +508,7 @@ def import_export_origin_0_0_0_and_terrainShadingMask_from_objFile(importExportO
             myFile.close()
             
             
-            locationNameCorrected_latitude_longitude = (fileNameIncomplete.split("_TERRAIN_MASK")[0]).replace("_"," ")
+            locationNameCorrected_latitude_longitude = (fileNameIncomplete.split("_TERRAIN")[0]).replace("_"," ")
             
             nowUTC = datetime.datetime.utcnow()  # UTC date and time
             UTCdateTimeString = str(nowUTC.year) + "-" + str(nowUTC.month) + "-" + str(nowUTC.day) + " " + str(nowUTC.hour) + ":" + str(nowUTC.minute) + ":" + str(nowUTC.second)
@@ -493,7 +528,7 @@ def import_export_origin_0_0_0_and_terrainShadingMask_from_objFile(importExportO
         return terrainShadingMask, origin_0_0_0
 
 
-def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink, heightM, minVisibilityRadiusM, maxVisibilityRadiusM, maskStyleLabel):
+def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink, heightM, minVisibilityRadiusM, maxVisibilityRadiusM, maskStyleLabel, source, sourceLabel):
     
     # convert the float to integer if minVisibilityRadiusM == 0 (to avoid "0.0" in the .obj fileName)
     if minVisibilityRadiusM == 0:
@@ -501,8 +536,8 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
     else:
         minVisibilityRadiusKM = minVisibilityRadiusM/1000
     
-    fileName = fileNameIncomplete + "_visibility=" + str(minVisibilityRadiusKM) + "-" + str(round(maxVisibilityRadiusM/1000, 2)) + "KM"
-    fileName2 = fileNameIncomplete + "_visibility=" + str(round(maxVisibilityRadiusM/1000, 2)) + "KM"
+    fileName = fileNameIncomplete + "_visibility=" + str(minVisibilityRadiusKM) + "-" + str(round(maxVisibilityRadiusM/1000, 2)) + "KM" + "_source=" + sourceLabel
+    fileName2 = fileNameIncomplete + "_visibility=" + str(round(maxVisibilityRadiusM/1000, 2)) + "KM" + "_source=" + sourceLabel
     objFileNamePlusExtension = fileName + "_" + maskStyleLabel + ".obj"
     rasterFileNamePlusExtension = fileName2 + ".tif"
     rasterReprojectedFileNamePlusExtension = fileName2 + "_reprojected" + ".tif"
@@ -637,30 +672,40 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
         if rasterFileAlreadyExists == False:
             ## .tif file has not been downloaded up until now, download it
             
-            # first check the location before download, so that it fits the opentopography.org limits (-56 to 60(59.99999 used instead of 60) latitude):
-            if locationLatitudeD > 59.99999:
-                # location beyond the -56 to 60 latittude limits
+            # first check the location before download, so that it fits the opentopography.org limits (-81 to 81(80.99999 used instead of 81) latitude):
+            if locationLatitudeD > 80.99999:
+                # location beyond the -81 to 81 latittude limits
                 # (correctedMaskRadiusM < 1) or (correctedMaskRadiusM < maxVisibilityRadiusM)
                 terrainShadingMask = origin_0_0_0 = None
                 valid_Obj_or_Raster_file = False
                 rasterFilePath = "needless"  # dummy
                 printMsg = "This component dowloads free topography data from opentopography.org in order to create a terrain for the chosen _location.\n" + \
-                           "But mentioned free topography data has its limits: from -56 South to 60 North latitude.\n" + \
+                           "But mentioned free topography data has its limits: from -81 South to 81 North latitude.\n" + \
                            "Your _location's latitude exceeds the upper mentioned limits.\n" + \
                            " \n" + \
                            "Try using the Ladybug \"Terrain Generator\" component instead."
             else:
-                # location within the -56 to 60 latittude limits
-                # correct (shorten) the maxVisibilityRadiusM according to the distance remained to the SRTM latitude range boundaries (-56 to 60)
+                # location within the -81 to 81 latittude limits
+                # correct (shorten) the maxVisibilityRadiusM according to the distance remained to the ALOS latitude range boundaries (-81 to 81)
                 correctedMaskRadiusM, validVisibilityRadiusM, printMsg = distanceBetweenTwoPoints(locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM)
                 if validVisibilityRadiusM == True:
                     # (correctedMaskRadiusM >= maxVisibilityRadiusM)
                     latitudeTopD, dummyLongitudeTopD, latitudeBottomD, dummyLongitudeBottomD, dummyLatitudeLeftD, longitudeLeftD, dummyLatitudeRightD, longitudeRightD = destinationLatLon(locationLatitudeD, locationLongitudeD, correctedMaskRadiusM)
-                    # generate download link for raster region (based on: http://www.opentopography.org/developers)
-                    downloadRasterLink_withCorrectedMaskRadiusKM = "http://opentopo.sdsc.edu/otr/getdem?demtype=SRTMGL1&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff" % (longitudeLeftD,latitudeBottomD,longitudeRightD,latitudeTopD)  # 1 arc second
+                    # generate download link for raster region
+                    
+                    if source == 0:
+                        # based on: http://www.opentopography.org/developers
+                        downloadRasterLink_withCorrectedMaskRadiusKM = "http://opentopo.sdsc.edu/otr/getdem?demtype=SRTMGL1&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff" % (longitudeLeftD,latitudeBottomD,longitudeRightD,latitudeTopD)  # SRTM 1 arc second
+                    elif source == 1:
+                        # based on: http://www.opentopography.org/developers
+                        downloadRasterLink_withCorrectedMaskRadiusKM = "http://opentopo.sdsc.edu/otr/getdem?demtype=AW3D30&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff" % (longitudeLeftD,latitudeBottomD,longitudeRightD,latitudeTopD)  # ALOS 1 arc second (AW3D30)
+                    elif source == 2:
+                        # based on: http://www.marine-geo.org/tools/gridserverinfo.php#!/tools/getGMRTGrid
+                        #downloadRasterLink_withCorrectedMaskRadiusKM = "http://www.marine-geo.org/services/GridServer?north=%s&west=%s&east=%s&south=%s&layer=topo&format=geotiff&resolution=high" % (latitudeTopD,longitudeLeftD,longitudeRightD,latitudeBottomD)  # GMRT
+                        downloadRasterLink_withCorrectedMaskRadiusKM = "http://www.marine-geo.org/services/GridServer?north=%s&west=%s&east=%s&south=%s&layer=topo&format=geotiff&resolution=max" % (latitudeTopD,longitudeLeftD,longitudeRightD,latitudeBottomD)  # GMRT
                     
                     # new rasterFileNamePlusExtension and rasterFilePath corrected according to new correctedMaskRadiusM
-                    rasterFileNamePlusExtension_withCorrectedMaskRadiusKM = fileNameIncomplete + "_visibility=" + str(round(maxVisibilityRadiusM/1000, 2)) + "KM" + ".tif"  # rasterFileNamePlusExtension_withCorrectedMaskRadiusKM will always be used instead of rasterFilePath from line 647 !!!
+                    rasterFileNamePlusExtension_withCorrectedMaskRadiusKM = fileNameIncomplete + "_visibility=" + str(round(maxVisibilityRadiusM/1000, 2)) + "KM" + "_source=" + sourceLabel + ".tif"  # IMPORTANT: rasterFileNamePlusExtension_withCorrectedMaskRadiusKM will always be used instead of rasterFilePath from line 647 !!!
                     rasterFilePath_withCorrectedMaskRadiusKM = os.path.join(workingSubFolderPath, rasterFileNamePlusExtension_withCorrectedMaskRadiusKM)
                     tifFileDownloaded = gismo_preparation.downloadFile(downloadRasterLink_withCorrectedMaskRadiusKM, rasterFilePath_withCorrectedMaskRadiusKM)
                     if tifFileDownloaded:
@@ -676,7 +721,7 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
                                    "1) Sometimes due to large number of requests, the component fails to download the topography data even if opentopography.org website and their services are up and running.\n" + \
                                    "In this case, wait a couple of seconds and try reruning the component.\n" + \
                                    " \n" + \
-                                   "2) opentopography.org website could be up and running, but their SRTM service may be down (this already happened before).\n" + \
+                                   "2) opentopography.org website could be up and running, but their terrain service (RESTful Web service) may be down (this already happened before).\n" + \
                                    "Try again in a couple of hours.\n" + \
                                    " \n" + \
                                    "If each of two mentioned advices fails, open a new topic about this issue on: www.grasshopper3d.com/group/gismo/forum."
@@ -690,162 +735,6 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
     
     
     return terrainShadingMask, origin_0_0_0, fileName, objFilePath, rasterFilePath, rasterReprojectedFilePath, rasterReprojectedFileNamePlusExtension, vrtFilePath, elevationM, valid_Obj_or_Raster_file, printMsg
-
-
-def createTerrainMeshBrep2(locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM, gridSize, unitConversionFactor2):
-    
-    # create "terrainMesh" and "terrrainBrep" from GoogleMaps data
-    
-    # find cellsize based on radius_ and gridSize_ inputs
-    latitudeTopD, longitudeTopD, latitudeBottomD, longitudeBottomD, latitudeLeftD, longitudeLeftD, latitudeRightD, longitudeRightD = destinationLatLon(locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM)
-    topLeftPointLatitude = latitudeTopD
-    topLeftPointLongitude = longitudeLeftD
-    
-    diameterM = 2 * maxVisibilityRadiusM
-    numOfPtsInX = int(diameterM / gridSize)
-    numOfPtsInY = numOfPtsInX
-    
-    numOfFieldsMirrored = ((numOfPtsInX-1)/2)
-    cellsizeX_M = maxVisibilityRadiusM / numOfFieldsMirrored   # in meters, for 22x22 elevation points (484 points total < 512 allowed), there is 10.5 fields from each side of X or Y axis
-    cellsizeY_M = cellsizeX_M 
-    
-    # generate lat-lon pairs for url query
-    elevationPts_lat_lon = []
-    scaleFactor = 1
-    for k in range(numOfPtsInY):
-        for i in range(numOfPtsInX):
-            distanceX = - k*cellsizeX_M  # in Rhino units
-            distanceY = i*cellsizeY_M  # in Rhino units
-            
-            distanceX = distanceX * scaleFactor
-            distanceY = distanceY * scaleFactor
-            if distanceX == 0:
-                latitudeTopD1 = topLeftPointLatitude
-            elif distanceX != 0:
-                latitudeTopD1, longitudeTopD1, latitudeBottomD1, longitudeBottomD1, latitudeLeftD1, longitudeLeftD1, latitudeRightD1, longitudeRightD1 = destinationLatLon(topLeftPointLatitude, topLeftPointLongitude, distanceX)
-            
-            if distanceY == 0:
-                longitudeRightD2 = topLeftPointLongitude
-            elif distanceY != 0:
-                latitudeTopD2, longitudeTopD2, latitudeBottomD2, longitudeBottomD2, latitudeLeftD2, longitudeLeftD2, latitudeRightD2, longitudeRightD2 = destinationLatLon(topLeftPointLatitude, topLeftPointLongitude, distanceY)
-            elevationPt_latitude = latitudeTopD1
-            elevationPt_longitude = longitudeRightD2
-            elevationPt = Rhino.Geometry.Point3d(elevationPt_longitude, elevationPt_latitude, 0)
-            
-            elevationPts_lat_lon.append(elevationPt)
-    
-    # create all url queries
-    numOfItemsPerList = 256  # which is half of 512. 256 seems to be the maximal number of allowed elevationPts per single query if "access_key" is not supplied to the end of the URL call to google maps
-    numOfItemsPerList = max(1, numOfItemsPerList)
-    elevationPts_lat_lon_LL = list(elevationPts_lat_lon[i:i+numOfItemsPerList] for i in xrange(0, len(elevationPts_lat_lon), numOfItemsPerList))  # from http://stackoverflow.com/a/1751478
-    #print "len(elevationPts_lat_lon_LL): ", len(elevationPts_lat_lon_LL)  # this is also the number of "googleMapsElevations_nn.txt" files
-    
-    googleMapsElevationRequest_url_L = []
-    for subList in elevationPts_lat_lon_LL:
-        if len(subList) > 0:
-            locations_string = ""
-            for elevationPt in subList:
-                locations_string += str(elevationPt.Y) + "," + str(elevationPt.X) + "|"
-            googleMapsElevationRequest_url = "http://maps.googleapis.com/maps/api/elevation/json?locations=" + locations_string[:-1] + "&sensor=false"  # [:-1] to remove the last "|"
-            googleMapsElevationRequest_url_L.append(googleMapsElevationRequest_url)
-    
-    # download the file "googleMapsElevations_nn.txt" files
-    downloadedFilePath_L = []
-    for index,googleMapsElevationRequest_url in enumerate(googleMapsElevationRequest_url_L):
-        downloadedFilePath = "D:\za brisanje\osm\googleMapsElevations_%s.txt" % index
-        if os.path.exists(downloadedFilePath):
-            downloadedFilePath_L.append(downloadedFilePath)
-        else:
-            downloadFileSuccess = gismo_preparation.downloadFile(googleMapsElevationRequest_url, downloadedFilePath)
-            print "downloadFileSuccess: ", downloadFileSuccess
-            if (downloadFileSuccess == True):
-                downloadedFilePath_L.append(downloadedFilePath)
-    
-    
-    # extract elevation data from "googleMapsElevations.txt"
-    googleMapsElevations = []
-    for downloadedFilePath in downloadedFilePath_L:
-        status = ""  # initial value
-        myFile = open(downloadedFilePath,"r")
-        for line in myFile.xreadlines():
-            if "elevation" in line:
-                elevationValue_unstripped = line.split(":")[-1]
-                elevationValue = elevationValue_unstripped[:-2].strip()  # remove "," from the end. And empty spaces from beginning
-                googleMapsElevations.append(float(elevationValue))
-            
-            if "status" in line:
-                # https://developers.google.com/maps/documentation/elevation/intro#ElevationResponses
-                statusLine_stripped = line.strip()
-                statusLine_splitted = statusLine_stripped.split(":")
-                status = statusLine_splitted[1].replace('"','')
-                status = status.strip()
-        #print "status=%s__" % status
-    myFile.close()
-    
-    
-    
-    if (status != "OK"):  # only the last value of "status" will be taken into account
-        terrainMesh = terrainBrep = locationPt = elevationM = None
-        valid_GoogleMapsQuery = False
-        printMsg = "The following error message has been raised:\n \n" + \
-                   " %s\n \n" % status + \
-                   "If upper error message is: \"OVER_QUERY_LIMIT\", then that means that you exceeded allowed daily data quota from Google Maps. Do the following:\n" + \
-                   "a) Either decrease the \"_radius\" input/or increase the \"gridSize_\" input and try tomorrow,  or\n" + \
-                   "b) Change the \"source_\" input to \"0\" (Open topography source instead of Google Maps). \"source_ = 1\" has much smaller allowed daily data quota than \"source_\" = 0.\n" + \
-                   " \n" + \
-                   "If this is not the raised error message, then post a question on Grasshopper forum, with a screenshot of your error message:\n" + \
-                   "http://www.grasshopper #####"
-        return terrainMesh, terrainBrep, locationPt, elevationM, valid_GoogleMapsQuery, printMsg
-    else:
-        scaleFactor = 0.01  # scale terrainMesh 100 times (should never be changed), meaning 1 meter in real life is 0.01 meters in Rhino document
-        origin_0_0_0 = Rhino.Geometry.Point3d(0,0,0)  # always center the terrainMesh to 0,0,0 point
-        topLeftPtX = origin_0_0_0.X - (numOfFieldsMirrored * cellsizeX_M/unitConversionFactor2 * scaleFactor)
-        topLeftPtY = origin_0_0_0.Y + (numOfFieldsMirrored * cellsizeY_M/unitConversionFactor2 * scaleFactor)
-        
-        index = 0
-        pts = []
-        for k in range(numOfPtsInY):
-            for i in range(numOfPtsInX):
-                ptY = topLeftPtY - (k*cellsizeY_M/unitConversionFactor2 * scaleFactor)
-                ptX = topLeftPtX + (i*cellsizeX_M/unitConversionFactor2 * scaleFactor)
-                ptZ = googleMapsElevations[index]/unitConversionFactor2 * scaleFactor
-                pt = Rhino.Geometry.Point3d(ptX, ptY, ptZ)
-                pts.append(pt)
-                index += 1
-        
-        terrainMesh = gismo_geometry.meshFromPoints(numOfPtsInX, numOfPtsInX, pts)
-    
-    
-    # always create a terrain brep
-    uDegree = min(3, numOfPtsInY - 1)
-    vDegree = min(3, numOfPtsInX - 1)
-    uClosed = False; vClosed = False
-    terrainSurface = Rhino.Geometry.NurbsSurface.CreateThroughPoints(pts, numOfPtsInY, numOfPtsInX, uDegree, vDegree, uClosed, vClosed)
-    terrainBrep = terrainSurface.ToBrep()
-    
-    
-    # project origin_0_0_0 (locationPt) to terrainMesh
-    safeHeightDummy = 10000/unitConversionFactor2  # in meters
-    origin_0_0_0 = Rhino.Geometry.Point3d(0,0,0)  # always center the terrainMesh to 0,0,0 point
-    elevatedOrigin = Rhino.Geometry.Point3d(origin_0_0_0.X, origin_0_0_0.Y, (origin_0_0_0.Z+safeHeightDummy)*scaleFactor)  # project origin_0_0_0 to terrainMesh
-    ray = Rhino.Geometry.Ray3d(elevatedOrigin, Rhino.Geometry.Vector3d(0,0,-1))
-    rayIntersectParam = Rhino.Geometry.Intersect.Intersection.MeshRay(terrainMesh, ray)
-    locationPt = ray.PointAt(rayIntersectParam)
-    
-    elevationM = locationPt.Z/scaleFactor  # in rhino document units (not meters)
-    elevationM = round(elevationM,2)
-    
-    
-    # deleting
-    del elevationPts_lat_lon_LL
-    del googleMapsElevationRequest_url_L
-    del pts
-    gc.collect()
-    
-    valid_GoogleMapsQuery = True
-    printMsg = "ok"
-    
-    return terrainMesh, terrainBrep, locationPt, elevationM, valid_GoogleMapsQuery, printMsg
 
 
 def createTerrainMeshBrep(rasterFilePath, rasterReprojectedFilePath, locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM, unitConversionFactor2):
@@ -914,6 +803,8 @@ def createTerrainMeshBrep(rasterFilePath, rasterReprojectedFilePath, locationLat
     for k in xrange(numOfCellsInY):
         for i in xrange(numOfCellsInX):
             ptZ = grid.Value(i,k)
+            if math.isnan(ptZ):  # ptZ is float("nan")
+                ptZ = 0
             pt = Rhino.Geometry.Point3d(terrainMeshStartPtX+(i*abs(cellsizeX/unitConversionFactor2)*scaleFactor), terrainMeshStartPtY-(k*abs(cellsizeY/unitConversionFactor2)*scaleFactor), ptZ/unitConversionFactor2*scaleFactor)
             pts.append(pt)
     
@@ -921,7 +812,6 @@ def createTerrainMeshBrep(rasterFilePath, rasterReprojectedFilePath, locationLat
     
     # always create a terrain mesh regardless of type_ input so that "elevationM" can be calculated on a mesh
     terrainMesh = gismo_geometry.meshFromPoints(numOfRows, numOfColumns, pts)
-    
     
     # always create a terrain brep
     uDegree = min(3, numOfCellsInY - 1)
@@ -1017,17 +907,24 @@ def split_createStand_colorTerrain(terrainMesh, terrainBrep, locationPt, origin,
             terrainBrepsSplitted = terrainBrep.Split(brepSphere, 0.01)
         
         [splittedBrep.Faces.ShrinkFaces() for splittedBrep in terrainBrepsSplitted]
-        terrainMeshesSplitted = [Rhino.Geometry.Mesh.CreateFromBrep(splittedBrep) for splittedBrep in terrainBrepsSplitted]  # convert terrainBrepsSplitted to meshes for quicker calculation
+        terrainMeshesSplitted = [Rhino.Geometry.Mesh.CreateFromBrep(splittedBrep)[0]  for splittedBrep in terrainBrepsSplitted]  # convert terrainBrepsSplitted to meshes for quicker calculation
     
     
-    tupleDistanceToLocationPt = [ (Rhino.Geometry.AreaMassProperties.Compute(splittedMesh).Centroid .DistanceTo(locationPt),  i)  for i,splittedMesh in enumerate(terrainMeshesSplitted)]  # calculate the distance from centroids of the meshes from terrainMeshesSplitted to locationPt
-    tupleDistanceToLocationPt.sort()
+    # calculate the distance from projected centroids of the meshes from terrainMeshesSplitted to locationPt
+    tupleDistanceToLocationPtL = []
+    for i,splittedMesh in enumerate(terrainMeshesSplitted):
+        meshCentroid = Rhino.Geometry.AreaMassProperties.Compute(splittedMesh).Centroid
+        meshCentroid_closestPt = splittedMesh.ClosestPoint(meshCentroid)
+        distance = meshCentroid_closestPt.DistanceTo(locationPt)
+        tupleDistanceToLocationPt = (distance, i)
+        tupleDistanceToLocationPtL.append(tupleDistanceToLocationPt)
+    tupleDistanceToLocationPtL.sort()
     
     if (_type == 0) or (_type == 1):
-        terrain_MeshOrBrep_Splitted = terrainMeshesSplitted[tupleDistanceToLocationPt[0][1]]
+        terrain_MeshOrBrep_Splitted = terrainMeshesSplitted[tupleDistanceToLocationPtL[0][1]]
         terrainOutlines = [polyline.ToNurbsCurve() for polyline in terrain_MeshOrBrep_Splitted.GetNakedEdges()]
     elif (_type == 2) or (_type == 3):
-        terrain_MeshOrBrep_Splitted = terrainBrepsSplitted[tupleDistanceToLocationPt[0][1]]
+        terrain_MeshOrBrep_Splitted = terrainBrepsSplitted[tupleDistanceToLocationPtL[0][1]]
         nakedOnly = True
         terrainOutlines = terrain_MeshOrBrep_Splitted.DuplicateEdgeCurves(nakedOnly)
     
@@ -1166,7 +1063,7 @@ def title_scalingRotating(terrainUnoriginUnscaledUnrotated, locationName, locati
     
     
     # hide "origin" output
-    ghenv.Component.Params.Output[3].Hidden = True
+    ghenv.Component.Params.Output[2].Hidden = True
     
     return terrainUnoriginUnscaledUnrotated, titleLabelMesh, elevationContours_UnoriginUnscaledUnrotated
 
@@ -1232,12 +1129,12 @@ if sc.sticky.has_key("gismoGismo_released"):
         
         locationName, locationLatitudeD, locationLongitudeD, timeZone, elevation, validLocationData, printMsg = gismo_preparation.checkLocationData(_location)
         if validLocationData:
-            fileNameIncomplete = locationName + "_" + str(locationLatitudeD) + "_" + str(locationLongitudeD) + "_TERRAIN_MASK"  # incomplete due to missing "_visibility=100KM_sph" part (for example)
-            heightM = 0; minVisibilityRadiusM = 0; maskStyle = 0; maskStyleLabel = "sph"; downloadUrl_ = None; downloadTSVLink = None;   gridSize_ = 10; source_ = 0  # dummy values
-            maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg = checkInputData(radius_, gridSize_, source_, type_, origin_, north_, standThickness_, numOfContours_, downloadTSVLink)
+            fileNameIncomplete = locationName + "_" + str(locationLatitudeD) + "_" + str(locationLongitudeD) + "_TERRAIN"  # incomplete due to missing "_visibility=2KM_source=AW3D30" part (for example)
+            heightM = 0; minVisibilityRadiusM = 0; maskStyle = 0; maskStyleLabel = "sph"; downloadUrl_ = None; downloadTSVLink = None;   gridSize_ = 10  # dummy value
+            maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg = checkInputData(locationLatitudeD, radius_, gridSize_, source_, type_, origin_, north_, standThickness_, numOfContours_, downloadTSVLink)
             if validInputData:
                 if _runIt:
-                    terrainShadingMaskUnscaledUnrotated, origin_0_0_0, fileName, objFilePath, rasterFilePath, rasterReprojectedFilePath, rasterReprojectedFileNamePlusExtension, vrtFilePath, elevationM, valid_Obj_or_Raster_file, printMsg = checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink, heightM, minVisibilityRadiusM, maxVisibilityRadiusM, maskStyleLabel)
+                    terrainShadingMaskUnscaledUnrotated, origin_0_0_0, fileName, objFilePath, rasterFilePath, rasterReprojectedFilePath, rasterReprojectedFileNamePlusExtension, vrtFilePath, elevationM, valid_Obj_or_Raster_file, printMsg = checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink, heightM, minVisibilityRadiusM, maxVisibilityRadiusM, maskStyleLabel, source, sourceLabel)
                     if valid_Obj_or_Raster_file:
                         if (rasterFilePath != "needless") and (rasterFilePath != "download failed"):  # terrain shading mask NEEDS to be created
                             terrainMesh, terrainBrep, locationPt, elevationM = createTerrainMeshBrep(rasterFilePath, rasterReprojectedFilePath, locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM, unitConversionFactor2)
