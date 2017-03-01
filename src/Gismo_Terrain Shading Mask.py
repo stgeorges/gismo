@@ -36,7 +36,7 @@ https://books.google.rs/books/about/Matemati%C4%8Dka_kartografija.html?id=GcXEMg
 https://books.google.rs/books?id=fIvvAwAAQBAJ&printsec=frontcover#v=onepage&q&f=false
 http://www.movable-type.co.uk/scripts/latlong-vincenty.html
 -
-Provided by Gismo 0.0.1
+Provided by Gismo 0.0.2
     
     input:
         _location: The output from the "importEPW" or "constructLocation" component.  This is essentially a list of text summarizing a location on the Earth.
@@ -147,11 +147,11 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_Terrain Shading Mask"
 ghenv.Component.NickName = "TerrainShadingMask"
-ghenv.Component.Message = "VER 0.0.1\nJAN_29_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
-#compatibleGismoVersion = VER 0.0.1\nJAN_29_2017
+#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
