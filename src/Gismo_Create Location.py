@@ -5,8 +5,6 @@
 # This file is part of Gismo.
 #
 # Copyright (c) 2017, Djordje Spasic <djordjedspasic@gmail.com>
-# Component icon based on free OSM icon from: <https://icons8.com/web-app/13398/osm>
-#
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
 # Gismo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -18,7 +16,7 @@
 """
 Use this component to construct a location based on latitude, longitude coordinates.
 -
-Provided by Gismo 0.0.1
+Provided by Gismo 0.0.2
 
     input:
         locationName_: A name of the location.
@@ -42,11 +40,11 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_Create Location"
 ghenv.Component.NickName = "CreateLocation"
-ghenv.Component.Message = "VER 0.0.1\nJAN_29_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
-#compatibleGismoVersion = VER 0.0.1\nJAN_29_2017
+#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
@@ -58,49 +56,59 @@ def checkInputs(locationName, latitude, longitude):
     
     # check inputs
     if (locationName == None):
-        location = None
+        locationString = None
         validInputData = False
         printMsg = "Please define the \"locationName_\" input."
         return location, validInputData, printMsg
     
     if (latitude == None):
-        location = None
+        locationString = None
         validInputData = False
         printMsg = "Please define the \"latitude_\" input."
         return location, validInputData, printMsg
     elif (latitude < -90) or (latitude > 90):
-        location = None
+        locationString = None
         validInputData = False
         printMsg = "\"latitude_\" input can not be larger than 90 nor smaller than -90."
         return location, validInputData, printMsg
     
     if (longitude == None):
-        location = None
+        locationString = None
         validInputData = False
         printMsg = "Please define the \"latitude_\" input."
         return location, validInputData, printMsg
     elif (longitude < -180) or (longitude > 180):
-        location = None
+        locationString = None
         validInputData = False
         printMsg = "\"longitude_\" input can not be larger than 180 nor smaller than -180."
         return location, validInputData, printMsg
     
     
-    timeZone = 0; elevation = 0  # default. These two inputs are not important for OSM and terrain components
+    correctedLocationName = gismo_preparation.cleanString(locationName)  # removing "/", "\", " ", "," from locationName_
     
-    location = "Site:Location,\n" + \
-               "%s,\n" % locationName + \
-               "%s,      !Latitude\n" % latitude + \
-               "%s,     !Longitude\n" % longitude + \
-               "%s,     !Time Zone\n" % timeZone + \
-               "%s;       !Elevation" % elevation
+    timeZone = 0; elevation = 0  # default. These two inputs are not important for OSM and terrain components
+    locationString = gismo_preparation.constructLocation(correctedLocationName, latitude, longitude, timeZone, elevation)
+    
     
     validInputData = True
     printMsg = "ok"
-    return location, validInputData, printMsg
+    return locationString, validInputData, printMsg
 
-level = Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning
-location, validInputData, printMsg = checkInputs(locationName_, latitude_, longitude_)
-if not validInputData:
+
+level = Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning  # [do not change this line 
+if sc.sticky.has_key("gismoGismo_released"):
+    validVersionDate, printMsg = sc.sticky["gismo_check"].versionDate(ghenv.Component)
+    if validVersionDate:
+        gismo_preparation = sc.sticky["gismo_Preparation"]()
+        
+        location, validInputData, printMsg = checkInputs(locationName_, latitude_, longitude_)
+        if not validInputData:
+            print printMsg
+            ghenv.Component.AddRuntimeMessage(level, printMsg)
+    else:
+        print printMsg
+        ghenv.Component.AddRuntimeMessage(level, printMsg)
+else:
+    printMsg = "First please run the Gismo Gismo component."
     print printMsg
     ghenv.Component.AddRuntimeMessage(level, printMsg)
