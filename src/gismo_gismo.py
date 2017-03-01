@@ -17,7 +17,7 @@
 This component contains all Gismo classes. Other Gismo components are being run by referencing these classes.
 So in order for any other Gismo component to work, you need to run this component first. If this component is ran successfully you will hear the Gismo penquin peeping!!
 -
-Provided by Gismo 0.0.1
+Provided by Gismo 0.0.2
     input:
         mapFolder_: Optional folder path for MapWinGIS installation folder.
                     -
@@ -33,7 +33,7 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.1\nFEB_14_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
@@ -124,7 +124,7 @@ class Check(object):
                     # "#compatibleGismoVersion" date
                     dateIncomplete2 = dateIncomplete.strip()
                     date = dateIncomplete2.replace("_","/")  # example: JUN/09/2020
-                    component_date_timeStruct = time.strptime(date, "%m/%d/%Y")
+                    component_date_timeStruct = time.strptime(date, "%b/%d/%Y")
                     break
             else:
                 # "#compatibleGismoVersion" is not found in the components code
@@ -324,9 +324,9 @@ class Preparation(object):
     """
     def cleanString(self, string):
         """
-        for a given string, replace "/" and "\" with "-". replace " " with "_"
+        for a given string, replace "/", "\", " ", "," with "_"
         """
-        stringCorrected = System.String.Replace(  System.String.strip(System.String.Replace(System.String.Replace(string,"\\","-"), "/", "-") )  ," ", "_")  # removing "/", "\", " "
+        stringCorrected = System.String.Replace(   System.String.Replace(  System.String.strip(System.String.Replace(System.String.Replace(string,"\\","_"), "/", "_") )  ," ", "_")   ,",", "_") # removing "/", "\", " ", ","
         return stringCorrected
     
     
@@ -448,7 +448,7 @@ class Preparation(object):
             try:
                 # location data
                 locationName, latitude, longitude, timeZone, elevation = self.deconstructLocation(location)  # latitude positive towards north, longitude positive towards east
-                locationNameCorrected = System.String.Replace(  System.String.strip(System.String.Replace(System.String.Replace(locationName,"\\","-"), "/", "-") )  ," ", "_")  # removing "/", "\", " " from locationName
+                locationNameCorrected = System.String.Replace(   System.String.Replace(  System.String.strip(System.String.Replace(System.String.Replace(locationName,"\\","_"), "/", "_") )  ," ", "_")   ,",", "_") # removing "/", "\", " ", "," from locationName
                 
                 latitude = float(latitude)
                 longitude = float(longitude)
@@ -1099,11 +1099,11 @@ class CreateGeometry():
         create a legend for the given "values"
         """
         # read the "legendBakePar_"
-        myGismo_preparation = Preparation()
-        legendStyle, legendPlane, maxValue, minValue, customColors, numLegendCells, fontName, fontSize, numDecimals, customLegendUnit, customTitle, scale, layerName, layerColor, layerCategoryName = myGismo_preparation.read_legendBakePar(legendBakePar)
+        gismo_preparation = Preparation()
+        legendStyle, legendPlane, maxValue, minValue, customColors, numLegendCells, fontName, fontSize, numDecimals, customLegendUnit, customTitle, scale, layerName, layerColor, layerCategoryName = gismo_preparation.read_legendBakePar(legendBakePar)
         
         if (len(customColors) == 0):
-            customColors = myGismo_preparation.defaultCustomColors()
+            customColors = gismo_preparation.defaultCustomColors()
         
         if (customLegendUnit == None) and (legendUnit == None):
             # nothing inputted into "legendUnit_" input of "Legend Bake Parameter" component. And no "legendUnit" has been supplied to this method
@@ -1118,7 +1118,7 @@ class CreateGeometry():
         
         
         # calculate bounding box properties from the "geometryL"
-        bb_volume, bb_centroid, bb_length, bb_depth, bb_height, bb_bottomLeftCorner, bb_bottomRightCorner, bb_topRightCorner, bb_topLeftCorner = myGismo_preparation.boundingBox_properties(geometryL, accurate=True)
+        bb_volume, bb_centroid, bb_length, bb_depth, bb_height, bb_bottomLeftCorner, bb_bottomRightCorner, bb_topRightCorner, bb_topLeftCorner = gismo_preparation.boundingBox_properties(geometryL, accurate=True)
         
         # cell size, text size
         legendCellWidth = bb_length/10 * scale
@@ -1142,7 +1142,7 @@ class CreateGeometry():
             cellNumber = valuesMin + i*step
             cellNumbers.append(cellNumber)
         
-        cellColors = myGismo_preparation.numberToColor(cellNumbers, customColors, minValue, maxValue)
+        cellColors = gismo_preparation.numberToColor(cellNumbers, customColors, minValue, maxValue)
         
         # create the bottom cell
         legendStartPt = Rhino.Geometry.Point3d(bb_bottomRightCorner)
@@ -1223,11 +1223,11 @@ class CreateGeometry():
                 cellNumber_string = "%0.5f" % cellNumber_string
             elif (numDecimals == 6):
                 cellNumber_string = "%0.6f" % cellNumber_string
-            cellNumber_mesh = myGismo_preparation.text2srfOrMesh("mesh", [cellNumber_string], cellNumber_startPt, cellNumber_textSize, fontName, bold=False, italic=False, justificationIndex=0)
+            cellNumber_mesh = gismo_preparation.text2srfOrMesh("mesh", [cellNumber_string], cellNumber_startPt, cellNumber_textSize, fontName, bold=False, italic=False, justificationIndex=0)
             cellNumber_joinedMesh.Append(cellNumber_mesh)
         
         legendUnits_startPt = Rhino.Geometry.Point3d(cellNumber_startPts[-1].X, cellNumber_startPts[-1].Y + legendCellHeight, cellNumber_startPts[-1].Z)
-        legendUnits_mesh = myGismo_preparation.text2srfOrMesh("mesh", [legendUnit], legendUnits_startPt, cellNumber_textSize, fontName, bold=False, italic=False, justificationIndex=0)
+        legendUnits_mesh = gismo_preparation.text2srfOrMesh("mesh", [legendUnit], legendUnits_startPt, cellNumber_textSize, fontName, bold=False, italic=False, justificationIndex=0)
         
         # join cells and text into a single mesh
         legend_allMeshes_joined = Rhino.Geometry.Mesh()
