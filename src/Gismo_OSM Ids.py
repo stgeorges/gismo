@@ -25,7 +25,7 @@ These lists can be used to define:
 Additional info:
 Sometimes "OSM shapes" can output invalid or unwanted shapes. In that case the purpose of this component is to remove those shapes by adding their ids to the "osm_id_Remove_" and/or "osm_way_id_Remove_" inputs.
 -
-Provided by Gismo 0.0.1
+Provided by Gismo 0.0.2
     
     input:
         osm_id_Only_: A list (or a single id) of "osm_id" which will only be included when "OSM shapes" component is ran.
@@ -50,11 +50,11 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_OSM Ids"
 ghenv.Component.NickName = "OSMids"
-ghenv.Component.Message = "VER 0.0.1\nJAN_29_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.1\nJAN_29_2017
+#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
