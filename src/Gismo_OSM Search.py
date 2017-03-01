@@ -21,7 +21,7 @@ Use this component to search through OSM 2D and 3D shapes. Shapes will be search
 1) If you would like to search OSM 2D shapes, add data to _shapes, _keys, _values inputs.  Or
 2) If you would like to search OSM 3D shapes, then additionally add data to threeDeeShapes_, threeDeeValues_ inputs.
 -
-Provided by Gismo 0.0.1
+Provided by Gismo 0.0.2
     
     input:
         _requiredTag: Required tag represents a combination between a key and value(s) for which this component will perform the search.
@@ -77,11 +77,11 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_OSM Search"
 ghenv.Component.NickName = "OSMsearch"
-ghenv.Component.Message = "VER 0.0.1\nFEB_09_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.1\nFEB_09_2017
+#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
