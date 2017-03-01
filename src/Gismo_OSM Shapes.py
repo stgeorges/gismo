@@ -28,7 +28,7 @@ https://github.com/MapWindow/MapWinGIS/releases
 If you are using Rhino 5 x86, then download the "Win32" version.
 If you are using Rhino 5 x64, then download the "x64" version.
 -
-Provided by Gismo 0.0.1
+Provided by Gismo 0.0.2
     
     input:
         _location: Output from Gismo's \"Create Location\" component. This is essentially a text containing information (latitude, longitude, name...) about a location on the Earth.
@@ -96,11 +96,11 @@ Provided by Gismo 0.0.1
 
 ghenv.Component.Name = "Gismo_OSM Shapes"
 ghenv.Component.NickName = "OSMshapes"
-ghenv.Component.Message = "VER 0.0.1\nFEB_18_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.1\nFEB_09_2017
+#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "1"
 except: pass
 
@@ -852,7 +852,8 @@ def createShapesKeysValues(locationName, locationLatitudeD, locationLongitudeD, 
                        "If this same message appears again open a new topic about it on: www.grasshopper3d.com/group/gismo/forum."
     
     
-    originPtProjected = gismo_osm.projectedLocationCoordinates(locationLatitudeD, locationLongitudeD)  # in meters!
+    originPtProjected_meters = gismo_osm.projectedLocationCoordinates(locationLatitudeD, locationLongitudeD)  # in meters!
+    originPtProjected = Rhino.Geometry.Point3d(originPtProjected_meters.X/unitConversionFactor, originPtProjected_meters.Y/unitConversionFactor, originPtProjected_meters.Z/unitConversionFactor)  # in Rhino units
     
     # rotation due to north angle position
     #transformMatrixRotate = Rhino.Geometry.Transform.Rotation(-northRad, Rhino.Geometry.Vector3d(0,0,1), originPt)  # counter-clockwise
