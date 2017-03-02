@@ -87,7 +87,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM 3D"
 ghenv.Component.NickName = "OSM3D"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_02_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -557,6 +557,7 @@ def createThreeDeeShapes(shapesDataTree, keys, valuesDataTree, heightPerLevel, r
                                 extrudedShapeBrep = Rhino.Geometry.Surface.CreateExtrusion(trunkTop_crv, extrusionVector).ToBrep()
                                 splittedBreps = Rhino.Geometry.Brep.Split(extrudedShapeBrep, groundBrep_singleBrepFace, tol)
                                 trunkBrep = splittedBreps[0]
+                                shrinkSuccess = trunkBrep.Faces.ShrinkFaces()
                                 del splittedBreps
                         
                         # b) crown
@@ -669,6 +670,7 @@ def createThreeDeeShapes(shapesDataTree, keys, valuesDataTree, heightPerLevel, r
                                     # something inputted into the "groundTerrain_" input
                                     splittedBreps = Rhino.Geometry.Brep.Split(extrudedShape, groundBrep_singleBrepFace, tol)
                                     if len(splittedBreps) > 0:
+                                        shrinkSuccess = splittedBreps[0].Faces.ShrinkFaces()
                                         threeDeeShapeL = [splittedBreps[0]]
                                     del splittedBreps
                     
