@@ -34,7 +34,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM Keys"
 ghenv.Component.NickName = "OSMKeys"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_02_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -52,11 +52,11 @@ import math
 def main(OSMobjectName):
     
     # check _OSMobjectName
-    if (OSMobjectName == None):
-        requiredKeys = OSMwebpage = None
+    if (len(OSMobjectName) == 0):
+        requiredKeys_unique = OSMwebpage = None
         validInputData = False
-        printMsg = "Supply name to \"_OSMobjectName\" input by using \"OSM Objects\" dropdown list."
-        return requiredKeys, OSMwebpage, validInputData, printMsg
+        printMsg = "Supply a name or names to \"_OSMobjectName\" input by using \"OSM Objects\" dropdown list."
+        return requiredKeys_unique, OSMwebpage, validInputData, printMsg
     
     
     requiredKeys_dictionary = {
@@ -1302,20 +1302,42 @@ def main(OSMobjectName):
     "denotation",
     "historic",
     "http://wiki.openstreetmap.org/wiki/Tag:natural%3Dtree"]
+    ,
+    """Color""" :
+    ["name",
+    "name:en",
+    "building:colour",
+    "roof:colour",
+    "colour",
+    "building:roof:colour",
+    "building:facade:colour",
+    "natural",
+    "leisure",
+    "http://wiki.openstreetmap.org/wiki/Key:colour"]
     }
     
-    if requiredKeys_dictionary.has_key(OSMobjectName):
-        requiredKeys_unsliced = requiredKeys_dictionary[OSMobjectName]
-        OSMwebpage = requiredKeys_unsliced[-1]
-        requiredKeys = requiredKeys_unsliced[:-1]
-    else:
+    
+    requiredKeys_all = []
+    OSMwebpage = []
+    for name in OSMobjectName:
+        if requiredKeys_dictionary.has_key(name):
+            requiredKeys_perName_unsliced = requiredKeys_dictionary[name]
+            OSMwebpage_perName = requiredKeys_perName_unsliced[-1]
+            requiredKeys_perName = requiredKeys_perName_unsliced[:-1]
+            requiredKeys_all.extend(requiredKeys_perName)
+            OSMwebpage.append(OSMwebpage_perName)
+    
+    requiredKeys_unique = list(set(requiredKeys_all))  # only pick unique keys
+    requiredKeys_unique.sort()  # sort them alphabetically
+    
+    if (len(requiredKeys_unique) == 0):
         # "_OSMobjectName" does not exist in upper "requiredKeys_dictionary"
-        requiredKeys = OSMwebpage = None
+        requiredKeys_unique = OSMwebpage = None
         validInputData = False
         printMsg = "Supplied \"_OSMobjectName\" does not exist among this component's data.\n" + \
                    "Try creating your own \"requiredKeys\" output manually by looking at:\n \n" + \
                    "http://taginfo.openstreetmap.org/keys"
-        return requiredKeys, OSMwebpage, validInputData, printMsg
+        return requiredKeys_unique, OSMwebpage, validInputData, printMsg
     
     
     resultsCompletedMsg = "OSM keys component results successfully completed!\n \nInput data:\n \nOSMobjectName: %s" % OSMobjectName
@@ -1324,7 +1346,7 @@ def main(OSMobjectName):
     validInputData = True
     printMsg = "ok"
     
-    return requiredKeys, OSMwebpage, validInputData, printMsg
+    return requiredKeys_unique, OSMwebpage, validInputData, printMsg
 
 
 level = Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning
