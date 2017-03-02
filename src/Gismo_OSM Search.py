@@ -77,7 +77,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM Search"
 ghenv.Component.NickName = "OSMsearch"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_03_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -557,7 +557,10 @@ def titleAndBaking(OSMobjectName, foundShapesDataTree, shapeType):
             for shape in subL:
                 if shapeType == 2:
                     # points (shapeType = 2)
-                    ptcloud.Add(shape)
+                    if (type(shape) == Rhino.Geometry.Point3d):
+                        ptcloud.Add(shape)
+                    elif (type(shape) == Rhino.Geometry.Point):
+                        ptcloud.Add(shape.Location)
                 else:
                     try:
                         # polygons, polyline (shapeType = 0, 1)
