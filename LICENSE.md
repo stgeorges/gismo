@@ -70,6 +70,19 @@ http://viewfinderpanoramas.org/dem3.html
 
 ===============
 
+Gismo uses GMRT raster data from marine-geo.org with the following acknowledgement:
+
+- Ryan, W. B. F., S.M. Carbotte, J. Coplan, S. O'Hara, A. Melkonian, R. Arko, R.A. Weissel, V. Ferrini, A. Goodwillie, F. Nitsche, J. Bonczkowski, and R. Zemsky (2009), Global Multi-Resolution Topography (GMRT) synthesis data set, Geochem. Geophys. Geosyst., 10, Q03014, doi:10.1029/2008GC002332.
+
+- Data doi: 10.1594/IEDA.0001000
+
+marine-geo.org data and metadata are licensed under Creative Commons Attribution-Noncommercial-Share Alike 3.0 United States License.
+
+Please refer to marine-geo.org GMRT page for more information:
+http://www.marine-geo.org/portals/gmrt
+
+===============
+
 Gismo uses JavaScript code written by Chris Veness, re-written in Python by Djordje Spasic and is used to calculate distance, bearing and point location on Earth ellipsoid in "Terrain shading mask" component. Please refer to the original code at:
 
 http://www.movable-type.co.uk/scripts/latlong-vincenty.html
