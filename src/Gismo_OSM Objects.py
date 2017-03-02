@@ -27,8 +27,8 @@ Provided by Gismo 0.0.2
 """
 
 ghenv.Component.Name = "Gismo_OSM Objects"
-ghenv.Component.NickName = "OSMObjects"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.NickName = "OSMobjects"
+ghenv.Component.Message = "VER 0.0.2\nMAR_02_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -98,3 +98,4 @@ Internet access       = "Internet access"
 Toilet                = "Toilet"
 Building              = "Building"
 Tree                  = "Tree"
+Color                 = "Color"
