@@ -15,13 +15,10 @@ The GPL-3.0+ license http://spdx.org/licenses/GPL-3.0+
 Additional permission under GNU GPL version 3 section 7:
 
 
+Gismo entirely depends on Rhinoceros 5 and Grasshopper libraries. These two along with some other external libraries used by Rhinoceros 5 are excluded from Gismo's GPL license, and are subject to their own licensing conditions. Rhinoceros 5 and Grasshopper are owned and developed by Robert McNeel & Associates (McNeel).
+Please refer to McNeel's website for more information:
 
-
-
-Gismo uses the Rhinoceros RhinoCommon and Grasshopper libraries, which come with/for Rhinoceros 5.0. Gismo depends fundamentally on the use of Rhinoceros and Grasshopper, and so Rhinocommon, Grasshopper and all associated libraries are assumed to be "System Libraries" as defined by the GPL, and thus are excluded from this license.
-Please contact McNeel & Associates for further information.
-
-http://www.en.na.mcneel.com/
+http://www.mcneel.com
 
 ===============
 
