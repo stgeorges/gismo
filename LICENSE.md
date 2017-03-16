@@ -25,8 +25,11 @@ http://www.mcneel.com
 In its example files, Gismo may use Grasshopper components from other Grasshopper plugins.
 E.g. Gismo may use Ladybug Terrain Generator component which makes use of Google Maps API. This specific component, and other ones that can be found in Gismo example files may be excluded from Gismo's GPL license, and are subject to their own licensing conditions.
 For more information check the Ladybug plugin source code repository, and Google Maps API and Terms of service pages:
+
 https://github.com/mostaphaRoudsari/ladybug
+
 https://developers.google.com/maps/documentation
+
 https://developers.google.com/maps/terms
 
 ===============
