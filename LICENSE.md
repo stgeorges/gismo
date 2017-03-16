@@ -20,6 +20,15 @@ Please refer to McNeel's website for more information:
 
 http://www.mcneel.com
 
+
+
+In its example files, Gismo may use Grasshopper components from other Grasshopper plugins.
+E.g. Gismo may use Ladybug Terrain Generator component which makes use of Google Maps API. This specific component, and other ones that can be found in Gismo example files may be excluded from Gismo's GPL license, and are subject to their own licensing conditions.
+For more information check the Ladybug plugin source code repository, and Google Maps API and Terms of service pages:
+https://github.com/mostaphaRoudsari/ladybug
+https://developers.google.com/maps/documentation
+https://developers.google.com/maps/terms
+
 ===============
 
 Gismo uses MapWinGIS, free and open source C++ based geographic information system programming ActiveX Control and application programmer interface (API), which is distributed under the terms of Mozilla Public License Version 2.0 License. Some external libraries which can be optionally used by MapWinGIS are subject to their own licensing conditions. MapWinGIS is developed by Paul Meems and Sergei Leschinsky. Please refer to its source code repository for more information:
