@@ -33,7 +33,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_24_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
@@ -217,10 +217,12 @@ class mainComponent(object):
             "D:\\Program Files\\MapWindow", 
             "D:\\Program Files (x86)\\MapWindow", 
             "C:\\MapWinGIS", 
+            "C:\\dev\\MapWinGIS",
             "C:\\ProgramData\\MapWinGIS", 
             "C:\\Program Files\\MapWinGIS", 
             "C:\\Program Files (x86)\\MapWinGIS", 
             "D:\\MapWinGIS", 
+            "D:\\dev\\MapWinGIS",
             "D:\\ProgramData\\MapWinGIS", 
             "D:\\Program Files\\MapWinGIS", 
             "D:\\Program Files (x86)\\MapWinGIS"]
