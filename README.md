@@ -52,8 +52,10 @@ Gismo is [licensed](https://github.com/stgeorges/gismo/blob/master/LICENSE.md) u
 
 
 # Contributors
+[Antonello Di Nunzio](https://github.com/AntonelloDN)
+
 [Djordje Spasic](https://github.com/stgeorges)
 
 [Guillaume Meunier](https://github.com/Alliages)
 
-Support on various issues and questions has been given by: Alec Bennett, Andrew T. Young, Bojan Savric, Christopher Crosby, Dragan Milenkovic, Even Rouault, Graham Dawson, Izabela Spasic, Jonathan de Ferranti, Menno Deij-van Rijswijk, Michal Migurski, Mostapha Sadeghipour Roudsari, Paul Meems, Sergei Leschinsky, Timothy Logan, Ulrich Deuschle, Vladimir Elistratov, OSM and GDAL communities.
+Support on various issues and questions has been given by: Alec Bennett, Andrew T. Young, Bojan Savric, Christopher Crosby, Dragan Milenkovic, Even Rouault, Graham Dawson, Izabela Spasic, Jonathan de Ferranti, Jukka Rahkonen, Menno Deij-van Rijswijk, Michal Migurski, Mostapha Sadeghipour Roudsari, Paul Meems, Sergei Leschinsky, Timothy Logan, Ulrich Deuschle, Vladimir Elistratov, OSM and GDAL communities.
