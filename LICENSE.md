@@ -104,7 +104,7 @@ http://www.grasshopper3d.com/xn/detail/2985220:Comment:663243
 
 ===============
 
-Gismo uses python code written by Clement Greiner to calculate an area of mesh faces. The code is used in "Ladybug_Ladybug" component. Please refer to the original code at:
+Gismo uses python code written by Clement Greiner to calculate an area of mesh faces. The code is used in "Gismo Gismo" component. Please refer to the original code at:
 
 http://discourse.mcneel.com/t/area-of-mesh-face/26609
 
