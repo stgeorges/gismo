@@ -98,6 +98,12 @@ http://www.movable-type.co.uk/scripts/latlong-vincenty.html
 
 ===============
 
+Gismo uses VB.NET code written by Vicente Soler, re-written in Python by Djordje Spasic and is used to create render mesh and its texture image (material diffuse map file) in "OSM Render Mesh" component. Please refer to the original code at:
+
+http://www.grasshopper3d.com/xn/detail/2985220:Comment:663243
+
+===============
+
 Gismo uses python code written by Clement Greiner to calculate an area of mesh faces. The code is used in "Ladybug_Ladybug" component. Please refer to the original code at:
 
 http://discourse.mcneel.com/t/area-of-mesh-face/26609
