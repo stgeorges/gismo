@@ -5,7 +5,6 @@
 # This file is part of Gismo.
 #
 # Copyright (c) 2017, Guillaume Meunier <alliages@gmail.com>
-#
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
 # Gismo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -30,7 +29,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Address To Location"
 ghenv.Component.NickName = "AddressToLocation"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_29_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | Gismo"
@@ -47,7 +46,7 @@ import httplib
 def main(address):
     timeZone = 0; elevation = 0  # default. These two inputs are not important for OSM and terrain components
     url = "http://nominatim.openstreetmap.org/search"
-    address = urllib.quote_plus(address)
+    address = urllib.quote_plus(address.encode("utf-8"))
     format="jsonv2"
     addressdetails="0"
     polygon_="0"
