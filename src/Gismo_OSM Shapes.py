@@ -96,7 +96,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM Shapes"
 ghenv.Component.NickName = "OSMshapes"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_29_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -954,7 +954,20 @@ def createShapesKeysValues(locationName, locationLatitudeD, locationLongitudeD, 
     reprojectedShapefile.Close()
     
     
-    if (shapes.DataCount == 0):
+    if (shapes.DataCount == 0) and (onlyRemove_Ids_.DataCount == 0):
+        # no data was added to the "shapes" list, AND nothing has been added to "onlyRemove_Ids_" input.
+        # this may happen when there is literally no geometry generated inside the specific .shp file for the chosen "shapeType_" input (you have shapeType_ = 2 in a place where there are no points on openstreetmap.org)
+        if shapeType_ == 0: shapeTypeLabel = "polygons"
+        elif shapeType_ == 1: shapeTypeLabel = "polylines"
+        elif shapeType_ == 2: shapeTypeLabel = "points"
+        shortenedName_keys = values = shapes = None
+        validShapes = False
+        printMsg = "No %s geometry exist for that location/radius/shapeType.\n" % shapeTypeLabel + \
+                   "Either change the \"_location\" input, or increase the \"radius_\" input, or change the \"shapeType_\" input."
+        
+        return shortenedName_keys, values, shapes, validShapes, printMsg
+    
+    elif (shapes.DataCount == 0) and (onlyRemove_Ids_.DataCount != 0):
         # this may happen if ids supplied to the "osm_id_Only_" and/or "osm_way_id_Only_" inputs of "OSM ids" component can not be found in this _location and/or radius_ (they may correspond to other _location and/or radius_)
         shortenedName_keys = values = shapes = None
         validShapes = False
