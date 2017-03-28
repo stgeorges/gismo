@@ -33,7 +33,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.2\nMAR_24_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAR_29_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
@@ -208,19 +208,19 @@ class mainComponent(object):
         if mapFolder == None:
             # check if there is a "MapWinGIS" folder present in some well known places
             iteropMapWinGIS_dll_folderPathLL = [
-            "C:\\MapWindow",
-            "C:\\ProgramData\\MapWindow", 
-            "C:\\Program Files\\MapWindow", 
-            "C:\\Program Files (x86)\\MapWindow", 
+            "c:\\MapWindow",
+            "c:\\ProgramData\\MapWindow", 
+            "c:\\Program Files\\MapWindow", 
+            "c:\\Program Files (x86)\\MapWindow", 
             "D:\\MapWindow", 
             "D:\\ProgramData\\MapWindow", 
             "D:\\Program Files\\MapWindow", 
             "D:\\Program Files (x86)\\MapWindow", 
-            "C:\\MapWinGIS", 
-            "C:\\dev\\MapWinGIS",
-            "C:\\ProgramData\\MapWinGIS", 
-            "C:\\Program Files\\MapWinGIS", 
-            "C:\\Program Files (x86)\\MapWinGIS", 
+            "c:\\MapWinGIS", 
+            "c:\\dev\\MapWinGIS",
+            "c:\\ProgramData\\MapWinGIS", 
+            "c:\\Program Files\\MapWinGIS", 
+            "c:\\Program Files (x86)\\MapWinGIS", 
             "D:\\MapWinGIS", 
             "D:\\dev\\MapWinGIS",
             "D:\\ProgramData\\MapWinGIS", 
