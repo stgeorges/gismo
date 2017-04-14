@@ -77,7 +77,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM Search"
 ghenv.Component.NickName = "OSMsearch"
-ghenv.Component.Message = "VER 0.0.2\nMAR_03_2017"
+ghenv.Component.Message = "VER 0.0.2\nAPR_14_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -110,6 +110,10 @@ def checkInputData(requiredTag, shapes, keys, values, threeDeeShapes, threeDeeVa
         # deconstruct "_requiredTag" input to requiredKey, requiredValues
         requiredKey = list(requiredTag.Branches[0])[0]
         requiredValues = list(requiredTag.Branches[1])
+        # requiredKey and requiredValues for future testing. For two OSMobjects: "Footway", "Road":
+        #requiredKeyL = ["highway", "highway"]  #
+        #requiredValuesL = [["footway"], ["road", "primary", "secondary", "tertiary", "unclassified", "residential", "service", "track", "junction", "trunk", "motorway", "motorway_link", "trunk_link", "primary_link", "secondary_link", "tertiary_link", "living_street", "bus_guideway", "escape"]]
+        
         if len(requiredValues) == 0:
             requiredValues = ["^"]  # returning changed "requiredValues = ["^"]" in "OSM tag" component
         
@@ -267,7 +271,7 @@ def checkInputData(requiredTag, shapes, keys, values, threeDeeShapes, threeDeeVa
     return OSMobjectName, requiredKey, requiredValues, createFootprints, perform_searchThreeDeeShapes, shapeType, validInputData, printMsg
 
 
-def searchShapes(OSMobjectName, requiredKey, requiredValues, shapesDataTree, keys, valuesDataTree, threeDeeShapesDataTree, threeDeeValuesDataTree, createFootprints, groundTerrain, shapeType, perform_searchThreeDeeShapes):
+def searchShapes(requiredKey, requiredValues, shapesDataTree, keys, valuesDataTree, threeDeeShapesDataTree, threeDeeValuesDataTree, createFootprints, groundTerrain, shapeType, perform_searchThreeDeeShapes):
     
     tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance
     projectionDirection = Rhino.Geometry.Vector3d(0,0,1)  # it can be projectionDirection = Rhino.Geometry.Vector3d(0,0,-1) as well, does not matter
@@ -281,16 +285,16 @@ def searchShapes(OSMobjectName, requiredKey, requiredValues, shapesDataTree, key
         
         groundTerrain_edges = groundTerrain.DuplicateEdgeCurves()
         
-        if len(groundTerrain_edges) == 1:
+        if (len(groundTerrain_edges) == 1):
             # circular groundTerrain without NO "standThickness_" (Terrain Generator 2 component)
             groundTerrain_outterEdge = Rhino.Geometry.Curve.JoinCurves([groundTerrain_edges[0]], tol)[0]
-        elif len(groundTerrain_edges) == 3:
+        elif (len(groundTerrain_edges) == 3):
             # circular groundTerrain_ with "standThickness_" (Terrain Generator 2 components)
             groundTerrain_outterEdge = Rhino.Geometry.Curve.JoinCurves([groundTerrain_edges[0]], tol)[0]
-        elif len(groundTerrain_edges) == 4:
+        elif (len(groundTerrain_edges) == 4):
             # rectangular groundTerrain_ with NO "standThickness_" (Terrain Generator or Terrain Generator 2 component)
             groundTerrain_outterEdge = Rhino.Geometry.Curve.JoinCurves(groundTerrain_edges, tol)[0]
-        elif len(groundTerrain_edges) == 12:
+        elif (len(groundTerrain_edges) == 9) or (len(groundTerrain_edges) == 12):
             # rectangular groundTerrain_ with "standThickness_" (Terrain Generator 2 component)
             groundTerrain_outterEdge = Rhino.Geometry.Curve.JoinCurves(groundTerrain_edges[:4], tol)[0]
         
@@ -358,7 +362,6 @@ def searchShapes(OSMobjectName, requiredKey, requiredValues, shapesDataTree, key
             
             if (value in requiredValues) and (value != ""):
                 foundShapesSwitch = True
-            #elif (key == requiredKey) and (requiredValues == "^") and (value != ""):
             elif (key == requiredKey) and (requiredValues == ["^"]) and (value != ""):
                 foundShapesSwitch = True
             
@@ -522,27 +525,27 @@ def searchShapes(OSMobjectName, requiredKey, requiredValues, shapesDataTree, key
     
     if (foundShapesDataTree.DataCount == 0):
         # 2D OSM search
-        foundShapesDataTree = foundValuesDataTree = foundShapeOrNotDataTree = OSMobjectName = None
+        foundShapesDataTree = foundValuesDataTree = foundShapeOrNotDataTree = None
         validInputs = False
         printMsg = "No OSM object can be found for given _keys and _values.\n" + \
                    "_keys and _values are affected by \"shapeType\" input of \"OSM shapes\" component. For example, trees will always be located (if they exist at that location) for shapeType_ = 2.\n" + \
                    "Try changing the value of the \"shapeType\" input of \"OSM shapes\" component."
-        return foundShapesDataTree, foundValuesDataTree, foundShapeOrNotDataTree, OSMobjectName, validInputs, printMsg
+        return foundShapesDataTree, foundValuesDataTree, foundShapeOrNotDataTree, validInputs, printMsg
     
     if (foundThreeDeeShapesDataTree.DataCount == 0) and (threeDeeShapes_.DataCount != 0) and (threeDeeValues_.DataCount != 0):
         # 3D OSM search
-        foundThreeDeeShapesDataTree = foundThreeDeeValuesDataTree = foundThreeDeeShapeOrNotDataTree = OSMobjectName = None
+        foundThreeDeeShapesDataTree = foundThreeDeeValuesDataTree = foundThreeDeeShapeOrNotDataTree = None
         validInputs = False
         printMsg = "No 3D OSM object can be found through _requiredTag for the given _shapes, _keys, _values and threeDeeShapes_, threeDeeValues_ data."
-        return foundThreeDeeShapesDataTree, foundThreeDeeValuesDataTree, foundThreeDeeShapeOrNotDataTree, OSMobjectName, validInputs, printMsg
+        return foundThreeDeeShapesDataTree, foundThreeDeeValuesDataTree, foundThreeDeeShapeOrNotDataTree, validInputs, printMsg
     
     
     validInputs = True
     printMsg = "ok"
     if (perform_searchThreeDeeShapes == True):
-        return foundThreeDeeShapesDataTree, foundThreeDeeValuesDataTree, foundThreeDeeShapeOrNotDataTree, OSMobjectName, validInputs, printMsg
+        return foundThreeDeeShapesDataTree, foundThreeDeeValuesDataTree, foundThreeDeeShapeOrNotDataTree, validInputs, printMsg
     elif (perform_searchThreeDeeShapes == False):
-        return foundShapesDataTree, foundValuesDataTree, foundShapeOrNotDataTree, OSMobjectName, validInputs, printMsg
+        return foundShapesDataTree, foundValuesDataTree, foundShapeOrNotDataTree, validInputs, printMsg
 
 
 def titleAndBaking(OSMobjectName, foundShapesDataTree, shapeType):
@@ -654,11 +657,11 @@ if sc.sticky.has_key("gismoGismo_released"):
             if _runIt:
                 if (not perform_searchThreeDeeShapes):
                     # 2D
-                    foundShapes, foundValues, foundShapeOrNot, OSMobjectName, validInputs, printMsg = searchShapes(OSMobjectName, requiredKey, requiredValues, _shapes, _keys, _values, threeDeeShapes_, threeDeeValues_, createFootprints, groundTerrain_, shapeType, perform_searchThreeDeeShapes)
+                    foundShapes, foundValues, foundShapeOrNot, validInputs, printMsg = searchShapes(requiredKey, requiredValues, _shapes, _keys, _values, threeDeeShapes_, threeDeeValues_, createFootprints, groundTerrain_, shapeType, perform_searchThreeDeeShapes)
                 elif perform_searchThreeDeeShapes:
                     # 3D
                     createFootprints = True
-                    foundShapes, foundValues, foundShapeOrNot, OSMobjectName, validInputs, printMsg = searchShapes(OSMobjectName, requiredKey, requiredValues, _shapes, _keys, _values, threeDeeShapes_, threeDeeValues_, createFootprints, groundTerrain_, shapeType, perform_searchThreeDeeShapes)
+                    foundShapes, foundValues, foundShapeOrNot, validInputs, printMsg = searchShapes(requiredKey, requiredValues, _shapes, _keys, _values, threeDeeShapes_, threeDeeValues_, createFootprints, groundTerrain_, shapeType, perform_searchThreeDeeShapes)
                 if validInputs:
                     title, titleOriginPt = titleAndBaking(OSMobjectName, foundShapes, shapeType)
                     printOutput(requiredKey, requiredValues, createFootprints)
