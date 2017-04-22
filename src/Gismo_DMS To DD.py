@@ -34,7 +34,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_DMS To DD"
 ghenv.Component.NickName = "DMSToDD"
-ghenv.Component.Message = "VER 0.0.2\nAPR_22_2017"
+ghenv.Component.Message = "VER 0.0.2\nAPR_23_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | Gismo"
@@ -90,7 +90,8 @@ def main(dms):
             return decimalDegree, validInputData, printMsg
         
         
-        decimalDegree = plusOrMinus * float(degrees) + (  ( float(minutes) + (float(seconds)/60))/60  )
+        decimalDegree = float(degrees) + (  ( float(minutes) + (float(seconds)/60))/60  )
+        decimalDegree = plusOrMinus * decimalDegree
     
     
     else:
