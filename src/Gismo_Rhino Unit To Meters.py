@@ -35,7 +35,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Rhino Unit To Meters"
 ghenv.Component.NickName = "RhinoUnitToMeters"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.2\nAPR_22_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "3 | More"
@@ -54,7 +54,7 @@ def main(valueRhinoUnit):
         unitConversionFactor = valueMeters = None
         validInputData = False
         printMsg = "Please add a number to \"_valueRhinoUnit\" input."
-        return unitFactor, valueMeters, validInputData, printMsg
+        return unitConversionFactor, valueMeters, validInputData, printMsg
     
     unitConversionFactor, unitSystemLabel = gismo_preparation.checkUnits()
     valueMeters = valueRhinoUnit * unitConversionFactor
