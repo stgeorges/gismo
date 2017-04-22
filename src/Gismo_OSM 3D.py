@@ -87,11 +87,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM 3D"
 ghenv.Component.NickName = "OSM3D"
-ghenv.Component.Message = "VER 0.0.2\nMAR_02_2017"
+ghenv.Component.Message = "VER 0.0.2\nAPR_22_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
+#compatibleGismoVersion = VER 0.0.2\nMAR_29_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "3"
 except: pass
 
@@ -169,6 +169,23 @@ def checkInputData(shapes, keys, values, heightPerLevel, randomHeightRange, tree
                    "\"keys\" output from Gismo \"OSM shapes\" component to this component's \"_keys\" input. And:\n" + \
                    "\"values\" output from Gismo \"OSM shapes\" component to this component's \"_values\" input."
         return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg
+    
+    
+    # check if osmconf.ini has been changed according to "requiredKeys_" input of "OSM shapes" component. If it hasn't then this component will receive different number of values in its "_keys" and values in "_values" input branches
+    max_valuesBranch_length = 0
+    for values_branchL in values.Branches:
+        if (len(values_branchL) > max_valuesBranch_length):
+            max_valuesBranch_length = len(values_branchL)
+    
+    if (len(keys) > 0) and (max_valuesBranch_length > 0):
+        if (len(keys) != max_valuesBranch_length):
+            heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = shapeType = None
+            validInputData = False
+            printMsg = "The data from \"OSM shapes\" component coming to this component's \"_shapes\", \"_keys\" and \"_values\" inputs is invalid.\n" + \
+                       " \n" + \
+                       "This may happen if there are more than one \"OSM shapes\" components in this .gh definition, or if you have more than one .gh definition opened and both contain \"OSM shapes\" components.\n" + \
+                       "To fix this issue, set the \"_runIt\" input of the \"OSM shapes\" component to \"False\", and then again to \"True\". You should do this only for the \"OSM shapes\" component which is connected to this component's \"_shapes\", \"_keys\" and \"_values\" inputs."
+            return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg
     
     
     # heightPerLevel_ is always in Rhino document units
@@ -705,7 +722,12 @@ def createThreeDeeShapes(shapesDataTree, keys, valuesDataTree, heightPerLevel, r
                            "You can allow the component to create them with random heights with the use of \"randomHeightRange_\" input. Supply some domain to this input (for example: \"20 to 30\") to generate the 3d shapes."
             elif (atleastOneThreeDeeShapeCanBeCreated == False):
                 valid_onlyRemove_Ids_or_shapes = False
-                printMsg = "No 3D shape (building or tree) could be created with the supplied _values of _keys"
+                printMsg = "No 3D shape (building or tree) could be created with the supplied _keys and _values.\n" + \
+                           "\n" + \
+                           "Sometimes the reason for this can be that you are not looking for particular set of keys.\n" + \
+                           "For example: if you would like to generate 3d buildings, then try adding \"Building\" keys to the \"requiredKeys_\" input of the \"OSM shapes\" component.\n" + \
+                           "Or if you would like to generate 3d trees, then add \"Tree\" keys to the same input.\n" + \
+                           "Both of these keys can be created with the use of \"OSM keys\" component."
             
             return threeDeeShapesDataTree, threeDeeValuesDataTree, heightDataTree, valid_onlyRemove_Ids_or_shapes, printMsg
     
