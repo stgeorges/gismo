@@ -27,7 +27,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Support Gismo"
 ghenv.Component.NickName = "SupportGismo"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_01_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "3 | More"
@@ -73,7 +73,7 @@ def main(supportIndex):
                         "To do that check Gismo \"New Component Example\" component. It provides a simple template of how you can make a new one."
     elif (supportIndex == 3):
         supportString = "Donate to services which Gismo uses.\n" + \
-                        "Gismo is a free and open source plugin, and it will remain like this. Gismo will never ask you to donate money to its developers!\n" + \
+                        "Gismo is a free and open source plugin.\n" + \
                         "Still Gismo depends on some services from which it take data. The most important two are: OpenStreetMap and OpenTopography.\n" + \
                         "In case you can, and you want, you can donate a dollar or so to either:\n \n" + \
                         "OpenStreetMap:\n" + \
