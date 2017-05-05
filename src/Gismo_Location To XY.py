@@ -36,11 +36,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Location To XY"
 ghenv.Component.NickName = "LocationToXY"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | Gismo"
-#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
+#compatibleGismoVersion = VER 0.0.2\nMAY_05_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
@@ -76,20 +76,20 @@ def main(requiredLocation, anchorLocation, anchorOrigin):
     
     # inputCRS
     EPSGcode = 4326
-    inputCRS = gismo_osm.CRS_from_EPSGcode(EPSGcode)
+    inputCRS = gismo_gis.CRS_from_EPSGcode(EPSGcode)
     # outputCRS
-    outputCRS = gismo_osm.UTM_CRS_from_latitude(required_locationLatitudeD, required_locationLongitudeD)
+    outputCRS = gismo_gis.UTM_CRS_from_latitude(required_locationLatitudeD, required_locationLongitudeD)
     
-    required_originPtProjected_meters = gismo_osm.convertBetweenTwoCRS(inputCRS, outputCRS, required_locationLongitudeD, required_locationLatitudeD)  # in meters
+    required_originPtProjected_meters = gismo_gis.convertBetweenTwoCRS(inputCRS, outputCRS, required_locationLongitudeD, required_locationLatitudeD)  # in meters
     required_originPtProjected = Rhino.Geometry.Point3d(required_originPtProjected_meters.X/unitConversionFactor, required_originPtProjected_meters.Y/unitConversionFactor, required_originPtProjected_meters.Z/unitConversionFactor)  # in Rhino document units
     
     
     # inputCRS2 = inputCRS
     
     # outputCRS2
-    outputCRS2 = gismo_osm.UTM_CRS_from_latitude(anchor_locationLatitudeD, anchor_locationLongitudeD)
+    outputCRS2 = gismo_gis.UTM_CRS_from_latitude(anchor_locationLatitudeD, anchor_locationLongitudeD)
     
-    anchor_originPtProjected_meters = gismo_osm.convertBetweenTwoCRS(inputCRS, outputCRS2, anchor_locationLongitudeD, anchor_locationLatitudeD)  # in meters
+    anchor_originPtProjected_meters = gismo_gis.convertBetweenTwoCRS(inputCRS, outputCRS2, anchor_locationLongitudeD, anchor_locationLatitudeD)  # in meters
     anchor_originPtProjected = Rhino.Geometry.Point3d(anchor_originPtProjected_meters.X/unitConversionFactor, anchor_originPtProjected_meters.Y/unitConversionFactor, anchor_originPtProjected_meters.Z/unitConversionFactor)  # in Rhino document units
     
     
@@ -109,7 +109,7 @@ if sc.sticky.has_key("gismoGismo_released"):
     validVersionDate, printMsg = sc.sticky["gismo_check"].versionDate(ghenv.Component)
     if validVersionDate:
         gismo_preparation = sc.sticky["gismo_Preparation"]()
-        gismo_osm = sc.sticky["gismo_OSM"]()
+        gismo_gis = sc.sticky["gismo_GIS"]()
         
         point, validInputData, printMsg = main(_location, anchorLocation_, anchorOrigin_)
         if not validInputData:
