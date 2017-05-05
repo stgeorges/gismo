@@ -87,14 +87,14 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM 3D"
 ghenv.Component.NickName = "OSM3D"
-ghenv.Component.Message = "VER 0.0.2\nAPR_22_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.2\nMAR_29_2017
+#compatibleGismoVersion = VER 0.0.2\nMAY_05_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "3"
 except: pass
-
+import rhinoscriptsyntax as rs
 import scriptcontext as sc
 import Grasshopper
 import System
@@ -169,23 +169,6 @@ def checkInputData(shapes, keys, values, heightPerLevel, randomHeightRange, tree
                    "\"keys\" output from Gismo \"OSM shapes\" component to this component's \"_keys\" input. And:\n" + \
                    "\"values\" output from Gismo \"OSM shapes\" component to this component's \"_values\" input."
         return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg
-    
-    
-    # check if osmconf.ini has been changed according to "requiredKeys_" input of "OSM shapes" component. If it hasn't then this component will receive different number of values in its "_keys" and values in "_values" input branches
-    max_valuesBranch_length = 0
-    for values_branchL in values.Branches:
-        if (len(values_branchL) > max_valuesBranch_length):
-            max_valuesBranch_length = len(values_branchL)
-    
-    if (len(keys) > 0) and (max_valuesBranch_length > 0):
-        if (len(keys) != max_valuesBranch_length):
-            heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = shapeType = None
-            validInputData = False
-            printMsg = "The data from \"OSM shapes\" component coming to this component's \"_shapes\", \"_keys\" and \"_values\" inputs is invalid.\n" + \
-                       " \n" + \
-                       "This may happen if there are more than one \"OSM shapes\" components in this .gh definition, or if you have more than one .gh definition opened and both contain \"OSM shapes\" components.\n" + \
-                       "To fix this issue, set the \"_runIt\" input of the \"OSM shapes\" component to \"False\", and then again to \"True\". You should do this only for the \"OSM shapes\" component which is connected to this component's \"_shapes\", \"_keys\" and \"_values\" inputs."
-            return heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg
     
     
     # heightPerLevel_ is always in Rhino document units
@@ -400,7 +383,7 @@ def createThreeDeeShapes(shapesDataTree, keys, valuesDataTree, heightPerLevel, r
             threeDeeShapeL = []
             threeDeeValueL = []
         else:
-            subValuesL_filtered, shapesL_filtered = gismo_osm.filterShapes(keys, values_shiftedPaths_LL[branchIndex], "shapesL dummy string", osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove)
+            subValuesL_filtered, shapesL_filtered = gismo_gis.filterShapes(keys, values_shiftedPaths_LL[branchIndex], "shapesL dummy string", osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove)
             if (len(subValuesL_filtered) == 0) and (len(shapesL_filtered) == 0):
                 # the id supplied to the "osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove" is found
                 height = 0
@@ -646,50 +629,58 @@ def createThreeDeeShapes(shapesDataTree, keys, valuesDataTree, heightPerLevel, r
                             pointContainment = buildingShape.Contains(shapeCentroid, shapePlane, tol)
                             if (pointContainment == Rhino.Geometry.PointContainment.Inside) or (pointContainment == Rhino.Geometry.PointContainment.Coincident):
                                 # shapesL[0]'s centroid is contained inside another shapesL[0] (which has a valid "building" key), so use the "bottomCrvControlPt_highestZcoord" of that another shapesL[0]
-                                dummy_topCrvs, bottomCrvControlPt_highestZcoord = gismo_createGeometry.liftingOSMshapes_from_groundTerrain([buildingShape], groundBrep_singleBrepFace, height, valueMinHeight)  # "bottomCrvControlPt_highestZcoord" calculated
+                                dummy_topCrvs, bottomCrvControlPt_highestZcoord = gismo_geometry.liftingOSMshapes_from_groundTerrain([buildingShape], groundBrep_singleBrepFace, height, valueMinHeight)  # "bottomCrvControlPt_highestZcoord" calculated
                                 del dummy_topCrvs
                                 break  # the shapesL[0] has found to be inside another shapesL[0] which has a valid "building" key. No need for checking of other shapes
                         
-                        topCrvs, dummy_bottomCrvControlPt_highestZcoord = gismo_createGeometry.liftingOSMshapes_from_groundTerrain(shapesL, groundBrep_singleBrepFace, height, valueMinHeight, bottomCrvControlPt_highestZcoord)
+                        topCrvs, dummy_bottomCrvControlPt_highestZcoord = gismo_geometry.liftingOSMshapes_from_groundTerrain(shapesL, groundBrep_singleBrepFace, height, valueMinHeight, bottomCrvControlPt_highestZcoord)
+                        
                         if (len(topCrvs) == 0):
                             # the shapesL is located outside of the "groundTerrain_" ("if groundTerrain_" inputted. If "groundTerrain_" not inputted, len(projectedShapeCrvs) will never be equal to 0)
                             height = 0
                             threeDeeShapeL = []
                             threeDeeValueL = []
                         elif (len(topCrvs) != 0):
-                            threeDeeValueL = values_shiftedPaths_LL[branchIndex]
-                            
-                            planarBrep = Rhino.Geometry.Brep.CreatePlanarBreps(topCrvs)[0]
-                            planarBrep.Flip()  # for some reason the upper planarBrep has always a normal pointed downwards
-                            # extrude buildings
-                            if (valueMinHeight != ""):
-                                # there is a valid "min_height" value
-                                extrusionVec = Rhino.Geometry.Vector3d(0,0,-(height-valueMinHeight))
-                            elif (valueMinHeight == ""):
-                                if (groundTerrain == None):
-                                    extrusionVec = Rhino.Geometry.Vector3d(0,0,-height)
-                                elif(groundTerrain != None):
-                                    shapeExtrudeHeight = -(height + 2 * bb_height)  # "2" is due to safety
-                                    extrusionVec = Rhino.Geometry.Vector3d(0,0,shapeExtrudeHeight)
-                            
-                            topCrvs_StartPt = topCrvs[0].PointAtStart  # if topCrvs has more shapes than 1, the others will also be on the same height
-                            extrudeCrv = Rhino.Geometry.Line(topCrvs_StartPt, topCrvs_StartPt + extrusionVec).ToNurbsCurve()
-                            planarBrepFace = planarBrep.Faces[0]
-                            cap = True
-                            extrudedShape = Rhino.Geometry.BrepFace.CreateExtrusion(planarBrepFace, extrudeCrv, cap)
-                            if (groundTerrain == None):
-                                # nothing inputted into the "groundTerrain_" input
-                                threeDeeShapeL = [extrudedShape]
-                            elif (groundTerrain != None):
+                            # remove closed topCrvs with small area, as they can cause problems
+                            topCrvs_area = Rhino.Geometry.AreaMassProperties.Compute(topCrvs[0], tol).Area
+                            if (topCrvs[0].IsClosed == True) and (topCrvs_area <= tol):
+                                height = 0
+                                threeDeeShapeL = []
+                                threeDeeValueL = []
+                            else:
+                                threeDeeValueL = values_shiftedPaths_LL[branchIndex]
+                                
+                                planarBrep = Rhino.Geometry.Brep.CreatePlanarBreps(topCrvs)[0]
+                                planarBrep.Flip()  # for some reason the upper planarBrep has always a normal pointed downwards
+                                # extrude buildings
                                 if (valueMinHeight != ""):
-                                    threeDeeShapeL = [extrudedShape]
+                                    # there is a valid "min_height" value
+                                    extrusionVec = Rhino.Geometry.Vector3d(0,0,-(height-valueMinHeight))
                                 elif (valueMinHeight == ""):
-                                    # something inputted into the "groundTerrain_" input
-                                    splittedBreps = Rhino.Geometry.Brep.Split(extrudedShape, groundBrep_singleBrepFace, tol)
-                                    if len(splittedBreps) > 0:
-                                        shrinkSuccess = splittedBreps[0].Faces.ShrinkFaces()
-                                        threeDeeShapeL = [splittedBreps[0]]
-                                    del splittedBreps
+                                    if (groundTerrain == None):
+                                        extrusionVec = Rhino.Geometry.Vector3d(0,0,-height)
+                                    elif(groundTerrain != None):
+                                        shapeExtrudeHeight = -(height + 2 * bb_height)  # "2" is due to safety
+                                        extrusionVec = Rhino.Geometry.Vector3d(0,0,shapeExtrudeHeight)
+                                
+                                topCrvs_StartPt = topCrvs[0].PointAtStart  # if topCrvs has more shapes than 1, the others will also be on the same height
+                                extrudeCrv = Rhino.Geometry.Line(topCrvs_StartPt, topCrvs_StartPt + extrusionVec).ToNurbsCurve()
+                                planarBrepFace = planarBrep.Faces[0]
+                                cap = True
+                                extrudedShape = Rhino.Geometry.BrepFace.CreateExtrusion(planarBrepFace, extrudeCrv, cap)
+                                if (groundTerrain == None):
+                                    # nothing inputted into the "groundTerrain_" input
+                                    threeDeeShapeL = [extrudedShape]
+                                elif (groundTerrain != None):
+                                    if (valueMinHeight != ""):
+                                        threeDeeShapeL = [extrudedShape]
+                                    elif (valueMinHeight == ""):
+                                        # something inputted into the "groundTerrain_" input
+                                        splittedBreps = Rhino.Geometry.Brep.Split(extrudedShape, groundBrep_singleBrepFace, tol)
+                                        if len(splittedBreps) > 0:
+                                            shrinkSuccess = splittedBreps[0].Faces.ShrinkFaces()
+                                            threeDeeShapeL = [splittedBreps[0]]
+                                        del splittedBreps
                     
                     else:
                         # height is equal to 0
@@ -722,12 +713,17 @@ def createThreeDeeShapes(shapesDataTree, keys, valuesDataTree, heightPerLevel, r
                            "You can allow the component to create them with random heights with the use of \"randomHeightRange_\" input. Supply some domain to this input (for example: \"20 to 30\") to generate the 3d shapes."
             elif (atleastOneThreeDeeShapeCanBeCreated == False):
                 valid_onlyRemove_Ids_or_shapes = False
-                printMsg = "No 3D shape (building or tree) could be created with the supplied _keys and _values.\n" + \
-                           "\n" + \
-                           "Sometimes the reason for this can be that you are not looking for particular set of keys.\n" + \
-                           "For example: if you would like to generate 3d buildings, then try adding \"Building\" keys to the \"requiredKeys_\" input of the \"OSM shapes\" component.\n" + \
-                           "Or if you would like to generate 3d trees, then add \"Tree\" keys to the same input.\n" + \
-                           "Both of these keys can be created with the use of \"OSM keys\" component."
+                printMsg = "No 3D shape (building or tree) could be created for the given _keys and _values.\n\n" + \
+                           "These can be due to the following few reasons:\n" + \
+                           "-\n" + \
+                           "1) The simplest one: there really isn't any building or tree at that \"_location\" and for that \"_radius\".\n" + \
+                           "-\n" + \
+                           "2) You might be searching in incorrect \"shapeType_\" input.\n" + \
+                           "_keys and _values are affected by \"shapeType_\" input of the \"OSM shapes\" component. For example, trees will always be located (if they exist at that location) for shapeType_ = 2 (points). They can not be found in shapeType_ = 0 (polygons).\n" + \
+                           "Buildings will always be created in shapeType_ = 0.\n" + \
+                           "-\n" + \
+                           "3) Buildings and trees are basically found by matching certain _keys with _values. It can be that you haven't initially defined a list of specific _keys so that this component would find those based on them.\n" + \
+                           "To solve this problem define the \"requiredKeys_\" input of the \"OSM shapes\" component by using the \"OSM keys\" component. Generate the keys in \"OSM keys\" component by using the \"Building\" and \"Tree\" as \"_OSMobjectName\" inputs."
             
             return threeDeeShapesDataTree, threeDeeValuesDataTree, heightDataTree, valid_onlyRemove_Ids_or_shapes, printMsg
     
@@ -799,8 +795,8 @@ if sc.sticky.has_key("gismoGismo_released"):
     validVersionDate, printMsg = sc.sticky["gismo_check"].versionDate(ghenv.Component)
     if validVersionDate:
         gismo_preparation = sc.sticky["gismo_Preparation"]()
-        gismo_createGeometry = sc.sticky["gismo_CreateGeometry"]()
-        gismo_osm = sc.sticky["gismo_OSM"]()
+        gismo_geometry = sc.sticky["gismo_CreateGeometry"]()
+        gismo_gis = sc.sticky["gismo_GIS"]()
         
         heightPerLevel, randomHeightRange, randomHeightRangeStart, randomHeightRangeEnd, treeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, shapeType, unitConversionFactor, validInputData, printMsg = checkInputData(_shapes, _keys, _values, heightPerLevel_, randomHeightRange_, treeType_, onlyRemove_Ids_)
         if validInputData:
