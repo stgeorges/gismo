@@ -34,11 +34,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_XY To Location"
 ghenv.Component.NickName = "XYtoLocation"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | Gismo"
-#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
+#compatibleGismoVersion = VER 0.0.2\nMAY_05_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
@@ -75,23 +75,23 @@ def main(requiredPoint, anchorLocation, anchorOrigin):
     
     # inputCRS
     EPSGcode = 4326
-    inputCRS_dummy = gismo_osm.CRS_from_EPSGcode(EPSGcode)
+    inputCRS_dummy = gismo_gis.CRS_from_EPSGcode(EPSGcode)
     # outputCRS
-    outputCRS_dummy = gismo_osm.UTM_CRS_from_latitude(anchor_locationLatitudeD, anchor_locationLongitudeD)
+    outputCRS_dummy = gismo_gis.UTM_CRS_from_latitude(anchor_locationLatitudeD, anchor_locationLongitudeD)
     
-    anchor_originProjected_meters = gismo_osm.convertBetweenTwoCRS(inputCRS_dummy, outputCRS_dummy, anchor_locationLongitudeD, anchor_locationLatitudeD)  # in meters
+    anchor_originProjected_meters = gismo_gis.convertBetweenTwoCRS(inputCRS_dummy, outputCRS_dummy, anchor_locationLongitudeD, anchor_locationLatitudeD)  # in meters
     
     
     # inputCRS
     # based on assumption that both anchorLocation_ input and required_location belong to the same UTM zone
-    inputCRS = gismo_osm.UTM_CRS_from_latitude(anchor_locationLatitudeD, anchor_locationLongitudeD, anchor_locationLatitudeD, anchor_locationLongitudeD)
+    inputCRS = gismo_gis.UTM_CRS_from_latitude(anchor_locationLatitudeD, anchor_locationLongitudeD, anchor_locationLatitudeD, anchor_locationLongitudeD)
     
     # outputCRS
     EPSGcode = 4326
-    outputCRS = gismo_osm.CRS_from_EPSGcode(EPSGcode)
+    outputCRS = gismo_gis.CRS_from_EPSGcode(EPSGcode)
     
     
-    latitudeLongitudePt = gismo_osm.convertBetweenTwoCRS(inputCRS, outputCRS, (anchor_originProjected_meters.X - anchorOrigin_meters.X) + requiredPoint_meters.X, (anchor_originProjected_meters.Y - anchorOrigin_meters.Y) + requiredPoint_meters.Y)
+    latitudeLongitudePt = gismo_gis.convertBetweenTwoCRS(inputCRS, outputCRS, (anchor_originProjected_meters.X - anchorOrigin_meters.X) + requiredPoint_meters.X, (anchor_originProjected_meters.Y - anchorOrigin_meters.Y) + requiredPoint_meters.Y)
     required_location = gismo_preparation.constructLocation(locationName, latitudeLongitudePt.Y, latitudeLongitudePt.X, timeZone, elevation)
     
     
@@ -105,7 +105,7 @@ if sc.sticky.has_key("gismoGismo_released"):
     validVersionDate, printMsg = sc.sticky["gismo_check"].versionDate(ghenv.Component)
     if validVersionDate:
         gismo_preparation = sc.sticky["gismo_Preparation"]()
-        gismo_osm = sc.sticky["gismo_OSM"]()
+        gismo_gis = sc.sticky["gismo_GIS"]()
         
         location, validInputData, printMsg = main(_point, anchorLocation_, anchorOrigin_)
         if not validInputData:
