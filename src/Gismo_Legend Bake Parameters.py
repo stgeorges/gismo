@@ -80,11 +80,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Legend Bake Parameters"
 ghenv.Component.NickName = "LegendBakeParameters"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "3 | More"
-#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
+#compatibleGismoVersion = VER 0.0.2\nMAy_05_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
@@ -110,6 +110,12 @@ def checkInputData(legendStyle, legendPlane, maxValue, minValue, customColors, n
     
     if (len(customColors) == 0):
         customColors = []
+    elif (len(customColors) == 1):
+        legendBakePar_DataTree = legendBakePar_LL = None
+        validInputData = False
+        printMsg = "The \"customColors_\" input needs to have at least two colors.\n" + \
+                   "Add at least one more color to this input."
+        return legendBakePar_DataTree, legendBakePar_LL, validInputData, printMsg
     
     if (numLegendCells == None):
         numLegendCells = 12
@@ -149,7 +155,11 @@ def checkInputData(legendStyle, legendPlane, maxValue, minValue, customColors, n
         else:
             legendBakePar_DataTree.AddRange([item], Grasshopper.Kernel.Data.GH_Path(i))
     
-    return legendBakePar_DataTree, legendBakePar_LL
+    
+    validInputData = True
+    printMsg = "ok"
+    
+    return legendBakePar_DataTree, legendBakePar_LL, validInputData, printMsg
 
 
 def printOutput(legendStyle, legendPlane, maxValue, minValue, customColors, numLegendCells, fontName, fontSize, numDecimals, legendUnit, customTitle, scale, layerName, layerColor, layerCategoryName):
@@ -188,9 +198,13 @@ if sc.sticky.has_key("gismoGismo_released"):
     validVersionDate, printMsg = sc.sticky["gismo_check"].versionDate(ghenv.Component)
     if validVersionDate:
         
-        legendBakePar, legendBakePar_LL = checkInputData(legendStyle_, legendPlane_, maxValue_, minValue_, customColors_, numLegendCells_, fontName_, fontSize_, numDecimals_, legendUnit_, customTitle_, scale_, layerName_, layerColor_, layerCategoryName_)
-        legendStyle, legendPlane, maxValue, minValue, customColors, numLegendCells, fontName, fontSize, numDecimals, legendUnit, customTitle, scale, layerName, layerColor, layerCategoryName = legendBakePar_LL  # unpack "legendBakePar_LL" for "printOutput"
-        printOutput(legendStyle, legendPlane, maxValue, minValue, customColors, numLegendCells, fontName, fontSize, numDecimals, legendUnit, customTitle, scale, layerName, layerColor, layerCategoryName)
+        legendBakePar, legendBakePar_LL, validInputData, printMsg = checkInputData(legendStyle_, legendPlane_, maxValue_, minValue_, customColors_, numLegendCells_, fontName_, fontSize_, numDecimals_, legendUnit_, customTitle_, scale_, layerName_, layerColor_, layerCategoryName_)
+        if validInputData:
+            legendStyle, legendPlane, maxValue, minValue, customColors, numLegendCells, fontName, fontSize, numDecimals, legendUnit, customTitle, scale, layerName, layerColor, layerCategoryName = legendBakePar_LL  # unpack "legendBakePar_LL" for "printOutput"
+            printOutput(legendStyle, legendPlane, maxValue, minValue, customColors, numLegendCells, fontName, fontSize, numDecimals, legendUnit, customTitle, scale, layerName, layerColor, layerCategoryName)
+        else:
+            print printMsg
+            ghenv.Component.AddRuntimeMessage(level, printMsg)
     else:
         print printMsg
         ghenv.Component.AddRuntimeMessage(level, printMsg)
