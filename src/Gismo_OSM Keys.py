@@ -34,11 +34,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM Keys"
 ghenv.Component.NickName = "OSMKeys"
-ghenv.Component.Message = "VER 0.0.2\nMAR_02_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
+#compatibleGismoVersion = VER 0.0.2\nMAY_05_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
@@ -53,7 +53,8 @@ def main(OSMobjectName):
     
     # check _OSMobjectName
     if (len(OSMobjectName) == 0):
-        requiredKeys_unique = OSMwebpage = None
+        requiredKeys_unique = []
+        OSMwebpage = None
         validInputData = False
         printMsg = "Supply a name or names to \"_OSMobjectName\" input by using \"OSM Objects\" dropdown list."
         return requiredKeys_unique, OSMwebpage, validInputData, printMsg
@@ -900,6 +901,26 @@ def main(OSMobjectName):
     "crossing_ref",
     "http://wiki.openstreetmap.org/wiki/Tag:highway%3Dfootway"]
     ,
+    """Steps""" :
+    ["name", 
+    "name:en", 
+    "highway", 
+    "incline", 
+    "step_count", 
+    "conveying", 
+    "handrail", 
+    "tactile_paving", 
+    "surface", 
+    "ramp", 
+    "ramp:stroller", 
+    "ramp:bicycle", 
+    "ramp:wheelchair", 
+    "ramp:luggage", 
+    "wheelchair", 
+    "level", 
+    "width", 
+    "http://wiki.openstreetmap.org/wiki/Tag:highway=steps?uselang=en-US"]
+    ,
     """Pedestrian zone""" :
     ["name",
     "name:en",
@@ -1332,7 +1353,8 @@ def main(OSMobjectName):
     
     if (len(requiredKeys_unique) == 0):
         # "_OSMobjectName" does not exist in upper "requiredKeys_dictionary"
-        requiredKeys_unique = OSMwebpage = None
+        requiredKeys_unique = []
+        OSMwebpage = None
         validInputData = False
         printMsg = "Supplied \"_OSMobjectName\" does not exist among this component's data.\n" + \
                    "Try creating your own \"requiredKeys\" output manually by looking at:\n \n" + \
