@@ -33,13 +33,14 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.2\nMAR_29_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
 try: ghenv.Component.AdditionalHelpFromDocStrings = "1"
 except: pass
 
+import ghpythonlib.components as ghc
 import rhinoscriptsyntax as rs
 import scriptcontext as sc
 import Grasshopper
@@ -387,6 +388,28 @@ class Preparation(object):
                 return folderCreated
     
     
+    def checkInternetConnection(self):
+        """
+        check if PC is connected to internet
+        """
+        # connectedToInternet first check
+        connectedToInternet1 = System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable()
+        if connectedToInternet1 == False:
+            # connectedToInternet second check
+            try:
+                client = System.Net.WebClient()
+                client.OpenRead("http://www.google.com")
+                connectedToInternet = True
+            except:
+                connectedToInternet = False
+                # you are not connected to the Internet
+        elif connectedToInternet1 == True:
+            # no need for connectedToInternet second check
+            connectedToInternet = True
+        
+        return connectedToInternet
+    
+    
     def downloadFile(self, downloadLink, downloadedFilePath):
         """
         downloading a file for the given link and filepath location.
@@ -522,6 +545,21 @@ class Preparation(object):
         
         del shapesLL
         return shapeType
+    
+    
+    def flatten_dataTree(self, dataTree):
+        """
+        convert a data tree content to a single list
+        """
+        branchesLL = dataTree.Branches
+        branchesLL_flattened = []
+        for branchL in branchesLL:
+            if (len(branchL) > 0):
+                branchesLL_flattened.extend(branchL)
+        
+        del dataTree
+        del branchesLL
+        return branchesLL_flattened
     
     
     def modify_dataTree(self, oldDataTree, newBranchIndex, newBranchList):
@@ -951,15 +989,19 @@ class Preparation(object):
         integers = []
         if projectNameLayers:
             for l in projectNameLayers:
-                if category in l.Name:
+                splittedLayerName = l.Name.split("_")
+                layerNameWithoutNumber = "_".join(splittedLayerName[:-1])
+                #layerNameWithoutNumber = l.Name.split("_")[0]
+                if category == layerNameWithoutNumber:
                     integers.append(int(l.Name.split(category + "_")[-1]))
+            
             try:
                 integers.sort()
                 maxInt = integers[-1]
                 categoryName_n = category + "_" +str(int(maxInt)+1)
                 categoryL.Name = categoryName_n
                 categoryIndex = layerT.Add(categoryL)
-            except:
+            except Exception, e:
                 categoryL.Name = category  + "_0"
                 categoryIndex = layerT.Add(categoryL)
                 maxInt = -1
@@ -1088,7 +1130,7 @@ class CreateGeometry():
         """
         mesh_numOfVertices = mesh.Vertices.Count
         mesh.VertexColors.Clear()
-        #for i in range(len(mesh_numOfVertices)):
+        
         for i in range(mesh_numOfVertices):
             mesh.VertexColors.Add(colors[i])
         
@@ -1096,7 +1138,84 @@ class CreateGeometry():
         return mesh  # colored mesh
     
     
-    def createLegend(self, geometryL, values, legendBakePar, legendUnit=None):
+    def convertCrvToPolyline(self, crv, explodePolyline = False):
+        """
+        convert a curve to polyline. For a given single curve, it returns a list!
+        """
+        nurbsCrv = crv.ToNurbsCurve()
+        convertedToPolyline_Success, polyline = nurbsCrv.TryGetPolyline()
+        if (convertedToPolyline_Success == True):
+            # conversion succeeded
+            pass
+        if (convertedToPolyline_Success == False):
+            # conversion failed. "crv" is not a polyline nor a polycurve
+            distanceTol = 0.0
+            angleTol = 0.0
+            minimumSegmentLength = 0.5  # in rhino document units
+            polyline, numOfSegments = ghc.CurveToPolyline(crv, distanceTol, angleTol, minimumSegmentLength)
+        
+        if (explodePolyline == True):
+            nurbsCrv2 = polyline.ToNurbsCurve()
+            explodedLines = nurbsCrv2.DuplicateSegments()
+            if (len(explodedLines) == 0):
+                # the "polyline" was a line, it can not be exploded further
+                return [polyline]
+            elif (len(explodedLines) > 0):
+                return explodedLines
+        else:
+            return [polyline]
+    
+    
+    def curveRoundedOrNot(self, crv):
+        """
+        check if the curve has rounded corners, or they are all sharp
+        """
+        continuityType = 2
+        cornerPts = rs.CurveDiscontinuity(crv, continuityType)
+        cornerPts.extend(cornerPts)
+        startPt = crv.PointAtStart
+        cornerPts.append(startPt)
+        
+        maximumDistance = 0
+        for pt in cornerPts:
+            success, t = crv.ClosestPoint(pt, maximumDistance)
+            pt, tangent, angleR = ghc.EvaluateCurve(crv, t)  # "angleR" - angle between incoming vs outgoing curve at "t"
+            angleD = math.degrees(angleR)
+            if angleD >= 90:
+                curveIsNotRounded = True
+                break
+        else:
+            curveIsNotRounded = False
+        
+        del cornerPts
+        return curveIsNotRounded
+    
+    
+    def cullClosePolylinePts(self, polyline, distance = 0.01):
+        """
+        culling polyline points which are closer than "closeDistance" to the last polyline point 
+        """
+        # get polyline pts:
+        controlPts = list(polyline)
+        
+        newPolylinePts = []
+        for i,pt in enumerate(controlPts):
+            if i == 0:
+                lastPt = pt
+                newPolylinePts.append(lastPt)
+            elif i > 0:
+                if lastPt.DistanceTo(pt) > distance:
+                    lastPt = pt
+                    newPolylinePts.append(lastPt)
+                else:
+                    pass
+        
+        del controlPts
+        newPolyline = Rhino.Geometry.Polyline(newPolylinePts)
+        return newPolyline
+    
+    
+    def createLegend(self, geometryL, values, legendBakePar, legendUnit=None, customCellNumbers=[]):
         """
         create a legend for the given "values"
         """
@@ -1108,15 +1227,22 @@ class CreateGeometry():
             customColors = gismo_preparation.defaultCustomColors()
         
         if (customLegendUnit == None) and (legendUnit == None):
-            # nothing inputted into "legendUnit_" input of "Legend Bake Parameter" component. And no "legendUnit" has been supplied to this method
+            # nothing inputted into "legendUnit_" input of "Legend Bake Parameters" component. And no "legendUnit" has been supplied to this method
             legendUnit = "unknown unit"
         elif (customLegendUnit != None):
             # something inputted into "legendUnit_" input of "Legend Bake Parameter" component
             legendUnit = customLegendUnit
         
         if sum(values) == (len(values)*values[0]):
-            # # all items in "values" are the same: meaning all colors will be the same. Set the "numLegendCells" to 1
+            # all items in "values" are the same: meaning all colors will be the same. Set the "numLegendCells" to 1
             numLegendCells = 1
+        
+        if (len(customCellNumbers) != 0):
+            # if "customCellNumbers" list has been added as an input to this method, then limit the "numLegendCells" to the number of items in the "customCellNumbers" list
+            numLegendCells = len(customCellNumbers)
+            if (customLegendUnit == None):
+                # nothing inputted into "legendUnit_" input of "Legend Bake Parameters" component.
+                legendUnit = "~"
         
         
         # calculate bounding box properties from the "geometryL"
@@ -1210,21 +1336,27 @@ class CreateGeometry():
             cellNumber_startPts.append(cellNumber_startPt)
             
             # create cellNumber_joinedMesh
-            cellNumber_string = cellNumbers[i]
-            if (numDecimals == 0):
-                cellNumber_string = "%0.0f" % cellNumber_string
-            elif (numDecimals == 1):
-                cellNumber_string = "%0.1f" % cellNumber_string
-            elif (numDecimals == 2):
-                cellNumber_string = "%0.2f" % cellNumber_string
-            elif (numDecimals == 3):
-                cellNumber_string = "%0.3f" % cellNumber_string
-            elif (numDecimals == 4):
-                cellNumber_string = "%0.4f" % cellNumber_string
-            elif (numDecimals == 5):
-                cellNumber_string = "%0.5f" % cellNumber_string
-            elif (numDecimals == 6):
-                cellNumber_string = "%0.6f" % cellNumber_string
+            if (len(customCellNumbers) != 0):
+                # the "customCellNumbers" input of this method has been defined
+                cellNumber_string = customCellNumbers[i]
+            else:
+                # the "customCellNumbers" input of this method has NOT been defined
+                cellNumber_string = cellNumbers[i]
+                if (numDecimals == 0):
+                    cellNumber_string = "%0.0f" % cellNumber_string
+                elif (numDecimals == 1):
+                    cellNumber_string = "%0.1f" % cellNumber_string
+                elif (numDecimals == 2):
+                    cellNumber_string = "%0.2f" % cellNumber_string
+                elif (numDecimals == 3):
+                    cellNumber_string = "%0.3f" % cellNumber_string
+                elif (numDecimals == 4):
+                    cellNumber_string = "%0.4f" % cellNumber_string
+                elif (numDecimals == 5):
+                    cellNumber_string = "%0.5f" % cellNumber_string
+                elif (numDecimals == 6):
+                    cellNumber_string = "%0.6f" % cellNumber_string
+            
             cellNumber_mesh = gismo_preparation.text2srfOrMesh("mesh", [cellNumber_string], cellNumber_startPt, cellNumber_textSize, fontName, bold=False, italic=False, justificationIndex=0)
             cellNumber_joinedMesh.Append(cellNumber_mesh)
         
@@ -1379,8 +1511,6 @@ class CreateGeometry():
                         if minHeight != "":
                             # there is a valid "min_height" key. Lift the projected points for this value
                             topCrvPt = Rhino.Geometry.Point3d(bottomCrvControlPt.X, bottomCrvControlPt.Y, bottomCrvControlPt_highestZcoord + height)
-                            #topCrvPt = Rhino.Geometry.Point3d(bottomCrvControlPt.X, bottomCrvControlPt.Y, bottomCrvControlPt_highestZcoord + minHeight)
-                            #topCrvPt = Rhino.Geometry.Point3d(bottomCrvControlPt.X, bottomCrvControlPt.Y, bottomCrvControlPt_highestZcoord + minHeight + height)
                         else:
                             # there is no valid "min_height" key. Lift the projected points for the "height" value
                             topCrvPt = Rhino.Geometry.Point3d(bottomCrvControlPt.X, bottomCrvControlPt.Y, bottomCrvControlPt_highestZcoord + height)
@@ -1393,6 +1523,109 @@ class CreateGeometry():
         del topCrvPts
         
         return topCrvs, bottomCrvControlPt_highestZcoord
+    
+    
+    def projectPlanarClosedCrvsToTerrain(self, planarCrvsL, groundTerrainBrep, groundTerrain_outerEdge_extrusion):
+        """
+        project planar closed curves to a single face brep and make their footprints on terrain
+        """
+        # get unitConversionFactor
+        gismo_preparation = Preparation()
+        unitConversionFactor, unitSystemLabel = gismo_preparation.checkUnits()
+        
+        
+        if (groundTerrainBrep == None):
+            planarSrfs = Rhino.Geometry.Brep.CreatePlanarBreps(planarCrvsL)  # returns a list!
+            
+            validGroundTerrain = True
+            printMsg = "ok"
+            return planarSrfs, [], validGroundTerrain, printMsg
+        
+        elif (groundTerrainBrep != None):
+            # extract Faces[0] from "groundTerrain_",
+            # shrink the upper terrain brepface in case it is not shrinked (for example: the terrain surface inputted to _terrain input is not created by Gismo "Terrain Generator" component)
+            groundTerrainBrepFaces = groundTerrainBrep.Faces
+            groundTerrainBrepFaces.ShrinkFaces()
+            duplicateMeshes = False
+            groundBrep_singleBrepFace = groundTerrainBrepFaces[0].DuplicateFace(duplicateMeshes)
+            
+            tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance
+            # move _roadShapes above so that intersection with groundTerrain_ is fullfiled successfully
+            #####liftingOSMshapesHeight = 8848/unitConversionFactor  # "8848" dummy value
+            liftingOSMshapesHeight = 260/unitConversionFactor
+            bb_height = 100/unitConversionFactor  # "100" dummy value
+            moveMatrix = Rhino.Geometry.Transform.Translation(0,0,liftingOSMshapesHeight)
+            for planarOffsetRoadsCrv in planarCrvsL:
+                planarOffsetRoadsCrv.Transform(moveMatrix)
+            
+            extrudedShapeBrepL = []
+            srfProjectedOnTerainL = []
+            planarBreps = Rhino.Geometry.Brep.CreatePlanarBreps(planarCrvsL)
+            for planarBrep in planarBreps:
+                shapeStartPt = planarOffsetRoadsCrv.PointAtStart
+                extrudePathCurve = Rhino.Geometry.Line(shapeStartPt, Rhino.Geometry.Point3d(shapeStartPt.X, shapeStartPt.Y, shapeStartPt.Z - (liftingOSMshapesHeight+(2 * bb_height)) )).ToNurbsCurve()
+                cap = True
+                extrudedShapeBrep = planarBrep.Faces[0].CreateExtrusion(extrudePathCurve, cap)
+                extrudedShapeBrepL.append(extrudedShapeBrep)
+                splittedBreps = Rhino.Geometry.Brep.Split(groundBrep_singleBrepFace, extrudedShapeBrep, tol)
+                
+                if len(splittedBreps) > 0:
+                    # the planarOffsetRoadsCrv is inside of groundTerrain_ bounding box (a) or it interesect with it (b)
+                    # determine which one of these two is the case
+                    intersectionYes, intersectCrvs, intersectPts = Rhino.Geometry.Intersect.Intersection.BrepBrep(groundTerrain_outerEdge_extrusion, extrudedShapeBrep, tol)
+                    if (len(intersectCrvs) > 0):
+                        print "terrain edges intersect with road srf"
+                        # planarOffsetRoadsCrv planar srf intersects with groundTerrrain_
+                        
+                        # check the planarOffsetRoadsCrv oriention to determine the brep face index in "splittedBreps"
+                        upDirection = Rhino.Geometry.Vector3d(0,0,1)
+                        srfProjectedOnTerrain = splittedBreps[len(splittedBreps)-1]  # ovaj radi !!!
+                        #srfProjectedOnTerrain = splittedBreps[0]
+                        print "len(splittedBreps): ", len(splittedBreps)
+                        
+                        gotPlane_success, plane = planarOffsetRoadsCrv.TryGetPlane()
+                        print "plane_ZAxis: ", plane.ZAxis
+                        
+                        if (planarOffsetRoadsCrv.ClosedCurveOrientation(upDirection) == Rhino.Geometry.CurveOrientation.Clockwise):
+                            ####srfProjectedOnTerrain = splittedBreps[len(splittedBreps)-1]  # ovaj radi?
+                            #srfProjectedOnTerrain = splittedBreps[0]
+                            print "clockwise"
+                        elif (planarOffsetRoadsCrv.ClosedCurveOrientation(upDirection) == Rhino.Geometry.CurveOrientation.CounterClockwise):
+                            #srfProjectedOnTerrain = splittedBreps[0]
+                            print "counter clockwise"
+                        
+                        
+                        srfProjectedOnTerrain.Faces.ShrinkFaces()  # shrink the cutted srfProjectedOnTerrain
+                        srfProjectedOnTerainL.append(srfProjectedOnTerrain)
+                        
+                    elif (len(intersectCrvs) == 0):
+                        print "terrain edges DO NOT intersect with road srf."
+                        # planarOffsetRoadsCrv planar srf is inside groundTerrain_ and does not intersect it
+                        srfProjectedOnTerrain = splittedBreps[len(splittedBreps)-1]
+                        srfProjectedOnTerrain.Faces.ShrinkFaces()  # shrink the cutted srfProjectedOnTerrain
+                        srfProjectedOnTerainL.append(srfProjectedOnTerrain)
+                
+                else:
+                    # planarOffsetRoadsCrv is outside of groundTerrain_ bounding box, do not add it to the "srfProjectedOnTerainL" list
+                    pass
+                
+                del planarBrep; del extrudePathCurve; del splittedBreps; del extrudedShapeBrepL; extrudedShapeBrepL = []
+            
+            
+            # create a single mesh from all surfaces in the "" list
+            if (len(srfProjectedOnTerainL) == 0):
+                # the "groundTerrain_" is either too small (has very small radius) or it does not have the same origin as "_roadShapes", meaning the "_roadShapes" can not be projected to "groundBrep_singleBrepFace".
+                validGroundTerrain = False
+                printMsg = "Something is wrong with your \"groundTerrain_\" input.\n" + \
+                           "Make sure that when you look at it in Rhino's \"Top\" view, it covers (encapsulates) the whole \"_roadShapes\" geometry or at least some of its parts."
+                
+                return srfProjectedOnTerainL, extrudedShapeBrepL, validGroundTerrain, printMsg
+            elif (len(srfProjectedOnTerainL) > 0):
+                # everything is fine
+                validGroundTerrain = True
+                printMsg = "ok"
+                
+                return srfProjectedOnTerainL, extrudedShapeBrepL, validGroundTerrain, printMsg
     
     
     def createRenderMesh(self, mesh, u):
@@ -1568,22 +1801,26 @@ class EnvironmentalAnalysis():
         return skyExposureFactor
 
 
-class OSM():
+class GIS():
     """
-    methods for manipulation of OSM data
+    methods for manipulation of GIS data
     """
-    def calculateCRS_UTMzone(self, locationLatitudeD, locationLongitudeD):
-        # calculate CRS data: CRS_UTMzone, northOrsouth
+    def calculate_CRS_UTMzone(self, locationLatitudeD, locationLongitudeD):
+        """
+        calculate CRS UTMzone code based on location's latitude-longitude
+        """
         # by http://stackoverflow.com/a/9188972/3137724 (link given by Even Rouault)
         CRS_UTMzone = (math.floor((locationLongitudeD + 180)/6) % 60) + 1
         if locationLatitudeD >= 0:
             # for northern hemisphere
             northOrsouth = "north"
+            CRS_EPSG_code = 32600 + CRS_UTMzone
         elif locationLatitudeD < 0:
             # for southern hemisphere
             northOrsouth = "south"
+            CRS_EPSG_code = 32700 + CRS_UTMzone
         
-        return int(CRS_UTMzone), northOrsouth
+        return CRS_EPSG_code, int(CRS_UTMzone), northOrsouth
     
     
     def UTM_CRS_from_latitude(self, locationLatitudeD, locationLongitudeD, originLatitudeD = 0, originLongitudeD = 0):
@@ -1591,7 +1828,7 @@ class OSM():
         create UTM CRS from latitude, longitude and anchor latitude, anchor longitude
         """
         CRS = MapWinGIS.GeoProjectionClass()
-        CRS_UTMzone, northOrsouth = self.calculateCRS_UTMzone(locationLatitudeD, locationLongitudeD)
+        CRS_EPSG_code, CRS_UTMzone, northOrsouth = self.calculate_CRS_UTMzone(locationLatitudeD, locationLongitudeD)
         proj4_string = "+proj=utm +zone=%s +%s +datum=WGS84 +ellps=WGS84 +lat_0=%s +lon_0=%s" % (CRS_UTMzone, northOrsouth, originLatitudeD, originLongitudeD)#, resamplingMethod)
         CRS.ImportFromProj4(proj4_string)
         
@@ -1609,23 +1846,9 @@ class OSM():
     
     
     def convertBetweenTwoCRS(self, inputCRS, outputCRS, firstCoordinate, secondCoordinate):
-        
         """
-        shapefile = MapWinGIS.ShapefileClass()
-        openShapefileSuccess = MapWinGIS.ShapefileClass.Open(shapefile, shapeFile_filePath, None)
-        if openShapefileSuccess:
-            pass
+        convert coordinates from one CRS to another
         """
-        #print "__inputCRS_EPSG: ", inputCRS_EPSG
-        # set the input CRS
-        #inputCRS = MapWinGIS.GeoProjectionClass()
-        #MapWinGIS.GeoProjectionClass.ImportFromEPSG(inputCRS, inputCRS_EPSG)
-        #inputCRS.ImportFromEPSG(inputCRS_EPSG)
-        
-        # set the output CRS
-        #outputCRS = MapWinGIS.GeoProjectionClass()
-        #outputCRS.ImportFromEPSG(outputCRS_EPSG)
-        
         successStartTransform = inputCRS.StartTransform(outputCRS)
         
         secondCoordinate_ref = clr.StrongBox[System.Double](secondCoordinate)
@@ -1643,23 +1866,16 @@ class OSM():
         """
         convert latitude,longitude coordinates to x,y projected coordinates
         """
-        # by http://stackoverflow.com/a/9188972/3137724 (link given by Even Rouault)
-        outputCRS_UTMzone = (math.floor((locationLongitudeD + 180)/6) % 60) + 1
-        if locationLatitudeD >= 0:
-            # for northern hemisphere
-            outputCRS_EPSG = 32600 + outputCRS_UTMzone
-        elif locationLatitudeD < 0:
-            # for southern hemisphere
-            outputCRS_EPSG = 32700 + outputCRS_UTMzone
+        outputCRS_EPSG_code, CRS_UTMzone, northOrsouth = self.calculate_CRS_UTMzone(locationLatitudeD, locationLongitudeD)
         
         # set the CRS to WGS 84
         inputCRS = MapWinGIS.GeoProjectionClass()
-        inputCRS_EPSG = 4326  # WGS 84
-        inputCRS.ImportFromEPSG(inputCRS_EPSG)
+        inputCRS_EPSG_code = 4326  # WGS 84
+        inputCRS.ImportFromEPSG(inputCRS_EPSG_code)
         
         # set the output CRS
         outputCRS = MapWinGIS.GeoProjectionClass()
-        outputCRS.ImportFromEPSG(outputCRS_EPSG)
+        outputCRS.ImportFromEPSG(outputCRS_EPSG_code)
         
         successStartTransform = inputCRS.StartTransform(outputCRS)
         
@@ -1677,17 +1893,10 @@ class OSM():
     def projectedLocationCoordinates2(locationLatitudeD, locationLongitudeD, unitConversionFactor):
         """
         convert latitude,longitude coordinates to x,y projected coordinates2
-        this method should be replaced with upper "projectedLocationCoordinates" but only for 4.9.4? > versions of MapWinGIS
+        this method should be replaced with upper "projectedLocationCoordinates" but only for 4.9.4? > versions of MapWinGIS,
+        due to lack of MapWinGIS.GeoProjectionClass.Transform method in those MapWinGIS methods
         """
-        
-        # by http://stackoverflow.com/a/9188972/3137724 (link given by Even Rouault)
-        outputCRS_UTMzone = (math.floor((locationLongitudeD + 180)/6) % 60) + 1
-        if locationLatitudeD >= 0:
-            # for northern hemisphere
-            outputCRS_EPSG = 32600 + outputCRS_UTMzone
-        elif locationLatitudeD < 0:
-            # for southern hemisphere
-            outputCRS_EPSG = 32700 + outputCRS_UTMzone
+        outputCRS_EPSG_code, CRS_UTMzone, northOrsouth = self.calculate_CRS_UTMzone(locationLatitudeD, locationLongitudeD)
         
         # create a dummy point with locationLatitudeD, locationLongitudeD coordinates
         dummyShape = MapWinGIS.ShapeClass()
@@ -1709,8 +1918,8 @@ class OSM():
         
         # set the CRS of dummyShapefile to WGS 84
         inputCRS = MapWinGIS.GeoProjectionClass()
-        inputCRS_EPSG = 4326  # WGS 84
-        inputCRS.ImportFromEPSG(inputCRS_EPSG)
+        inputCRS_EPSG_code = 4326  # WGS 84
+        inputCRS.ImportFromEPSG(inputCRS_EPSG_code)
         dummyShapefile.GeoProjection = inputCRS
         
         shapeFileFolderPath = "C:\\gismo\\shapefile_example2"
@@ -1726,7 +1935,7 @@ class OSM():
         
         # reproject the dummyShapefile2
         outputCRS2 = MapWinGIS.GeoProjectionClass()
-        outputCRS2.ImportFromEPSG(outputCRS_EPSG)
+        outputCRS2.ImportFromEPSG(outputCRS_EPSG_code)
         numOfsuccessfullyReprojectedShapes = clr.StrongBox[System.Int32]()
         reprojectedShapefile = MapWinGIS.ShapefileClass.Reproject(dummyShapefile2, outputCRS2, numOfsuccessfullyReprojectedShapes)
         if reprojectedShapefile == None:
@@ -1749,6 +1958,132 @@ class OSM():
                 originPtProjected = Rhino.Geometry.Point3d(longitudeProjectedMeters/unitConversionFactor, latitudeProjectedMeters/unitConversionFactor, 0)  # in Rhino document units
          
         return originPtProjected
+    
+    
+    def destinationLatLon(self, latitude1D, longitude1D, radiusM):
+        """
+        calculate latitude-location for cardinal directions around the central latitude1D, longitude1D, for a given geodesic distance (radiusM). By Vincenty solution
+        """
+        # for WGS84:
+        a = 6378137  # equatorial radius, meters
+        b = 6356752.314245  # polar radius, meters
+        f = 0.00335281066474  # flattening (ellipticity, oblateness) parameter = (a-b)/a, dimensionless
+        
+        bearingAnglesR = [math.radians(0), math.radians(180), math.radians(270), math.radians(90)]  # top, bottom, left, right
+        latitudeLongitudeRegion = []
+        for bearingAngle1R in bearingAnglesR:
+            latitude1R = math.radians(latitude1D)
+            longitude1R = math.radians(longitude1D)
+            sinbearingAngle1R = math.sin(bearingAngle1R)
+            cosbearingAngle1R = math.cos(bearingAngle1R)
+            tanU1 = (1 - f) * math.tan(latitude1R)
+            cosU1 = 1 / math.sqrt(1 + tanU1 * tanU1)
+            sinU1 = tanU1 * cosU1
+            sigma1 = math.atan2(tanU1, cosbearingAngle1R)
+            sinBearingAngle1R = cosU1 * sinbearingAngle1R
+            cosSqBearingAngle1R = 1 - (sinBearingAngle1R * sinBearingAngle1R)
+            uSq = cosSqBearingAngle1R * (a * a - (b * b)) / (b * b)
+            A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - (175 * uSq))))
+            B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - (47 * uSq))))
+            sigma = radiusM / (b * A)  # radiusM in meters
+            sigma_ = 0
+            while abs(sigma - sigma_) > 1e-12:
+                cos2sigmaM = math.cos(2 * sigma1 + sigma)
+                sinsigma = math.sin(sigma)
+                cossigma = math.cos(sigma)
+                deltaSigma = B * sinsigma * (cos2sigmaM + B / 4 * (cossigma * (-1 + 2 * cos2sigmaM * cos2sigmaM) - (B / 6 * cos2sigmaM * (-3 + 4 * sinsigma * sinsigma) * (-3 + 4 * cos2sigmaM * cos2sigmaM))))
+                sigma_ = sigma
+                sigma = radiusM / (b * A) + deltaSigma
+            
+            tmp = sinU1 * sinsigma - (cosU1 * cossigma * cosbearingAngle1R)
+            latitude2R = math.atan2(sinU1 * cossigma + cosU1 * sinsigma * cosbearingAngle1R, (1 - f) * math.sqrt(sinBearingAngle1R * sinBearingAngle1R + tmp * tmp))
+            longitudeR = math.atan2(sinsigma * sinbearingAngle1R, cosU1 * cossigma - (sinU1 * sinsigma * cosbearingAngle1R))
+            C = f / 16 * cosSqBearingAngle1R * (4 + f * (4 - (3 * cosSqBearingAngle1R)))
+            L = longitudeR - ((1 - C) * f * sinBearingAngle1R * (sigma + C * sinsigma * (cos2sigmaM + C * cossigma * (-1 + 2 * cos2sigmaM * cos2sigmaM))))
+            longitude2R = (longitude1R + L + 3 * math.pi) % (2 * math.pi) - math.pi  # normalise to -180...+180
+            bearingAngle2R = math.atan2(sinBearingAngle1R, -tmp)
+            
+            latitude2D = math.degrees(latitude2R)
+            longitude2D = math.degrees(longitude2R)
+            bearingAngle2D = math.degrees(bearingAngle2R)
+            if bearingAngle2D < 0:
+                bearingAngle2D = 360-abs(bearingAngle2D)
+            
+            latitudeLongitudeRegion.append(latitude2D)
+            latitudeLongitudeRegion.append(longitude2D)
+        
+        # latitude positive towards north, longitude positive towards east
+        latitudeTopD, longitudeTopD, latitudeBottomD, longitudeBottomD, latitudeLeftD, longitudeLeftD, latitudeRightD, longitudeRightD = latitudeLongitudeRegion
+        
+        return latitudeTopD, longitudeTopD, latitudeBottomD, longitudeBottomD, latitudeLeftD, longitudeLeftD, latitudeRightD, longitudeRightD
+    
+    
+    def distanceBetweenTwoPoints(self, latitude1D, longitude1D, latitude2D, longitude2D):
+        """
+        calculate geodesic distance between two locations (given through latitude-location coordinates). By Vincenty solution
+        """
+        """
+        if latitude1D >= 0:
+            # northern hemishere:
+            latitude2D = 60
+        elif latitude1D < 0:
+            # southern hemishere:
+            latitude2D = -56
+        longitude2D = longitude1D
+        """
+        
+        # for WGS84:
+        a = 6378137  # equatorial radius, meters
+        b = 6356752.314245  # polar radius, meters
+        f = 0.00335281066474  # flattening (ellipticity, oblateness) parameter = (a-b)/a, dimensionless
+        
+        latitude1R = math.radians(latitude1D)
+        latitude2R = math.radians(latitude2D)
+        longitude1R = math.radians(longitude1D)
+        longitude2R = math.radians(longitude2D)
+        
+        L = longitude2R - longitude1R
+        tanU1 = (1-f) * math.tan(latitude1R)
+        cosU1 = 1 / math.sqrt((1 + tanU1*tanU1))
+        sinU1 = tanU1 * cosU1
+        tanU2 = (1-f) * math.tan(latitude2R)
+        cosU2 = 1 / math.sqrt((1 + tanU2*tanU2))
+        sinU2 = tanU2 * cosU2
+        longitudeR = L
+        longitudeR_ = 0
+        
+        for i in range(100):
+            sinLongitudeR = math.sin(longitudeR)
+            cosLongitudeR = math.cos(longitudeR)
+            sinSqSigma = (cosU2*sinLongitudeR) * (cosU2*sinLongitudeR) + (cosU1*sinU2-sinU1*cosU2*cosLongitudeR) * (cosU1*sinU2-sinU1*cosU2*cosLongitudeR)
+            sinSigma = math.sqrt(sinSqSigma)
+            cosSigma = sinU1*sinU2 + cosU1*cosU2*cosLongitudeR
+            sigma = math.atan2(sinSigma, cosSigma)
+            sinBearingAngleR = cosU1 * cosU2 * sinLongitudeR / sinSigma
+            cosSqBearingAngleR = 1 - sinBearingAngleR*sinBearingAngleR
+            if cosSqBearingAngleR == 0:
+                # if distanceM is measured along the equator line (latitude1D = latitude2D = 0, longitude1D != longitude2D != 0)
+                cos2SigmaM = 0
+            else:
+                cos2SigmaM = cosSigma - 2*sinU1*sinU2/cosSqBearingAngleR
+            C = f/16*cosSqBearingAngleR*(4+f*(4-3*cosSqBearingAngleR))
+            longitudeR_ = longitudeR
+            longitudeR = L + (1-C) * f * sinBearingAngleR * (sigma + C*sinSigma*(cos2SigmaM+C*cosSigma*(-1+2*cos2SigmaM*cos2SigmaM)))
+        
+        uSq = cosSqBearingAngleR * (a*a - b*b) / (b*b)
+        A = 1 + uSq/16384*(4096+uSq*(-768+uSq*(320-175*uSq)))
+        B = uSq/1024 * (256+uSq*(-128+uSq*(74-47*uSq)))
+        deltaSigma = B*sinSigma*(cos2SigmaM+B/4*(cosSigma*(-1+2*cos2SigmaM*cos2SigmaM) - B/6*cos2SigmaM*(-3+4*sinSigma*sinSigma)*(-3+4*cos2SigmaM*cos2SigmaM)))
+        
+        distanceM = b*A*(sigma-deltaSigma)  # in meters
+        
+        bearingAngleForwardR = math.atan2(cosU2*sinLongitudeR,  cosU1*sinU2-sinU1*cosU2*cosLongitudeR)
+        bearingAngleReverseR = math.atan2(cosU1*sinLongitudeR, -sinU1*cosU2+cosU1*sinU2*cosLongitudeR)
+        
+        bearingAngleForwardD = math.degrees(bearingAngleForwardR)
+        bearingAngleReverseD = math.degrees(bearingAngleReverseR)
+        
+        return distanceM
     
     
     def filterShapes(self, shortenedName_keys, subValuesL, shapesL, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove):
@@ -1784,6 +2119,63 @@ class OSM():
                 return [], []
     
     
+    def tagEqual_to_requiredTag(self, branchIndex, keys, values_shiftedPaths_LL, requiredKeyL, requiredValuesLL, OSMobjectNameL):
+        """
+        determine if shapes's tags (key=value pairs) correspond to particular requiredTag (key=value pair)
+        """
+        value = ""  # dummy value in case requiredKey or requiredValues does not exist
+        foundShapesSwitch = False  # initial value
+        for keyIndex,key in enumerate(keys):
+            for requiredKeyIndex,requiredKey in enumerate(requiredKeyL):
+                if (key == requiredKey):
+                    # requiredKey is found, check if requiredValue can be found
+                    value = values_shiftedPaths_LL[branchIndex][keyIndex]
+                    
+                    if (value in requiredValuesLL[requiredKeyIndex]) and (value != ""):
+                        foundShapesSwitch = True
+                        OSMobjectName = OSMobjectNameL[requiredKeyIndex]  # "requiredKeyL" and "OSMobjectNameL" lists have the same number of items
+                        
+                        del values_shiftedPaths_LL
+                        return foundShapesSwitch, value, [OSMobjectName]
+                    elif (key == requiredKey) and (requiredValuesLL[requiredKeyIndex] == ["^"]) and (value != ""):
+                        foundShapesSwitch = True
+                        OSMobjectName = OSMobjectNameL[requiredKeyIndex]  # "requiredKeyL" and "OSMobjectNameL" lists have the same number of items
+                        
+                        del values_shiftedPaths_LL
+                        return foundShapesSwitch, value, [OSMobjectName]
+        
+        del values_shiftedPaths_LL
+        return foundShapesSwitch, value, []
+    
+    
+    def checkIfShapefilesAreValid(self, keys, values):
+        """
+        check if the .shp files have been created correctly according to the supplied "requiredKeys_" in osmconf.ini file
+        """
+        max_valuesBranch_length = 0
+        for values_branchL in values.Branches:
+            if (len(values_branchL) > max_valuesBranch_length):
+                max_valuesBranch_length = len(values_branchL)
+        
+        if (len(keys) > 0) and (max_valuesBranch_length > 0):
+            if (len(keys) != max_valuesBranch_length):
+                heightPerLevel = randomHeightRange = randomHeightRangeStart = randomHeightRangeEnd = treeType = osm_id_Only = osm_way_id_Only = osm_id_Remove = osm_way_id_Remove = shapeType = None
+                validShapefiles = False
+                printMsg = "The component generated invalid shapes data.\n" + \
+                           " \n" + \
+                           "To fix this issue, simply rerun the component (set the \"_runIt\" input to \"False\", and then again to \"True\")."
+            else:
+                validShapefiles = True
+                printMsg = "ok"
+        
+        del keys; del values
+        return validShapefiles, printMsg
+
+
+class OSM():
+    """
+    methods for manipulation of OSM and GIS data
+    """
     def requiredTag_dictionary(self):
         """
         tags for particular OSM objects
@@ -1831,6 +2223,7 @@ class OSM():
         """Road""" : ["highway", ("road", "primary", "secondary", "tertiary", "unclassified", "residential", "service", "track", "junction", "trunk", "motorway", "motorway_link", "trunk_link", "primary_link", "secondary_link", "tertiary_link", "living_street", "bus_guideway", "escape")],
         """Railway""" : ["railway", ("rail", "tram", "light_rail", "subway", "narrow_gauge", "funicular")],
         """Footway""" : ["highway", ("footway",)],
+        """Steps""" : ["highway", ("steps",)],
         """Pedestrian zone""" : ["highway", ("pedestrian",)],
         """Aeroway""" : ["aeroway", ("aerodrome",)],
         """Bicycle parking""" : ["amenity", ("bicycle_parking",)],
@@ -1869,6 +2262,7 @@ sc.sticky["gismo_mainComponent"] = mainComponent
 sc.sticky["gismo_Preparation"] = Preparation
 sc.sticky["gismo_CreateGeometry"] = CreateGeometry
 sc.sticky["gismo_EnvironmentalAnalysis"] = EnvironmentalAnalysis
+sc.sticky["gismo_GIS"] = GIS
 sc.sticky["gismo_OSM"] = OSM
 sc.sticky["gismo_mapwingisFolder"] = mapFolder_
 
