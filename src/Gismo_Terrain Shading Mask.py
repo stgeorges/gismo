@@ -147,11 +147,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Terrain Shading Mask"
 ghenv.Component.NickName = "TerrainShadingMask"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
-#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
+#compatibleGismoVersion = VER 0.0.2\nMAY_05_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
@@ -421,70 +421,6 @@ def distanceBetweenTwoPoints(latitude1D, longitude1D, maxVisibilityRadiusM):
     return correctedMaskRadiusM, validVisibilityRadiusM, printMsg
 
 
-def destinationLatLon(latitude1D, longitude1D, maxVisibilityRadiusM):
-    # "Destination point given distance and bearing from start point" by Vincenty solution
-    # based on JavaScript code made by Chris Veness
-    # http://www.movable-type.co.uk/scripts/latlong-vincenty.html
-    
-    # for WGS84:
-    a = 6378137  # equatorial radius, meters
-    b = 6356752.314245  # polar radius, meters
-    f = 0.00335281066474  # flattening (ellipticity, oblateness) parameter = (a-b)/a, dimensionless
-    
-    bearingAnglesR = [math.radians(0), math.radians(180), math.radians(270), math.radians(90)]  # top, bottom, left, right
-    latitudeLongitudeRegion = []
-    for bearingAngle1R in bearingAnglesR:
-        latitude1R = math.radians(latitude1D)
-        longitude1R = math.radians(longitude1D)
-        sinbearingAngle1R = math.sin(bearingAngle1R)
-        cosbearingAngle1R = math.cos(bearingAngle1R)
-        tanU1 = (1 - f) * math.tan(latitude1R)
-        cosU1 = 1 / math.sqrt(1 + tanU1 * tanU1)
-        sinU1 = tanU1 * cosU1
-        sigma1 = math.atan2(tanU1, cosbearingAngle1R)
-        sinBearingAngle1R = cosU1 * sinbearingAngle1R
-        cosSqBearingAngle1R = 1 - (sinBearingAngle1R * sinBearingAngle1R)
-        uSq = cosSqBearingAngle1R * (a * a - (b * b)) / (b * b)
-        A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - (175 * uSq))))
-        B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - (47 * uSq))))
-        sigma = maxVisibilityRadiusM / (b * A)  # maxVisibilityRadiusM in meters
-        sigma_ = 0
-        while abs(sigma - sigma_) > 1e-12:
-            cos2sigmaM = math.cos(2 * sigma1 + sigma)
-            sinsigma = math.sin(sigma)
-            cossigma = math.cos(sigma)
-            deltaSigma = B * sinsigma * (cos2sigmaM + B / 4 * (cossigma * (-1 + 2 * cos2sigmaM * cos2sigmaM) - (B / 6 * cos2sigmaM * (-3 + 4 * sinsigma * sinsigma) * (-3 + 4 * cos2sigmaM * cos2sigmaM))))
-            sigma_ = sigma
-            sigma = maxVisibilityRadiusM / (b * A) + deltaSigma
-        
-        tmp = sinU1 * sinsigma - (cosU1 * cossigma * cosbearingAngle1R)
-        latitude2R = math.atan2(sinU1 * cossigma + cosU1 * sinsigma * cosbearingAngle1R, (1 - f) * math.sqrt(sinBearingAngle1R * sinBearingAngle1R + tmp * tmp))
-        longitudeR = math.atan2(sinsigma * sinbearingAngle1R, cosU1 * cossigma - (sinU1 * sinsigma * cosbearingAngle1R))
-        C = f / 16 * cosSqBearingAngle1R * (4 + f * (4 - (3 * cosSqBearingAngle1R)))
-        L = longitudeR - ((1 - C) * f * sinBearingAngle1R * (sigma + C * sinsigma * (cos2sigmaM + C * cossigma * (-1 + 2 * cos2sigmaM * cos2sigmaM))))
-        longitude2R = (longitude1R + L + 3 * math.pi) % (2 * math.pi) - math.pi  # normalise to -180...+180
-        bearingAngle2R = math.atan2(sinBearingAngle1R, -tmp)
-        
-        latitude2D = math.degrees(latitude2R)
-        longitude2D = math.degrees(longitude2R)
-        bearingAngle2D = math.degrees(bearingAngle2R)
-        if bearingAngle2D < 0:
-            bearingAngle2D = 360-abs(bearingAngle2D)
-        
-        latitudeLongitudeRegion.append(latitude2D)
-        latitudeLongitudeRegion.append(longitude2D)
-    
-    # latitude positive towards north, longitude positive towards east
-    latitudeTopD, dummyLongitudeTopD, latitudeBottomD, dummyLongitudeBottomD, dummyLatitudeLeftD, longitudeLeftD, dummyLatitudeRightD, longitudeRightD = latitudeLongitudeRegion
-    
-    # generate download link for raster region
-    # based on: http://www.opentopography.org/developers
-    downloadRasterLink = "http://opentopo.sdsc.edu/otr/getdem?demtype=SRTMGL3&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff" % (longitudeLeftD,latitudeBottomD,longitudeRightD,latitudeTopD)  # 3 arc-second (this one!)
-    #downloadRasterLink = "http://opentopo.sdsc.edu/otr/getdem?demtype=SRTMGL1&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff" % (longitudeLeftD,latitudeBottomD,longitudeRightD,latitudeTopD)  # 1 arc-second
-    
-    return downloadRasterLink
-
-
 def import_export_origin_0_0_0_and_terrainShadingMask_from_objFile(importExportObj, objFilePath, fileNameIncomplete, heightM, minVisibilityRadiusM, maxVisibilityRadiusM, elevationM=None, shadingMaskSrf=None, origin=None):
         
         objFilePath2 = chr(34) + objFilePath + chr(34)
@@ -617,21 +553,8 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
         #####     check if .obj file is listed in "0_terrain_shading_masks_download_links.tsv"  file (download the "0_terrain_shading_masks_download_links.tsv" file first)
         terrainShadingMask = origin_0_0_0 = elevationM = None
         
-        # connectedToInternet first check
-        connectedToInternet1 = System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable()
-        if connectedToInternet1 == False:
-            # connectedToInternet second check
-            try:
-                client = System.Net.WebClient()
-                client.OpenRead("http://www.google.com")
-                connectedToInternet = True
-            except:
-                connectedToInternet = False
-                # you are not connected to the Internet
-        elif connectedToInternet1 == True:
-            # no need for connectedToInternet second check
-            connectedToInternet = True
-        
+        # connected to Internet check
+        connectedToInternet = gismo_preparation.checkInternetConnection()
         
         if connectedToInternet == False:
             # you are NOT connected to the Internet, exit this function
@@ -724,7 +647,11 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
                 correctedMaskRadiusM, validVisibilityRadiusM, printMsg = distanceBetweenTwoPoints(locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM)
                 if validVisibilityRadiusM == True:
                     # (correctedMaskRadiusM >= maxVisibilityRadiusM)
-                    downloadRasterLink_withCorrectedMaskRadiusKM = destinationLatLon(locationLatitudeD, locationLongitudeD, correctedMaskRadiusM)
+                    # generate download link for raster region
+                    latitudeTopD, dummyLongitudeTopD, latitudeBottomD, dummyLongitudeBottomD, dummyLatitudeLeftD, longitudeLeftD, dummyLatitudeRightD, longitudeRightD = gismo_gis.destinationLatLon(locationLatitudeD, locationLongitudeD, correctedMaskRadiusM)
+                    # based on: http://www.opentopography.org/developers
+                    downloadRasterLink_withCorrectedMaskRadiusKM = "http://opentopo.sdsc.edu/otr/getdem?demtype=SRTMGL3&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff" % (longitudeLeftD,latitudeBottomD,longitudeRightD,latitudeTopD)  # 3 arc-second SRTMGL3
+                    
                     # new rasterFileNamePlusExtension and rasterFilePath corrected according to new correctedMaskRadiusM
                     rasterFileNamePlusExtension_withCorrectedMaskRadiusKM = fileNameIncomplete + "_visibility=" + str(int(maxVisibilityRadiusM/1000)) + "KM" + ".tif"  # rasterFileNamePlusExtension_withCorrectedMaskRadiusKM will always be used instead of rasterFilePath from line 647 !!!
                     rasterFilePath_withCorrectedMaskRadiusKM = os.path.join(workingSubFolderPath, rasterFileNamePlusExtension_withCorrectedMaskRadiusKM)
@@ -773,20 +700,12 @@ def ptZcorrectedHeight(locationPt, meshPt, scaleFactor):
 def createTerrainShadingMask(objFilePath, rasterFilePath, rasterReprojectedFilePath, rasterTranslatedFilePath, locationLatitudeD, locationLongitudeD, heightM, minVisibilityRadiusM, maxVisibilityRadiusM, maskStyle, context, unitConversionFactor):
     
     # output crs data: outputCRS_UTMzone, northOrsouth
-    # by http://stackoverflow.com/a/9188972/3137724 (link given by Even Rouault)
-    outputCRS_UTMzone = (math.floor((locationLongitudeD + 180)/6) % 60) + 1
-    if locationLatitudeD >= 0:
-        # for northern hemisphere
-        northOrsouth = "north"
-    elif locationLatitudeD < 0:
-        # for southern hemisphere
-        northOrsouth = "south"
-    
+    CRS_EPSG_code, outputCRS_UTMzone, northOrsouth = gismo_gis.calculate_CRS_UTMzone(locationLatitudeD, locationLongitudeD)
     
     # reproject raster
     utils = MapWinGIS.UtilsClass()
     resamplingMethod = "-r bilinear"
-    bstrOptions = '-s_srs EPSG:4326 -t_srs "+proj=utm +zone=%s +%s +datum=WGS84 +ellps=WGS84" %s' % (int(outputCRS_UTMzone), northOrsouth, resamplingMethod)
+    bstrOptions = '-s_srs EPSG:4326 -t_srs "+proj=utm +zone=%s +%s +datum=WGS84 +ellps=WGS84" %s' % (outputCRS_UTMzone, northOrsouth, resamplingMethod)
     reprojectGridResult = MapWinGIS.UtilsClass.GDALWarp(utils, rasterFilePath, rasterReprojectedFilePath, bstrOptions, None)
     if (reprojectGridResult != True):
         convertErrorNo = MapWinGIS.GlobalSettingsClass().GdalLastErrorNo
@@ -836,7 +755,7 @@ def createTerrainShadingMask(objFilePath, rasterFilePath, rasterReprojectedFileP
     lowerLeftCornerXcoord = lowerLeftCornerCellCentroidXcoord - (cellsizeX/2)
     lowerLeftCornerYcoord = lowerLeftCornerCellCentroidYcoord - (cellsizeY/2)
     
-    originPtProjected = gismo_osm.projectedLocationCoordinates(locationLatitudeD, locationLongitudeD)  # find the "origin" projected in Rhino document units for specific UTMzone
+    originPtProjected = gismo_gis.projectedLocationCoordinates(locationLatitudeD, locationLongitudeD)  # find the "origin" projected in Rhino document units for specific UTMzone
     
     #terrainMeshLeftBottomPtX = (lowerLeftCornerXcoord/unitConversionFactor2) - (originPtProjected.X/unitConversionFactor2)
     #terrainMeshLeftBottomPtY = (lowerLeftCornerYcoord/unitConversionFactor2) - (originPtProjected.Y/unitConversionFactor2)
@@ -1217,7 +1136,7 @@ if sc.sticky.has_key("gismoGismo_released"):
         gismo_preparation = sc.sticky["gismo_Preparation"]()
         gismo_geometry = sc.sticky["gismo_CreateGeometry"]()
         gismo_environmentalAnalysis = sc.sticky["gismo_EnvironmentalAnalysis"]()
-        gismo_osm = sc.sticky["gismo_OSM"]()
+        gismo_gis = sc.sticky["gismo_GIS"]()
         
         locationName, locationLatitudeD, locationLongitudeD, timeZone, elevation, validLocationData, printMsg = gismo_preparation.checkLocationData(_location)
         if validLocationData:
