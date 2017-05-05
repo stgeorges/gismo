@@ -34,10 +34,11 @@ Provided by Gismo 0.0.2
         _location: Output from Gismo's \"Create Location\" component. This is essentially a text containing information (latitude, longitude, name...) about a location on the Earth.
         radius_: Horizontal distance to which the surrounding terrain will be taken into account.
                  -
-                 It can not be shorter than 50 meters or longer than 20 000 meters.
+                 It can not be shorter than 50 meters.
+                 It can not be larger than from 5000 to 27000 meters. This depends on _location's latitude. The higher it is, the closer it is to 5000.
                  -
                  The component itself might inform the user to alter the initial radius_ inputted by the user.
-                 This is due to restriction of downloadable OSM data being limited to 0.5 latitude x 0.5 longitude range. If radius_ value for chosen location gets is equal to the mentioned range, or larger than it, the component will inform the user to shrink the radius_ for a certain amount.
+                 This is due to restriction of downloadable OSM data being limited to 0.5 latitude x 0.5 longitude range. If radius_ value for the chosen _location is equal to the mentioned range, or larger than it, the component will inform the user to shrink the radius_ for a certain amount.
                  -
                  If not supplied, default value of 100 meters will be used.
                  -
@@ -96,11 +97,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM Shapes"
 ghenv.Component.NickName = "OSMshapes"
-ghenv.Component.Message = "VER 0.0.2\nMAR_29_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
+#compatibleGismoVersion = VER 0.0.2\nMAY_05_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "1"
 except: pass
 
@@ -242,133 +243,6 @@ def checkInputData(radiusM, north, originPt, shapeType, requiredKeys, onlyRemove
     return radiusM, northRad, northDeg, originPt, shapeType, shapeTypeLabel, requiredKeys, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, iteropMapWinGIS_dll_folderPath, unitConversionFactor, validInputData, printMsg
 
 
-def destinationLatLon(latitude1D, longitude1D):
-    # "Destination point given distance and bearing from start point" by Vincenty solution
-    # based on JavaScript code made by Chris Veness
-    # http://www.movable-type.co.uk/scripts/latlong-vincenty.html
-    
-    # for WGS84:
-    a = 6378137  # equatorial radius, meters
-    b = 6356752.314245  # polar radius, meters
-    f = 0.00335281066474  # flattening (ellipticity, oblateness) parameter = (a-b)/a, dimensionless
-    
-    bearingAnglesR = [math.radians(0), math.radians(180), math.radians(270), math.radians(90)]  # top, bottom, left, right
-    latitudeLongitudeRegion = []
-    for bearingAngle1R in bearingAnglesR:
-        latitude1R = math.radians(latitude1D)
-        longitude1R = math.radians(longitude1D)
-        sinbearingAngle1R = math.sin(bearingAngle1R)
-        cosbearingAngle1R = math.cos(bearingAngle1R)
-        tanU1 = (1 - f) * math.tan(latitude1R)
-        cosU1 = 1 / math.sqrt(1 + tanU1 * tanU1)
-        sinU1 = tanU1 * cosU1
-        sigma1 = math.atan2(tanU1, cosbearingAngle1R)
-        sinBearingAngle1R = cosU1 * sinbearingAngle1R
-        cosSqBearingAngle1R = 1 - (sinBearingAngle1R * sinBearingAngle1R)
-        uSq = cosSqBearingAngle1R * (a * a - (b * b)) / (b * b)
-        A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - (175 * uSq))))
-        B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - (47 * uSq))))
-        sigma = radiusM / (b * A)  # radiusM in meters
-        sigma_ = 0
-        while abs(sigma - sigma_) > 1e-12:
-            cos2sigmaM = math.cos(2 * sigma1 + sigma)
-            sinsigma = math.sin(sigma)
-            cossigma = math.cos(sigma)
-            deltaSigma = B * sinsigma * (cos2sigmaM + B / 4 * (cossigma * (-1 + 2 * cos2sigmaM * cos2sigmaM) - (B / 6 * cos2sigmaM * (-3 + 4 * sinsigma * sinsigma) * (-3 + 4 * cos2sigmaM * cos2sigmaM))))
-            sigma_ = sigma
-            sigma = radiusM / (b * A) + deltaSigma
-        
-        tmp = sinU1 * sinsigma - (cosU1 * cossigma * cosbearingAngle1R)
-        latitude2R = math.atan2(sinU1 * cossigma + cosU1 * sinsigma * cosbearingAngle1R, (1 - f) * math.sqrt(sinBearingAngle1R * sinBearingAngle1R + tmp * tmp))
-        longitudeR = math.atan2(sinsigma * sinbearingAngle1R, cosU1 * cossigma - (sinU1 * sinsigma * cosbearingAngle1R))
-        C = f / 16 * cosSqBearingAngle1R * (4 + f * (4 - (3 * cosSqBearingAngle1R)))
-        L = longitudeR - ((1 - C) * f * sinBearingAngle1R * (sigma + C * sinsigma * (cos2sigmaM + C * cossigma * (-1 + 2 * cos2sigmaM * cos2sigmaM))))
-        longitude2R = (longitude1R + L + 3 * math.pi) % (2 * math.pi) - math.pi  # normalise to -180...+180
-        bearingAngle2R = math.atan2(sinBearingAngle1R, -tmp)
-        
-        latitude2D = math.degrees(latitude2R)
-        longitude2D = math.degrees(longitude2R)
-        bearingAngle2D = math.degrees(bearingAngle2R)
-        if bearingAngle2D < 0:
-            bearingAngle2D = 360-abs(bearingAngle2D)
-        
-        latitudeLongitudeRegion.append(latitude2D)
-        latitudeLongitudeRegion.append(longitude2D)
-    
-    # latitude positive towards north, longitude positive towards east
-    latitudeTopD, longitudeTopD, latitudeBottomD, longitudeBottomD, latitudeLeftD, longitudeLeftD, latitudeRightD, longitudeRightD = latitudeLongitudeRegion
-    
-    return latitudeTopD, longitudeTopD, latitudeBottomD, longitudeBottomD, latitudeLeftD, longitudeLeftD, latitudeRightD, longitudeRightD
-
-
-def distanceBetweenTwoPoints(latitude1D, longitude1D, radiusM):
-    # "Distance/bearing between two points (inverse solution)" by Vincenty solution
-    # based on JavaScript code made by Chris Veness
-    # http://www.movable-type.co.uk/scripts/latlong-vincenty.html
-    
-    # setting the latitude2D, longitude2D according to SRTM latitude range boundaries (-56 to 60)
-    if latitude1D >= 0:
-        # northern hemishere:
-        latitude2D = 60
-    elif latitude1D < 0:
-        # southern hemishere:
-        latitude2D = -56
-    longitude2D = longitude1D
-    
-    # for WGS84:
-    a = 6378137  # equatorial radius, meters
-    b = 6356752.314245  # polar radius, meters
-    f = 0.00335281066474  # flattening (ellipticity, oblateness) parameter = (a-b)/a, dimensionless
-    
-    latitude1R = math.radians(latitude1D)
-    latitude2R = math.radians(latitude2D)
-    longitude1R = math.radians(longitude1D)
-    longitude2R = math.radians(longitude2D)
-    
-    L = longitude2R - longitude1R
-    tanU1 = (1-f) * math.tan(latitude1R)
-    cosU1 = 1 / math.sqrt((1 + tanU1*tanU1))
-    sinU1 = tanU1 * cosU1
-    tanU2 = (1-f) * math.tan(latitude2R)
-    cosU2 = 1 / math.sqrt((1 + tanU2*tanU2))
-    sinU2 = tanU2 * cosU2
-    longitudeR = L
-    longitudeR_ = 0
-    
-    for i in range(100):
-        sinLongitudeR = math.sin(longitudeR)
-        cosLongitudeR = math.cos(longitudeR)
-        sinSqSigma = (cosU2*sinLongitudeR) * (cosU2*sinLongitudeR) + (cosU1*sinU2-sinU1*cosU2*cosLongitudeR) * (cosU1*sinU2-sinU1*cosU2*cosLongitudeR)
-        sinSigma = math.sqrt(sinSqSigma)
-        cosSigma = sinU1*sinU2 + cosU1*cosU2*cosLongitudeR
-        sigma = math.atan2(sinSigma, cosSigma)
-        sinBearingAngleR = cosU1 * cosU2 * sinLongitudeR / sinSigma
-        cosSqBearingAngleR = 1 - sinBearingAngleR*sinBearingAngleR
-        if cosSqBearingAngleR == 0:
-            # if distanceM is measured along the equator line (latitude1D = latitude2D = 0, longitude1D != longitude2D != 0)
-            cos2SigmaM = 0
-        else:
-            cos2SigmaM = cosSigma - 2*sinU1*sinU2/cosSqBearingAngleR
-        C = f/16*cosSqBearingAngleR*(4+f*(4-3*cosSqBearingAngleR))
-        longitudeR_ = longitudeR
-        longitudeR = L + (1-C) * f * sinBearingAngleR * (sigma + C*sinSigma*(cos2SigmaM+C*cosSigma*(-1+2*cos2SigmaM*cos2SigmaM)))
-    
-    uSq = cosSqBearingAngleR * (a*a - b*b) / (b*b)
-    A = 1 + uSq/16384*(4096+uSq*(-768+uSq*(320-175*uSq)))
-    B = uSq/1024 * (256+uSq*(-128+uSq*(74-47*uSq)))
-    deltaSigma = B*sinSigma*(cos2SigmaM+B/4*(cosSigma*(-1+2*cos2SigmaM*cos2SigmaM) - B/6*cos2SigmaM*(-3+4*sinSigma*sinSigma)*(-3+4*cos2SigmaM*cos2SigmaM)))
-    
-    distanceM = b*A*(sigma-deltaSigma)  # in meters
-    
-    bearingAngleForwardR = math.atan2(cosU2*sinLongitudeR,  cosU1*sinU2-sinU1*cosU2*cosLongitudeR)
-    bearingAngleReverseR = math.atan2(cosU1*sinLongitudeR, -sinU1*cosU2+cosU1*sinU2*cosLongitudeR)
-    
-    bearingAngleForwardD = math.degrees(bearingAngleForwardR)
-    bearingAngleReverseD = math.degrees(bearingAngleReverseR)
-    
-    return distanceM
-
-
 def setupOsmconf_ini_File(requiredKeys, shapeType, overpassFile_filePathL, osmconf_ini_filePath):
     
     # identify unique keys from overpassFile_filePathL files
@@ -378,11 +252,10 @@ def setupOsmconf_ini_File(requiredKeys, shapeType, overpassFile_filePathL, osmco
         for overpassFile_filePath in overpassFile_filePathL:
             requiredKeys = []
             
-            #overpassFile = open(overpassFile_filePath,"r")
+            # open the overpassFile files (4 of them) one by one
             with open(overpassFile_filePath) as overpassFile:
                 foundTags = False
                 lines = overpassFile.readlines()
-                #for line in overpassFile.xreadlines():
                 for line in lines:
                     if "tags" in line:
                         # "  "tags": {" line found
@@ -398,6 +271,7 @@ def setupOsmconf_ini_File(requiredKeys, shapeType, overpassFile_filePathL, osmco
                     
                 foundTags = False
                 overpassFile.close()
+                del lines; del overpassFile
                 
                 #print "requiredKeys: ", requiredKeys
                 requiredKeysSet = set(requiredKeys)
@@ -413,11 +287,11 @@ def setupOsmconf_ini_File(requiredKeys, shapeType, overpassFile_filePathL, osmco
     
     # create lines for the new osmconf.ini file by inserting the fullName_keysL to each section ([points], [lines], [multipolygons], [multilinestrings], [other_relations])
     osmconf_ini_newFileLines = []
-    points_tagPassed = lines_tagPassed = multipolygons_tagPassed = multilinestrings_tagPassed = other_relations_tagPassed = False  # initial values
+    points_tagPassed = False; lines_tagPassed = False; multipolygons_tagPassed = False; multilinestrings_tagPassed = False; other_relations_tagPassed = False  # initial values
     
-    #overpassFile = open(osmconf_ini_filePath,"r")  # results in a resource leak (http://stackoverflow.com/questions/28396759/os-remove-in-windows-gives-error-32-being-used-by-another-process). Reported at: http://www.grasshopper3d.com/xn/detail/2985220:Comment:1682182
-    with open(osmconf_ini_filePath) as overpassFile:
-        lines = overpassFile.readlines()
+    # open the current "osmconf.ini" file and iterate through its lines in order to create the new "osmconf.ini" file
+    with open(osmconf_ini_filePath) as osmconf_ini_File:
+        lines = osmconf_ini_File.readlines()
         for line in lines:
             # setting keys are considered to be polygons. This puts all shapes with these keys into the multipolygons.shp file. Otherwise (their key is not listed in this line) if they are closed ways, they will be put into the lines.shp file
             if line.startswith("closed_ways_are_polygons="):
@@ -496,23 +370,27 @@ def setupOsmconf_ini_File(requiredKeys, shapeType, overpassFile_filePathL, osmco
                         else:
                             # last key in fullName_keysL[4]
                             line = line + key + "\n"
+            
             osmconf_ini_newFileLines.append(line)
     
-    points_tagPassed = lines_tagPassed = multipolygons_tagPassed = multilinestrings_tagPassed = other_relations_tagPassed = False  # setting them back to "False" values
-    overpassFile.close()  # results in a resource leak (http://stackoverflow.com/questions/28396759/os-remove-in-windows-gives-error-32-being-used-by-another-process). Reported at: http://www.grasshopper3d.com/xn/detail/2985220:Comment:1682182
+    points_tagPassed = False; lines_tagPassed = False; multipolygons_tagPassed = False; multilinestrings_tagPassed = False; other_relations_tagPassed = False  # setting them back to "False" values
+    osmconf_ini_File.close()
     os.remove(osmconf_ini_filePath)  # delete the original "osmconf.ini" file
     
+    
     # create the new osmconf.ini file
-    osmconf_ini_newFilePath = osmconf_ini_filePath
-    #new_overpassFile_file = open(osmconf_ini_newFilePath,"w")  # results in a resource leak (http://stackoverflow.com/questions/28396759/os-remove-in-windows-gives-error-32-being-used-by-another-process). Reported at: http://www.grasshopper3d.com/xn/detail/2985220:Comment:1682182
-    with open(osmconf_ini_newFilePath, "w") as new_overpassFile_file:
+    new_osmconf_ini_FilePath = osmconf_ini_filePath
+    
+    with open(new_osmconf_ini_FilePath, "w") as new_osmconf_ini_File:
         for line in osmconf_ini_newFileLines:
-            new_overpassFile_file.write(line)
-    new_overpassFile_file.close()  # results in a resource leak (http://stackoverflow.com/questions/28396759/os-remove-in-windows-gives-error-32-being-used-by-another-process). Reported at: http://www.grasshopper3d.com/xn/detail/2985220:Comment:1682182
+            new_osmconf_ini_File.write(line)
+    new_osmconf_ini_File.close()
+    
     
     # deleting
-    del overpassFile
-    del new_overpassFile_file
+    del lines
+    del osmconf_ini_File
+    del new_osmconf_ini_File
     del osmconf_ini_newFileLines
     
     
@@ -525,19 +403,33 @@ def setupOsmconf_ini_File(requiredKeys, shapeType, overpassFile_filePathL, osmco
 
 def checkOsmShpFiles(locationLatitudeD, locationLongitudeD, fileNameIncomplete, radiusM, requiredKeys, shapeType):
     
-    latitudeTopD, longitudeTopD, latitudeBottomD, longitudeBottomD, latitudeLeftD, longitudeLeftD, latitudeRightD, longitudeRightD = destinationLatLon(locationLatitudeD, locationLongitudeD)
+    latitudeTopD, longitudeTopD, latitudeBottomD, longitudeBottomD, latitudeLeftD, longitudeLeftD, latitudeRightD, longitudeRightD = gismo_gis.destinationLatLon(locationLatitudeD, locationLongitudeD, radiusM)
     
     # check if osm region is 0.5x0.5 degrees
-    if ((latitudeTopD - latitudeBottomD) >= 0.5)  or  ((longitudeRightD - longitudeLeftD) >= 0.5):
-        distanceM = distanceBetweenTwoPoints(locationLatitudeD, locationLongitudeD, radiusM)
-        correctedRadiusM = int(distanceM)  # int(distanceM) will always perform the math.floor(distanceM)
-        validVisibilityRadiusM = False
+    validRadiusM = True  # initial value
+    if ((latitudeTopD - latitudeBottomD) >= 0.5):
+        validRadiusM = False
+        latitude2D = locationLatitudeD - 0.24  # 0.24 is 0.25*2 (0.25 from both sides of the _location) - 0.01 (for safety)
+        longitude2D = locationLongitudeD
+        distanceM = gismo_gis.distanceBetweenTwoPoints(locationLatitudeD, locationLongitudeD, latitude2D, longitude2D)
+        correctedRadiusM_for_latitude = int(distanceM)  # int(distanceM) will always perform the math.floor(distanceM)
+    if ((longitudeRightD - longitudeLeftD) >= 0.5):
+        validRadiusM = False
+        latitude2D = locationLatitudeD 
+        longitude2D = locationLongitudeD - 0.24  # 0.24 is 0.25*2 (0.25 from both sides of the _location) - 0.01 (for safety)
+        distanceM = gismo_gis.distanceBetweenTwoPoints(locationLatitudeD, locationLongitudeD, latitude2D, longitude2D)
+        correctedRadiusM_for_longitude = int(distanceM)  # int(distanceM) will always perform the math.floor(distanceM)
+    
+    if (validRadiusM == False):
+        #print "correctedRadiusM_for_latitude, correctedRadiusM_for_longitude: ", correctedRadiusM_for_latitude, ",", correctedRadiusM_for_longitude
+        shapeFile_filePath = fullName_keys = None
         printMsg = "This component downloads map data from openstreetmap.org in order to create the shapes for the chosen _location.\n" + \
-                   "But mentioned openstreetmap.org data has limits: the radius can not be longer than 0.25 degrees of latitude and longitude.\n" + \
-                   "This is why the inputted radius_ value, needs to be shank.\n" + \
+                   "But mentioned openstreetmap.org download data has limits: the radius can not be longer than 0.25 degrees of latitude and longitude.\n" + \
+                   "This is why the inputted radius_ value, needs to be shrank.\n" + \
                    " \n" + \
-                   "Please supply the \"radius_\" input with value: %s.\n" % correctedRadiusM
-        return shapeFile_filePath, valid_osm_or_shp_files, printMsg
+                   "Please supply the \"radius_\" input with the value not larger than: %s.\n" % min(correctedRadiusM_for_latitude, correctedRadiusM_for_longitude)  # always choose the smallest corrected radius
+        return shapeFile_filePath, fullName_keys, validRadiusM, printMsg
+    
     
     
     # create "gismoFolder_\osm_files" folder
@@ -571,20 +463,7 @@ def checkOsmShpFiles(locationLatitudeD, locationLongitudeD, fileNameIncomplete, 
     
     
     #  check internet connection
-    # connectedToInternet first check
-    connectedToInternet1 = System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable()
-    if connectedToInternet1 == False:
-        # connectedToInternet second check
-        try:
-            client = System.Net.WebClient()
-            client.OpenRead("http://www.google.com")
-            connectedToInternet = True
-        except:
-            connectedToInternet = False
-            # you are not connected to the Internet
-    elif connectedToInternet1 == True:
-        # no need for connectedToInternet second check
-        connectedToInternet = True
+    connectedToInternet = gismo_preparation.checkInternetConnection()
     
     
     # always delete the .shp/.shx/.dbg/.prj files, whenever the "OSM Shapes" component is run
@@ -652,13 +531,13 @@ def checkOsmShpFiles(locationLatitudeD, locationLongitudeD, fileNameIncomplete, 
     
     # 1) check if lines.shp, multilinestrings....shp, multipolygons....shp, points....shp files exist in "osm_files\osm_shp_file_folderPath\" folder
     if os.path.isfile(shpMultipolygonsFile_filePath) and os.path.isfile(shpLinesFile_filePath) and os.path.isfile(shpPointsFile_filePath) and os.path.isfile(shpMultilinestringsFile_filePath):
-        ####print "_1_SHP files exist!"
+        #print "_1_SHP files exist!"
         # lines.shp, multilinestrings.shp, multipolygons.shp, points.shp files EXIST in "osm_files\osm_shp_file_folderPath\" folder. Disregard the .osm file
         valid_osm_or_shp_files = True
         osmToShpSwitch = False  # dummy value
         printMsg = "ok"
     else:
-        ####print "_1_SHP files DO NOT exist"
+        #print "_1_SHP files DO NOT exist"
         # lines.shp, multilinestrings.shp, multipolygons.shp, points.shp files do NOT exist in "osm_files\osm_shp_file_folderPath\" folder
         # check if .osm file exists in "osm_files\osm_shp_file_folderPath\" folder
         if os.path.isfile(osmFile_filePath):
@@ -690,7 +569,7 @@ def checkOsmShpFiles(locationLatitudeD, locationLongitudeD, fileNameIncomplete, 
                     printMsg = "This component requires OSM data to be downloaded from openstreetmap.org. It has just failed to do that. Try the following two fixes:\n" + \
                                " \n" + \
                                "1) Sometimes due to large number of requests, the component fails to download the OSM data even if openstreetmap.org website and their services are up and running.\n" + \
-                               "In this case, wait a couple of seconds and try reruning the component.\n" + \
+                               "In this case, wait a couple of seconds and try rerunning the component.\n" + \
                                " \n" + \
                                "2) Try lowering the \"radius_\" input.\n" + \
                                " \n" + \
@@ -749,55 +628,11 @@ def checkOsmShpFiles(locationLatitudeD, locationLongitudeD, fileNameIncomplete, 
     return shapeFile_filePath, fullName_keys, valid_osm_or_shp_files, printMsg
 
 
-def filterShapes(shortenedName_keys, subValuesL, shapesL, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove):
-    
-    value__osm_id = "^#-@"  # dummy value, in case for some unknown reason there is no "osm_id" field
-    value__osm_way_id = "^#-@"  # dummy value, in case there is no "osm_way_id" field (shapeType = 1,2)
-    for shortenedName_keysIndex, field in enumerate(shortenedName_keys):
-        if field == "osm_id":
-            value__osm_id = subValuesL[shortenedName_keysIndex]
-        if field == "osm_way_id":
-            value__osm_way_id = subValuesL[shortenedName_keysIndex]
-    
-    
-    # removing shapes
-    if value__osm_id in osm_id_Remove:
-        return [], []
-    elif value__osm_way_id in osm_way_id_Remove:
-        return [], []
-    
-    # allowing this shapes
-    if value__osm_id in osm_id_Only:
-        return subValuesL, shapesL
-    elif value__osm_way_id in osm_way_id_Only:
-        return subValuesL, shapesL
-    else:
-        if (len(osm_id_Only) == 0) and (len(osm_way_id_Only) == 0):
-            # "osm_id_Only" and "osm_way_id_Only" are empty. Use ALL shapes except ones whos "osm_id" and "osm_way_id" are defined in either "osm_id_Remove" and "osm_way_id_Remove"
-            return subValuesL, shapesL
-        else:
-            # either "osm_id_Only" and "osm_way_id_Only" are NOT empty. Use ONLY those shapes whos "osm_id" and "osm_way_id" are defined in either "osm_id_Only" and "osm_way_id_Only"
-            return [], []
-
-
 def createShapesKeysValues(locationName, locationLatitudeD, locationLongitudeD, shapeFile_filePath, northRad, originPt, shapeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove, unitConversionFactor):
     
-    # UTM CRS for given location
-    # by http://stackoverflow.com/a/9188972/3137724 (link given by Even Rouault)
-    UTMzone = (math.floor((locationLongitudeD + 180)/6) % 60) + 1
-    if locationLatitudeD >= 0:
-        # for northern hemisphere
-        northOrsouth = "north"
-        outputCRS_EPSG = 32600 + UTMzone
-    elif locationLatitudeD < 0:
-        # for southern hemisphere
-        northOrsouth = "south"
-        outputCRS_EPSG = 32700 + UTMzone
+    # this is the "main" function. It extracts shapes from the .shp file
     
-    # output crs
-    outputCRS = MapWinGIS.GeoProjectionClass()
-    outputCRS.ImportFromEPSG(outputCRS_EPSG)
-    
+    outputCRS = gismo_gis.UTM_CRS_from_latitude(locationLatitudeD, locationLongitudeD)
     
     
     # fix invalid shapes, overlapping shape issues, shape vertices direction ...
@@ -852,7 +687,7 @@ def createShapesKeysValues(locationName, locationLatitudeD, locationLongitudeD, 
                        "If this same message appears again open a new topic about it on: www.grasshopper3d.com/group/gismo/forum."
     
     
-    originPtProjected_meters = gismo_osm.projectedLocationCoordinates(locationLatitudeD, locationLongitudeD)  # in meters!
+    originPtProjected_meters = gismo_gis.projectedLocationCoordinates(locationLatitudeD, locationLongitudeD)  # in meters!
     originPtProjected = Rhino.Geometry.Point3d(originPtProjected_meters.X/unitConversionFactor, originPtProjected_meters.Y/unitConversionFactor, originPtProjected_meters.Z/unitConversionFactor)  # in Rhino units
     
     # rotation due to north angle position
@@ -909,7 +744,7 @@ def createShapesKeysValues(locationName, locationLatitudeD, locationLongitudeD, 
                 transformBoolSuccess = point3dMoved.Transform(transformMatrixRotate)
                 ptsPerShape.append(point3dMoved)
             
-            subValuesL_filtered, ptsPerShape_filtered = filterShapes(shortenedName_keys, subValuesL, ptsPerShape, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove)
+            subValuesL_filtered, ptsPerShape_filtered = gismo_gis.filterShapes(shortenedName_keys, subValuesL, ptsPerShape, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove)
             
             values.AddRange(subValuesL_filtered, Grasshopper.Kernel.Data.GH_Path(i))
             shapes.AddRange(ptsPerShape_filtered, Grasshopper.Kernel.Data.GH_Path(i))
@@ -938,7 +773,7 @@ def createShapesKeysValues(locationName, locationLatitudeD, locationLongitudeD, 
                     ptsPerPart.append(point3dMoved)
                 polyline = Rhino.Geometry.Polyline(ptsPerPart)
                 
-                subValuesL_filtered, shapesL_filtered = filterShapes(shortenedName_keys, subValuesL, [polyline], osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove)
+                subValuesL_filtered, shapesL_filtered = gismo_gis.filterShapes(shortenedName_keys, subValuesL, [polyline], osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove)
                 
                 values.AddRange(subValuesL_filtered, Grasshopper.Kernel.Data.GH_Path(i,n))
                 shapes.AddRange(shapesL_filtered, Grasshopper.Kernel.Data.GH_Path(i,n))
@@ -1001,7 +836,7 @@ def titleAndBaking(locationName, locationLatitudeD, locationLongitudeD, radiusM,
                     curve = shape.ToNurbsCurve()
                     shapesFlattenedList.append(curve)
     
-    if shapeType == 2:
+    if (shapeType == 2):
         titleLabelMesh, titleStartPt, titleTextSize = gismo_preparation.createTitle("mesh", [ptcloud], [titleLabelText])
     else:
         titleLabelMesh, titleStartPt, titleTextSize = gismo_preparation.createTitle("mesh", shapesFlattenedList, [titleLabelText])
@@ -1013,7 +848,7 @@ def titleAndBaking(locationName, locationLatitudeD, locationLongitudeD, radiusM,
     
     # baking
     if bakeIt_:
-        layerName = locationName + "_" + str(locationLatitudeD) + "_" + str(locationLongitudeD) + "_RADIUS=" + str(radiusM) + "M" + "_NORTH=" + str(northDeg) + "_GEOMETRYTYPE=" + str(shapeType)
+        layerName = locationName + "_" + str(locationLatitudeD) + "_" + str(locationLongitudeD) + "_RADIUS=" + str(radiusM) + "M" + "_NORTH=" + str(northDeg) + "_SHAPETYPE=" + str(shapeType)
         
         layParentName = "GISMO"; laySubName = "OSM"; layerCategoryName = "SHAPES"
         newLayerCategory = False
@@ -1022,7 +857,10 @@ def titleAndBaking(locationName, locationLatitudeD, locationLongitudeD, radiusM,
         
         layerIndex, layerName_dummy = gismo_preparation.createLayer(layParentName, laySubName, layerCategoryName, newLayerCategory, layerName, laySubName_color, layerColor) 
         
-        geometryToBakeL = shapesFlattenedList + [originPt]
+        if (shapeType == 2):
+            geometryToBakeL = [ptcloud, originPt]
+        else:
+            geometryToBakeL = shapesFlattenedList + [originPt]
         geometryIds = gismo_preparation.bakeGeometry(geometryToBakeL, layerIndex)
         
         geometryToBakeL2 = [titleLabelMesh]
@@ -1071,7 +909,7 @@ if sc.sticky.has_key("gismoGismo_released"):
         gismo_mainComponent = sc.sticky["gismo_mainComponent"]()
         gismo_preparation = sc.sticky["gismo_Preparation"]()
         gismo_geometry = sc.sticky["gismo_CreateGeometry"]()
-        gismo_osm = sc.sticky["gismo_OSM"]()
+        gismo_gis = sc.sticky["gismo_GIS"]()
         
         locationName, locationLatitudeD, locationLongitudeD, timeZone, elevation, validLocationData, printMsg = gismo_preparation.checkLocationData(_location)
         if validLocationData:
@@ -1085,9 +923,14 @@ if sc.sticky.has_key("gismoGismo_released"):
                         #keys = shortenedName_keys
                         keys = fullName_keys
                         if validShapes:
-                            title, titleOriginPt = titleAndBaking(locationName, locationLatitudeD, locationLongitudeD, radiusM, northDeg, originPt, shapeType, shapeTypeLabel, shapes)
-                            printOutput(locationName, locationLatitudeD, locationLongitudeD, radiusM, northDeg, originPt, requiredKeys, shapeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove)
-                            gc.collect()
+                            validShapefiles, printMsg = gismo_gis.checkIfShapefilesAreValid(keys, values)
+                            if validShapefiles:
+                                title, titleOriginPt = titleAndBaking(locationName, locationLatitudeD, locationLongitudeD, radiusM, northDeg, originPt, shapeType, shapeTypeLabel, shapes)
+                                printOutput(locationName, locationLatitudeD, locationLongitudeD, radiusM, northDeg, originPt, requiredKeys, shapeType, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove)
+                                gc.collect()
+                            else:
+                                print printMsg
+                                ghenv.Component.AddRuntimeMessage(level, printMsg)
                         else:
                             print printMsg
                             ghenv.Component.AddRuntimeMessage(level, printMsg)
