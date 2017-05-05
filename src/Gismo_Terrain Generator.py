@@ -106,11 +106,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Terrain Generator"
 ghenv.Component.NickName = "TerrainGenerator"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
-#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
+#compatibleGismoVersion = VER 0.0.2\nMAY_05_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "1"
 except: pass
 
@@ -395,65 +395,6 @@ def distanceBetweenTwoPoints(latitude1D, longitude1D, maxVisibilityRadiusM):
     return correctedMaskRadiusM, validVisibilityRadiusM, printMsg
 
 
-def destinationLatLon(latitude1D, longitude1D, maxVisibilityRadiusM):
-    # "Destination point given distance and bearing from start point" by Vincenty solution
-    # based on JavaScript code made by Chris Veness
-    # http://www.movable-type.co.uk/scripts/latlong-vincenty.html
-    
-    # for WGS84:
-    a = 6378137  # equatorial radius, meters
-    b = 6356752.314245  # polar radius, meters
-    f = 0.00335281066474  # flattening (ellipticity, oblateness) parameter = (a-b)/a, dimensionless
-    
-    bearingAnglesR = [math.radians(0), math.radians(180), math.radians(270), math.radians(90)]  # top, bottom, left, right
-    latitudeLongitudeRegion = []
-    for bearingAngle1R in bearingAnglesR:
-        latitude1R = math.radians(latitude1D)
-        longitude1R = math.radians(longitude1D)
-        sinbearingAngle1R = math.sin(bearingAngle1R)
-        cosbearingAngle1R = math.cos(bearingAngle1R)
-        tanU1 = (1 - f) * math.tan(latitude1R)
-        cosU1 = 1 / math.sqrt(1 + tanU1 * tanU1)
-        sinU1 = tanU1 * cosU1
-        sigma1 = math.atan2(tanU1, cosbearingAngle1R)
-        sinBearingAngle1R = cosU1 * sinbearingAngle1R
-        cosSqBearingAngle1R = 1 - (sinBearingAngle1R * sinBearingAngle1R)
-        uSq = cosSqBearingAngle1R * (a * a - (b * b)) / (b * b)
-        A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - (175 * uSq))))
-        B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - (47 * uSq))))
-        sigma = maxVisibilityRadiusM / (b * A)  # maxVisibilityRadiusM in meters
-        sigma_ = 0
-        while abs(sigma - sigma_) > 1e-12:
-            cos2sigmaM = math.cos(2 * sigma1 + sigma)
-            sinsigma = math.sin(sigma)
-            cossigma = math.cos(sigma)
-            deltaSigma = B * sinsigma * (cos2sigmaM + B / 4 * (cossigma * (-1 + 2 * cos2sigmaM * cos2sigmaM) - (B / 6 * cos2sigmaM * (-3 + 4 * sinsigma * sinsigma) * (-3 + 4 * cos2sigmaM * cos2sigmaM))))
-            sigma_ = sigma
-            sigma = maxVisibilityRadiusM / (b * A) + deltaSigma
-        
-        tmp = sinU1 * sinsigma - (cosU1 * cossigma * cosbearingAngle1R)
-        latitude2R = math.atan2(sinU1 * cossigma + cosU1 * sinsigma * cosbearingAngle1R, (1 - f) * math.sqrt(sinBearingAngle1R * sinBearingAngle1R + tmp * tmp))
-        longitudeR = math.atan2(sinsigma * sinbearingAngle1R, cosU1 * cossigma - (sinU1 * sinsigma * cosbearingAngle1R))
-        C = f / 16 * cosSqBearingAngle1R * (4 + f * (4 - (3 * cosSqBearingAngle1R)))
-        L = longitudeR - ((1 - C) * f * sinBearingAngle1R * (sigma + C * sinsigma * (cos2sigmaM + C * cossigma * (-1 + 2 * cos2sigmaM * cos2sigmaM))))
-        longitude2R = (longitude1R + L + 3 * math.pi) % (2 * math.pi) - math.pi  # normalise to -180...+180
-        bearingAngle2R = math.atan2(sinBearingAngle1R, -tmp)
-        
-        latitude2D = math.degrees(latitude2R)
-        longitude2D = math.degrees(longitude2R)
-        bearingAngle2D = math.degrees(bearingAngle2R)
-        if bearingAngle2D < 0:
-            bearingAngle2D = 360-abs(bearingAngle2D)
-        
-        latitudeLongitudeRegion.append(latitude2D)
-        latitudeLongitudeRegion.append(longitude2D)
-    
-    # latitude positive towards north, longitude positive towards east
-    latitudeTopD, dummyLongitudeTopD, latitudeBottomD, dummyLongitudeBottomD, dummyLatitudeLeftD, longitudeLeftD, dummyLatitudeRightD, longitudeRightD = latitudeLongitudeRegion
-    
-    return latitudeTopD, dummyLongitudeTopD, latitudeBottomD, dummyLongitudeBottomD, dummyLatitudeLeftD, longitudeLeftD, dummyLatitudeRightD, longitudeRightD
-
-
 def import_export_origin_0_0_0_and_terrainShadingMask_from_objFile(importExportObj, objFilePath, fileNameIncomplete, heightM, minVisibilityRadiusM, maxVisibilityRadiusM, elevationM=None, shadingMaskSrf=None, origin=None):
         
         objFilePath2 = chr(34) + objFilePath + chr(34)
@@ -585,21 +526,8 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
         #####     check if .obj file is listed in "0_terrain_shading_masks_download_links.tsv"  file (download the "0_terrain_shading_masks_download_links.tsv" file first)
         terrainShadingMask = origin_0_0_0 = elevationM = None
         
-        # connectedToInternet first check
-        connectedToInternet1 = System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable()
-        if connectedToInternet1 == False:
-            # connectedToInternet second check
-            try:
-                client = System.Net.WebClient()
-                client.OpenRead("http://www.google.com")
-                connectedToInternet = True
-            except:
-                connectedToInternet = False
-                # you are not connected to the Internet
-        elif connectedToInternet1 == True:
-            # no need for connectedToInternet second check
-            connectedToInternet = True
-        
+        # connected to Internet check
+        connectedToInternet = gismo_preparation.checkInternetConnection()
         
         if connectedToInternet == False:
             # you are NOT connected to the Internet, exit this function
@@ -690,7 +618,7 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
                 correctedMaskRadiusM, validVisibilityRadiusM, printMsg = distanceBetweenTwoPoints(locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM)
                 if validVisibilityRadiusM == True:
                     # (correctedMaskRadiusM >= maxVisibilityRadiusM)
-                    latitudeTopD, dummyLongitudeTopD, latitudeBottomD, dummyLongitudeBottomD, dummyLatitudeLeftD, longitudeLeftD, dummyLatitudeRightD, longitudeRightD = destinationLatLon(locationLatitudeD, locationLongitudeD, correctedMaskRadiusM)
+                    latitudeTopD, dummyLongitudeTopD, latitudeBottomD, dummyLongitudeBottomD, dummyLatitudeLeftD, longitudeLeftD, dummyLatitudeRightD, longitudeRightD = gismo_gis.destinationLatLon(locationLatitudeD, locationLongitudeD, correctedMaskRadiusM)
                     # generate download link for raster region
                     
                     if source == 0:
@@ -742,19 +670,12 @@ def createTerrainMeshBrep(rasterFilePath, rasterReprojectedFilePath, locationLat
     # create "terrainMesh" and "terrrainBrep" from Opentopography data
     
     # output crs data: outputCRS_UTMzone, northOrsouth
-    # by http://stackoverflow.com/a/9188972/3137724 (link given by Even Rouault)
-    outputCRS_UTMzone = (math.floor((locationLongitudeD + 180)/6) % 60) + 1
-    if locationLatitudeD >= 0:
-        # for northern hemisphere
-        northOrsouth = "north"
-    elif locationLatitudeD < 0:
-        # for southern hemisphere
-        northOrsouth = "south"
+    CRS_EPSG_code, outputCRS_UTMzone, northOrsouth = gismo_gis.calculate_CRS_UTMzone(locationLatitudeD, locationLongitudeD)
     
     # reproject raster
     utils = MapWinGIS.UtilsClass()
     resamplingMethod = "-r bilinear"
-    bstrOptions = '-s_srs EPSG:4326 -t_srs "+proj=utm +zone=%s +%s +datum=WGS84 +ellps=WGS84" %s' % (int(outputCRS_UTMzone), northOrsouth, resamplingMethod)
+    bstrOptions = '-s_srs EPSG:4326 -t_srs "+proj=utm +zone=%s +%s +datum=WGS84 +ellps=WGS84" %s' % (outputCRS_UTMzone, northOrsouth, resamplingMethod)
     reprojectGridResult = MapWinGIS.UtilsClass.GDALWarp(utils, rasterFilePath, rasterReprojectedFilePath, bstrOptions, None)
     if (reprojectGridResult != True):
         convertErrorNo = MapWinGIS.GlobalSettingsClass().GdalLastErrorNo
@@ -790,7 +711,7 @@ def createTerrainMeshBrep(rasterFilePath, rasterReprojectedFilePath, locationLat
     lowerLeftCornerXcoord = lowerLeftCornerCellCentroidXcoord - (cellsizeX/2)
     lowerLeftCornerYcoord = lowerLeftCornerCellCentroidYcoord - (cellsizeY/2)
     
-    originPtProjected = gismo_osm.projectedLocationCoordinates(locationLatitudeD, locationLongitudeD)  # find the "origin" projected in Rhino document units for specific UTMzone
+    originPtProjected = gismo_gis.projectedLocationCoordinates(locationLatitudeD, locationLongitudeD)  # find the "origin" projected in Rhino document units for specific UTMzone
     
     terrainMeshLeftBottomPtX = (lowerLeftCornerXcoord/unitConversionFactor2) - (originPtProjected.X/unitConversionFactor2)
     terrainMeshLeftBottomPtY = (lowerLeftCornerYcoord/unitConversionFactor2) - (originPtProjected.Y/unitConversionFactor2)
@@ -848,11 +769,10 @@ def colorMesh(terrainMesh):
     terrainMesh_numOfVertices = list(terrainMesh.Vertices)
     terrainMesh_verticesZ = [pt.Z for pt in terrainMesh_numOfVertices]
     
-    #Gismo legendBakePar_ input (tree)
+    # deconstruct "legendBakePar_" input
     legendStyle, legendPlane, maxValue, minValue, customColors, numLegendCells, font, fontSize, numDecimals, legendUnit, customTitle, scale, layerName, layerColor, layerCategoryName = gismo_preparation.read_legendBakePar(legendBakePar_)
     
     colors = gismo_preparation.numberToColor(terrainMesh_verticesZ, customColors)
-    #colors = lb_visualization.gradientColor(terrainMesh_verticesZ, lowB, highB, customColors)
     
     terrainMesh.VertexColors.Clear()
     for i in range(len(terrainMesh_numOfVertices)):
@@ -1029,7 +949,7 @@ def createElevationContours(terrainUnoriginUnscaledUnrotated, numOfContours, _ty
     return elevationContours
 
 
-def title_scalingRotating(terrainUnoriginUnscaledUnrotated, locationName, locationLatitudeD, locationLongitudeD, locationPt, maxVisibilityRadiusM, _type, origin, northDeg, northRad, numOfContours, unitConversionFactor):
+def title_scalingRotating(terrainUnoriginUnscaledUnrotated, locationName, locationLatitudeD, locationLongitudeD, locationPt, maxVisibilityRadiusM, _type, sourceLabel, origin, northDeg, northRad, numOfContours, unitConversionFactor):
     
     # scaling, rotating
     originTransformMatrix = Rhino.Geometry.Transform.PlaneToPlane(  Rhino.Geometry.Plane(locationPt, Rhino.Geometry.Vector3d(0,0,1)), Rhino.Geometry.Plane(origin, Rhino.Geometry.Vector3d(0,0,1)) )  # move the terrain from "locationPt" to "origin"
@@ -1056,7 +976,7 @@ def title_scalingRotating(terrainUnoriginUnscaledUnrotated, locationName, locati
     legendStyle, legendPlane, maxValue, minValue, customColors, numLegendCells, font, fontSize, numDecimals, legendUnit, customTitle, scale, layerName, layerColor, layerCategoryName = gismo_preparation.read_legendBakePar(legendBakePar_)
     
     if (customTitle == None):
-        titleLabelText = "Location: %s\nLatitude: %s, Longitude: %s\nRadius: %sm, North: %s" % (locationName, locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM, northDeg)
+        titleLabelText = "Location: %s\nLatitude: %s, Longitude: %s\nRadius: %sm, North: %s, Source: %s" % (locationName, locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM, northDeg, sourceLabel)
     else:
         titleLabelText = customTitle
     titleLabelMesh, titleStartPt, titleTextSize = gismo_preparation.createTitle("mesh", [terrainUnoriginUnscaledUnrotated], [titleLabelText], customTitle, textStartPt=None, textSize=fontSize, fontName=font)
@@ -1107,13 +1027,14 @@ Longitude (deg.): %s
 North (deg.): %s
 
 Radius (m): %s
+Source: %s (%s)
 Type: %s (%s)
 Origin: %s
 Stand thickness (rhino doc. units): %s
 Number of elevation contours: %s
 
 Working folder: %s
-    """ % (locationName, latitude, longitude, northDeg, maxVisibilityRadiusM, _type, typeLabel, origin, standThickness, numOfContours, workingSubFolderPath)
+    """ % (locationName, latitude, longitude, northDeg, maxVisibilityRadiusM, source, sourceLabel, _type, typeLabel, origin, standThickness, numOfContours, workingSubFolderPath)
     print resultsCompletedMsg
     print printOutputMsg
 
@@ -1125,7 +1046,7 @@ if sc.sticky.has_key("gismoGismo_released"):
         gismo_mainComponent = sc.sticky["gismo_mainComponent"]()
         gismo_preparation = sc.sticky["gismo_Preparation"]()
         gismo_geometry = sc.sticky["gismo_CreateGeometry"]()
-        gismo_osm = sc.sticky["gismo_OSM"]()
+        gismo_gis = sc.sticky["gismo_GIS"]()
         
         locationName, locationLatitudeD, locationLongitudeD, timeZone, elevation, validLocationData, printMsg = gismo_preparation.checkLocationData(_location)
         if validLocationData:
@@ -1139,7 +1060,7 @@ if sc.sticky.has_key("gismoGismo_released"):
                         if (rasterFilePath != "needless") and (rasterFilePath != "download failed"):  # terrain shading mask NEEDS to be created
                             terrainMesh, terrainBrep, locationPt, elevationM = createTerrainMeshBrep(rasterFilePath, rasterReprojectedFilePath, locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM, unitConversionFactor2)
                             terrainUnoriginUnscaledUnrotated = split_createStand_colorTerrain(terrainMesh, terrainBrep, locationPt, origin, standThickness, unitConversionFactor2)
-                        terrain, title, elevationContours = title_scalingRotating(terrainUnoriginUnscaledUnrotated, locationName, locationLatitudeD, locationLongitudeD, locationPt, maxVisibilityRadiusM, _type, origin, northDeg, northRad, numOfContours, unitConversionFactor)
+                        terrain, title, elevationContours = title_scalingRotating(terrainUnoriginUnscaledUnrotated, locationName, locationLatitudeD, locationLongitudeD, locationPt, maxVisibilityRadiusM, _type, sourceLabel, origin, northDeg, northRad, numOfContours, unitConversionFactor)
                         if bakeIt_: bakingGrouping(locationName, locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM, sourceLabel, typeLabel, standThickness, terrain, title, elevationContours, origin)
                         printOutput(northDeg, locationLatitudeD, locationLongitudeD, locationName, maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, workingSubFolderPath, standThickness, numOfContours)
                         elevation = elevationM
