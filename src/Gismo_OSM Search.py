@@ -87,11 +87,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM Search"
 ghenv.Component.NickName = "OSMsearch"
-ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_07_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.2\nMAY_05_2017
+#compatibleGismoVersion = VER 0.0.2\nMAY_07_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
@@ -396,7 +396,8 @@ def searchShapes(requiredKeyL, requiredValuesLL, shapesDataTree, keys, valuesDat
     shapes_shiftedPaths_LL = shapes_shiftedPaths_DataTree.Branches
     values_shiftedPaths_LL = values_shiftedPaths_DataTree.Branches
     
-    foundShapes_flattened = []
+    foundShapes_flattened = []  # for 3D, or offset polylines
+    foundOSMobjectNames_flattened = []  # for 3D
     foundShapesDataTree = Grasshopper.DataTree[object]()
     foundValuesDataTree = Grasshopper.DataTree[object]()
     foundShapeOrNotDataTree = Grasshopper.DataTree[object]()
@@ -529,8 +530,9 @@ def searchShapes(requiredKeyL, requiredValuesLL, shapesDataTree, keys, valuesDat
                 foundShapeOrNotL = [False]
                 OSMobjectNameBranchL = []
         
-        if (len(foundShapesL) != 0):
+        if (len(foundShapesL) != 0):  # the object has been found so the "foundShapesL" list is not empty
             foundShapes_flattened.extend(foundShapesL)  # for 3D foundShapes only
+            foundOSMobjectNames_flattened.extend(OSMobjectNameBranchL)
         foundShapesDataTree.AddRange(foundShapesL, shapes_shiftedPaths_Paths[branchIndex])
         foundValuesDataTree.AddRange(values, shapes_shiftedPaths_Paths[branchIndex])
         foundShapeOrNotDataTree.AddRange(foundShapeOrNotL, shapes_shiftedPaths_Paths[branchIndex])
@@ -542,6 +544,7 @@ def searchShapes(requiredKeyL, requiredValuesLL, shapesDataTree, keys, valuesDat
     foundThreeDeeShapesDataTree = Grasshopper.DataTree[object]()
     foundThreeDeeValuesDataTree = Grasshopper.DataTree[object]()
     foundThreeDeeShapeOrNotDataTree = Grasshopper.DataTree[object]()
+    foundThreeDeeOSMobjectNamesDataTree = Grasshopper.DataTree[object]()
     if (perform_searchThreeDeeShapes == True):
         threeDeeShapes_LL = threeDeeShapesDataTree.Branches
         threeDeeValues_LL = threeDeeValuesDataTree.Branches
@@ -550,7 +553,7 @@ def searchShapes(requiredKeyL, requiredValuesLL, shapesDataTree, keys, valuesDat
             if (len(threeDeeShapesL) != 0):
                 upperFace = threeDeeShapesL[0].Faces[0]
                 upperFaceCentroid = Rhino.Geometry.AreaMassProperties.Compute(upperFace).Centroid
-                for foundShape in foundShapes_flattened:
+                for foundShapeIndex, foundShape in enumerate(foundShapes_flattened):
                     upperFaceCentroid_projected = Rhino.Geometry.Intersect.Intersection.ProjectPointsToBreps([foundShape], [upperFaceCentroid], projectionDirection, tol)
                     if len(upperFaceCentroid_projected) == 0:
                         continue
@@ -558,20 +561,24 @@ def searchShapes(requiredKeyL, requiredValuesLL, shapesDataTree, keys, valuesDat
                         foundThreeDeeShapesL = threeDeeShapesL
                         foundThreeDeeValuesL = threeDeeValues_LL[branchIndex]
                         foundThreeDeeShapeOrNotL = [True]
+                        OSMobjectNameBranchL = [foundOSMobjectNames_flattened[foundShapeIndex]]
                         break
                 else:
                     foundThreeDeeShapesL = []
                     foundThreeDeeValuesL = []
                     foundThreeDeeShapeOrNotL = [False]
+                    OSMobjectNameBranchL = []
             else:
                 # the 3d shape was not created from some particular shape
                 foundThreeDeeShapesL = []
                 foundThreeDeeValuesL = []
                 foundThreeDeeShapeOrNotL = [False]
+                OSMobjectNameBranchL = []
             
             foundThreeDeeShapesDataTree.AddRange(foundThreeDeeShapesL, threeDeePaths[branchIndex])
             foundThreeDeeValuesDataTree.AddRange(foundThreeDeeValuesL, threeDeePaths[branchIndex])
             foundThreeDeeShapeOrNotDataTree.AddRange(foundThreeDeeShapeOrNotL, threeDeePaths[branchIndex])
+            foundThreeDeeOSMobjectNamesDataTree.AddRange(OSMobjectNameBranchL, threeDeePaths[branchIndex])
     
     
     """
@@ -681,17 +688,17 @@ def searchShapes(requiredKeyL, requiredValuesLL, shapesDataTree, keys, valuesDat
     
     if (foundThreeDeeShapesDataTree.DataCount == 0) and (threeDeeShapes_.DataCount != 0) and (threeDeeValues_.DataCount != 0):
         # 3D OSM search
-        foundThreeDeeShapesDataTree = foundThreeDeeValuesDataTree = foundThreeDeeShapeOrNotDataTree = foundOSMobjectNamesDataTree = None
+        foundThreeDeeShapesDataTree = foundThreeDeeValuesDataTree = foundThreeDeeShapeOrNotDataTree = foundThreeDeeOSMobjectNamesDataTree = None
         validInputs = False
         printMsg = "No 3D OSM object can be found through _requiredTag for the given _shapes, _keys, _values and threeDeeShapes_, threeDeeValues_ data."
-        return foundThreeDeeShapesDataTree, foundThreeDeeValuesDataTree, foundThreeDeeShapeOrNotDataTree, foundOSMobjectNamesDataTree, validInputs, printMsg
+        return foundThreeDeeShapesDataTree, foundThreeDeeValuesDataTree, foundThreeDeeShapeOrNotDataTree, foundThreeDeeOSMobjectNamesDataTree, validInputs, printMsg
     
     
     validInputs = True
     printMsg = "ok"
     if (perform_searchThreeDeeShapes == True):
         # 3D OSM search
-        return foundThreeDeeShapesDataTree, foundThreeDeeValuesDataTree, foundThreeDeeShapeOrNotDataTree, foundOSMobjectNamesDataTree, validInputs, printMsg
+        return foundThreeDeeShapesDataTree, foundThreeDeeValuesDataTree, foundThreeDeeShapeOrNotDataTree, foundThreeDeeOSMobjectNamesDataTree, validInputs, printMsg
     elif (perform_searchThreeDeeShapes == False):
         # 2D OSM search
         return foundShapesDataTree, foundValuesDataTree, foundShapeOrNotDataTree, foundOSMobjectNamesDataTree, validInputs, printMsg
@@ -807,11 +814,10 @@ requiredTag:
 keys: %s
 values: %s
 
-Polyline width: %s
 Ground terrain inputted: %s
-    """ % (requiredKeyL, requiredValuesLL, polylineWidth_rhinoUnits, groundTerrainInputted)
-    #print resultsCompletedMsg
-    #print printOutputMsg
+    """ % (requiredKeyL, requiredValuesLL, groundTerrainInputted)
+    print resultsCompletedMsg
+    print printOutputMsg
 
 
 level = Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning
