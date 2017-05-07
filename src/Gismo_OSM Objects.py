@@ -16,7 +16,7 @@
 # The GPL-3.0+ license <http://spdx.org/licenses/GPL-3.0+>
 
 """
-Use this component to chose an OSM object.
+Use this dropdown list to chose an OSM object.
 -
 Provided by Gismo 0.0.2
     
@@ -28,18 +28,21 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM Objects"
 ghenv.Component.NickName = "OSMobjects"
-ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_07_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.2\nMAY_05_2017
+#compatibleGismoVersion = VER 0.0.2\nMAY_07_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
-Post office           = "Post office"
+
+Commercial building   = "Commercial building"
+Residential building  = "Residential building"
+Office building       = "Office building"
 Office administrative = "Office administrative"
 Office government     = "Office government"
-Residential building  = "Residential building"
+Post office           = "Post office"
 Hospital              = "Hospital"
 Ambulance station     = "Ambulance station"
 Pharmacy              = "Pharmacy"
