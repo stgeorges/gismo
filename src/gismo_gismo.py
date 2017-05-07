@@ -33,7 +33,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_07_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
@@ -2123,26 +2123,34 @@ class GIS():
         """
         determine if shapes's tags (key=value pairs) correspond to particular requiredTag (key=value pair)
         """
-        value = ""  # dummy value in case requiredKey or requiredValues does not exist
+        value = ""  # dummy values in case requiredKey or requiredValues does not exist
         foundShapesSwitch = False  # initial value
         for keyIndex,key in enumerate(keys):
             for requiredKeyIndex,requiredKey in enumerate(requiredKeyL):
                 if (key == requiredKey):
                     # requiredKey is found, check if requiredValue can be found
-                    value = values_shiftedPaths_LL[branchIndex][keyIndex]
                     
-                    if (value in requiredValuesLL[requiredKeyIndex]) and (value != ""):
-                        foundShapesSwitch = True
-                        OSMobjectName = OSMobjectNameL[requiredKeyIndex]  # "requiredKeyL" and "OSMobjectNameL" lists have the same number of items
-                        
-                        del values_shiftedPaths_LL
-                        return foundShapesSwitch, value, [OSMobjectName]
-                    elif (key == requiredKey) and (requiredValuesLL[requiredKeyIndex] == ["^"]) and (value != ""):
-                        foundShapesSwitch = True
-                        OSMobjectName = OSMobjectNameL[requiredKeyIndex]  # "requiredKeyL" and "OSMobjectNameL" lists have the same number of items
-                        
-                        del values_shiftedPaths_LL
-                        return foundShapesSwitch, value, [OSMobjectName]
+                    # first check if a value is a multi-value or not (example: "commercial;residential")
+                    values_unsplitted = values_shiftedPaths_LL[branchIndex][keyIndex]
+                    if (type(values_unsplitted) == System.Boolean):  # "OSM shapes" component replaces all "building"="yes"/"no" values with "building"=True/False. This is why it is not possible to split(";") the Boolean value, as it is a string
+                        values_stripped = [values_unsplitted]
+                    elif (type(values_unsplitted) != System.Boolean):
+                        values_splitted = values_unsplitted.split(";")  # in case a value is not a single item but a multiple-value (wiki.openstreetmap.org/wiki/Multiple_values). If it is a single value, then .strip(";") will not be performed
+                        values_stripped = [value2.strip()  for value2 in values_splitted]
+                    
+                    for value in values_stripped:
+                        if (value in requiredValuesLL[requiredKeyIndex]) and (value != ""):
+                            foundShapesSwitch = True
+                            OSMobjectName = OSMobjectNameL[requiredKeyIndex]  # "requiredKeyL" and "OSMobjectNameL" lists have the same number of items
+                            
+                            del values_shiftedPaths_LL
+                            return foundShapesSwitch, value, [OSMobjectName]
+                        elif (key == requiredKey) and (requiredValuesLL[requiredKeyIndex] == ["^"]) and (value != ""):
+                            foundShapesSwitch = True
+                            OSMobjectName = OSMobjectNameL[requiredKeyIndex]  # "requiredKeyL" and "OSMobjectNameL" lists have the same number of items
+                            
+                            del values_shiftedPaths_LL
+                            return foundShapesSwitch, value, [OSMobjectName]
         
         del values_shiftedPaths_LL
         return foundShapesSwitch, value, []
@@ -2181,10 +2189,12 @@ class OSM():
         tags for particular OSM objects
         """
         requiredKeyRequiredValue_dict = {
-        """Post office""" : ["leisure", ("post_office",)],
+        """Commercial building""" : ["building", ("commercial", "retail",)],
+        """Residential building""" : ["building", ("residential", "apartments", "terrace", "house", "detached")],
+        """Office building""" : ["building", ("office",)],
         """Office administrative""" : ["office", ("administrative",)],
         """Office government""" : ["office", ("government",)],
-        """Residential building""" : ["building", ("residential", "apartments", "terrace", "house", "detached")],
+        """Post office""" : ["leisure", ("post_office",)],
         """Hospital""" : ["amenity", ("hospital",)],
         """Ambulance station""" : ["emergency", ("ambulance_station",)],
         """Pharmacy""" : ["amenity", ("pharmacy",)],
