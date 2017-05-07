@@ -34,11 +34,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM Keys"
 ghenv.Component.NickName = "OSMKeys"
-ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_07_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.2\nMAY_05_2017
+#compatibleGismoVersion = VER 0.0.2\nMAY_07_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
@@ -61,26 +61,53 @@ def main(OSMobjectName):
     
     
     requiredKeys_dictionary = {
-    """Post office""" :
+    """Commercial building""" :
     ["name",
     "name:en",
-    "amenity",
+    "landuse",
+    "office",
+    "shop",
+    "building",
     "addr:country",
     "addr:city",
     "addr:postcode",
     "addr:street",
     "addr:housenumber",
-    "contact",
-    "phone",
-    "website",
-    "opening_hours",
-    "wheelchair",
-    "ref",
-    "ref:FR:LaPoste",
-    "atm",
-    "change_machine",
-    "operator",
-    "http://wiki.openstreetmap.org/wiki/Tag:amenity%3Dpost_office"]
+    "http://wiki.openstreetmap.org/wiki/Tag:building%3Dcommercial"]
+    ,
+    """Residential building""" :
+    ["name",
+    "name:en",
+    "building",
+    "addr:country",
+    "addr:city",
+    "addr:postcode",
+    "addr:street",
+    "addr:housenumber",
+    "building:levels",
+    "building:flats",
+    "building:roof",
+    "building:colour",
+    "building:ruian:type",
+    "roof:shape",
+    "roof:colour",
+    "roof:material",
+    "ref:ruian:building",
+    "source",
+    "http://wiki.openstreetmap.org/wiki/Tag:building%3Dresidential"]
+    ,
+    """Office building""" :
+    ["name",
+    "name:en",
+    "landuse",
+    "office",
+    "building",
+    "addr:country",
+    "addr:city",
+    "addr:postcode",
+    "addr:street",
+    "addr:housenumber",
+    "http://wiki.openstreetmap.org/wiki/Tag:building%3Doffice"]
     ,
     """Office administrative""" :
     ["name",
@@ -114,26 +141,26 @@ def main(OSMobjectName):
     "wheelchair",
     "http://wiki.openstreetmap.org/wiki/Tag:office%3Dgovernment"]
     ,
-    """Residential building""" :
+    """Post office""" :
     ["name",
     "name:en",
-    "building",
+    "amenity",
     "addr:country",
     "addr:city",
     "addr:postcode",
     "addr:street",
     "addr:housenumber",
-    "building:levels",
-    "building:flats",
-    "building:roof",
-    "building:colour",
-    "building:ruian:type",
-    "roof:shape",
-    "roof:colour",
-    "roof:material",
-    "ref:ruian:building",
-    "source",
-    "http://wiki.openstreetmap.org/wiki/Tag:building%3Dresidential"]
+    "contact",
+    "phone",
+    "website",
+    "opening_hours",
+    "wheelchair",
+    "ref",
+    "ref:FR:LaPoste",
+    "atm",
+    "change_machine",
+    "operator",
+    "http://wiki.openstreetmap.org/wiki/Tag:amenity%3Dpost_office"]
     ,
     """Hospital""" :
     ["name",
