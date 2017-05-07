@@ -46,11 +46,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Create Legend"
 ghenv.Component.NickName = "CreateLegend"
-ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_07_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "3 | More"
-#compatibleGismoVersion = VER 0.0.2\nMAY_05_2017
+#compatibleGismoVersion = VER 0.0.2\nMAY_07_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
@@ -162,10 +162,17 @@ def main(values, analysisGeometry, legendBakePar):
             
             
             # create mesh colors for each "_analysisGeometry"
-            if (len(analysisGeometry) == 1):
-                meshColorsForSpecificGeometryAnalysisItem = meshColorsPerEachGeometryAnalysisItem
-            elif (len(analysisGeometry) > 1):
+            if (len(analysisGeometry) == 1) and (type(analysisGeometry[0]) == Rhino.Geometry.Brep):
+                # there is only a single item in the "_values", so the once the brep is converted to a mesh all of mesh vertices need to be painted with that single item's color
                 meshColorsForSpecificGeometryAnalysisItem = [meshColorsPerEachGeometryAnalysisItem[analysisGeometryIndex]  for i in range(joinedMesh.Vertices.Count)]
+            elif (len(analysisGeometry) == 1) and (type(analysisGeometry[0]) == Rhino.Geometry.Mesh):
+                # each item in the "_values" corresponds to the color of the mesh vertex
+                meshColorsForSpecificGeometryAnalysisItem = meshColorsPerEachGeometryAnalysisItem
+            elif (len(analysisGeometry) > 1):  # and (type(analysisGeometry[0]) == Rhino.Geometry.Brep)
+                # there is the same number of items in both "_values" and "_analysisGeometry" inputs. They all correspond to each vertex color of the mesh
+                meshColorsForSpecificGeometryAnalysisItem = [meshColorsPerEachGeometryAnalysisItem[analysisGeometryIndex]  for i in range(joinedMesh.Vertices.Count)]
+            #elif (len(analysisGeometry) > 1) and (type(analysisGeometry[0]) == Rhino.Geometry.Mesh)
+                # this combination is not allowed
             
             # color the mesh
             coloredJoinedMesh = gismo_geometry.colorMeshVertices(joinedMesh, meshColorsForSpecificGeometryAnalysisItem)  # colored mesh
@@ -190,6 +197,7 @@ def main(values, analysisGeometry, legendBakePar):
     ghenv.Component.Params.Output[3].Hidden = True
     ghenv.Component.Params.Output[5].Hidden = True
     
+    print "Create Legend component successfully ran!"
     validInputData = True
     printMsg = "ok"
     
