@@ -51,11 +51,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM Clean Values"
 ghenv.Component.NickName = "OSMcleanValues"
-ghenv.Component.Message = "VER 0.0.2\nMAY_08_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_09_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.2\nMAR_08_2017
+#compatibleGismoVersion = VER 0.0.2\nMAR_07_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
