@@ -33,7 +33,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.2\nMAY_09_2017"
+ghenv.Component.Message = "VER 0.0.2\nMAY_31_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
