@@ -14,7 +14,7 @@
 # The GPL-3.0+ license <http://spdx.org/licenses/GPL-3.0+>
 
 """
-Use this component to convert values from Rhino units to meters. This can be useful for Gismo component's "radius_" inputs, as all of them use values in meters, regardless of what the Rhino units have been set at.
+Use this component to convert Rhino text (representing number) to Grasshopper number.
 -
 Provided by Gismo 0.0.2
 
@@ -32,7 +32,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Rhino Text To Number"
 ghenv.Component.NickName = "RhinoTextToNumber"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.2\nJUN_01_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "3 | More"
