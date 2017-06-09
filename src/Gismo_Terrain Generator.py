@@ -106,7 +106,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Terrain Generator"
 ghenv.Component.NickName = "TerrainGenerator"
-ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
+ghenv.Component.Message = "VER 0.0.2\nJUN_09_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
@@ -784,6 +784,7 @@ def colorMesh(terrainMesh):
 def split_createStand_colorTerrain(terrainMesh, terrainBrep, locationPt, origin, standThickness, unitConversionFactor2):
     
     scaleFactor = 0.01  # scale terrainMesh 100 times (should never be changed), meaning 1 meter in real life is 0.01 meters in Rhino document
+    tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance
     
     #if (radius_ < (200/unitConversionFactor2)):
     if (radius_ < 200):
@@ -819,12 +820,12 @@ def split_createStand_colorTerrain(terrainMesh, terrainBrep, locationPt, origin,
             boxInterval = Rhino.Geometry.Interval(-cuttingRadiusScaled, cuttingRadiusScaled)
             boxIntervalZ = Rhino.Geometry.Interval(-cuttingRadiusScaled*5, cuttingRadiusScaled*5)  # always use "5"
             boxBrep = Rhino.Geometry.Box(Rhino.Geometry.Plane(locationPt, Rhino.Geometry.Vector3d(0,0,1)), boxInterval, boxInterval, boxIntervalZ).ToBrep()
-            terrainBrepsSplitted = terrainBrep.Split(boxBrep, 0.01)
+            terrainBrepsSplitted = terrainBrep.Split(boxBrep, tol/(1/scaleFactor))  # divide the "tol" with "1/scaleFactor" to account for the 100 times scalling in "title_scalingRotating" function
         
         elif (_type == 3):
             # split with a sphere
             brepSphere = Rhino.Geometry.Sphere(locationPt, cuttingRadiusScaled).ToBrep()
-            terrainBrepsSplitted = terrainBrep.Split(brepSphere, 0.01)
+            terrainBrepsSplitted = terrainBrep.Split(brepSphere, tol/(1/scaleFactor))  # divide the "tol" with "1/scaleFactor" to account for the 100 times scalling in "title_scalingRotating" function
         
         [splittedBrep.Faces.ShrinkFaces() for splittedBrep in terrainBrepsSplitted]
         terrainMeshesSplitted = [Rhino.Geometry.Mesh.CreateFromBrep(splittedBrep)[0]  for splittedBrep in terrainBrepsSplitted]  # convert terrainBrepsSplitted to meshes for quicker calculation
@@ -925,6 +926,9 @@ def split_createStand_colorTerrain(terrainMesh, terrainBrep, locationPt, origin,
 
 def createElevationContours(terrainUnoriginUnscaledUnrotated, numOfContours, _type):
     
+    scaleFactor = 0.01
+    tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance
+    
     # create intersection planes
     accurate = True
     terrainBB_edges = terrainUnoriginUnscaledUnrotated.GetBoundingBox(accurate).GetEdges()
@@ -940,7 +944,7 @@ def createElevationContours(terrainUnoriginUnscaledUnrotated, numOfContours, _ty
     elif (_type == 2) or (_type == 3):
         elevationContours = []
         for plane in elevationContours_planes:
-            success, elevationContoursSubList, elevationContourPointsSubList = Rhino.Geometry.Intersect.Intersection.BrepPlane(terrainUnoriginUnscaledUnrotated, plane, 0.01)
+            success, elevationContoursSubList, elevationContourPointsSubList = Rhino.Geometry.Intersect.Intersection.BrepPlane(terrainUnoriginUnscaledUnrotated, plane, tol/(1/scaleFactor))  # divide the "tol" with "1/scaleFactor" to account for the 100 times scalling in "title_scalingRotating" function
             #elevationContoursSubList_closedCrvs = [crv  for crv in elevationContoursSubList  if crv.IsClosed] # remove elevationContours crvs which are not closed
             elevationContoursSubList_closedCrvs = [crv  for crv in elevationContoursSubList]
             if len(elevationContoursSubList_closedCrvs) > 0:  # or success == True
