@@ -34,11 +34,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM Keys"
 ghenv.Component.NickName = "OSMKeys"
-ghenv.Component.Message = "VER 0.0.2\nMAY_07_2017"
+ghenv.Component.Message = "VER 0.0.2\nJUN_15_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.2\nMAY_07_2017
+#compatibleGismoVersion = VER 0.0.2\nJUN_15_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
@@ -552,6 +552,42 @@ def main(OSMobjectName):
     "surface",
     "operator",
     "http://wiki.openstreetmap.org/wiki/Tag:natural%3Dgrassland"]
+    ,
+    """Waterway""" :
+    ["name",
+    "name:en",
+    "ref",
+    "waterway",
+    "natural",
+    "water",
+    "landuse",
+    "leisure",
+    "destination",
+    "distance",
+    "ford",
+    "seasonal",
+    "tidal",
+    "intermittent",
+    "lock",
+    "http://wiki.openstreetmap.org/wiki/Key:waterway"]
+    ,
+    """Coastline""" :
+    ["name",
+    "name:en",
+    "natural",
+    "landuse",
+    "waterway",
+    "harbour",
+    "leisure",
+    "amenity",
+    "mooring",
+    "man_made",
+    "place",
+    "sport",
+    "seamark:type",
+    "boundary",
+    "source",
+    "http://wiki.openstreetmap.org/wiki/Tag:natural%3Dcoastline"]
     ,
     # ------------
     """Cafe""" :
