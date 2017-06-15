@@ -33,7 +33,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.2\nMAY_31_2017"
+ghenv.Component.Message = "VER 0.0.2\nJUN_15_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
@@ -2217,6 +2217,8 @@ class OSM():
         """Camping site""" : ["tourism", ("camp_site",)],
         """Forest""" : ["landuse", ("forest",)],
         """Grassland""" : ["natural", ("grassland",)],
+        """Waterway""" : ["waterway", ("^",)],  # "^" means there is no specific value for this key
+        """Coastline""" : ["natural", ("coastline",)],
         # -----------------
         """Cafe""" : ["amenity", ("cafe",)],
         """Bar""" : ["amenity", ("bar",)],
