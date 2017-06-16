@@ -106,7 +106,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Terrain Generator"
 ghenv.Component.NickName = "TerrainGenerator"
-ghenv.Component.Message = "VER 0.0.2\nJUN_09_2017"
+ghenv.Component.Message = "VER 0.0.2\nJUN_16_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
@@ -195,7 +195,6 @@ def checkInputData(locationLatitudeD, maxVisibilityRadiusM, gridSize, source, _t
     if (origin == None):
         origin = Rhino.Geometry.Point3d(0, 0, 0)
     # send the origin of this component ("Terrain Generator") to sc.sticky, in order for it be used in the "OSM search" component
-    sc.sticky["gismo_terrainGeneratorComp_origin"] = origin
     
     
     if (standThickness == None):
