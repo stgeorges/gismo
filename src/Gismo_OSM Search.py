@@ -87,7 +87,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM Search"
 ghenv.Component.NickName = "OSMsearch"
-ghenv.Component.Message = "VER 0.0.2\nMAY_07_2017"
+ghenv.Component.Message = "VER 0.0.2\nJUN_16_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -364,7 +364,8 @@ def searchShapes(requiredKeyL, requiredValuesLL, shapesDataTree, keys, valuesDat
         bb_height = 30  # dummy value
         groundTerrain_outerEdge_extrusion = None  # dummy value
     
-    
+    """
+    # option 1
     # compare "OSM shapes" and "Terrain Generator" component's "origin_" inputs. Their Z coordinate needs to be equal or 
     OSMshapesComp_origin = sc.sticky["gismo_OSMshapesComp_origin"]
     if sc.sticky.has_key("gismo_terrainGeneratorComp_origin"):
@@ -381,6 +382,13 @@ def searchShapes(requiredKeyL, requiredValuesLL, shapesDataTree, keys, valuesDat
         #print "__Ladybug Terrain Generator component ran !!"
         # groundTerrain_ inputted from Ladybug "Terrain Generator"
         liftingOSMshapesHeight = 8848  # dummy (high) value
+    """
+    # option 2
+    if groundTerrain:
+        liftingOSMshapesHeight = gismo_preparation.LiftingOSMshapesHeight(shapesDataTree, shapeType, bb_height, bb_bottomLeftCorner)
+    else:
+        # nothing inputted to the "groundTerrain_"
+        liftingOSMshapesHeight = 0
     
     
     if (shapeType == 0):
