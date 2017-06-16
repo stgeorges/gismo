@@ -33,7 +33,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.2\nJUN_15_2017"
+ghenv.Component.Message = "VER 0.0.2\nJUN_16_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
@@ -545,6 +545,38 @@ class Preparation(object):
         
         del shapesLL
         return shapeType
+    
+    
+    def LiftingOSMshapesHeight(self, shapesDataTree, shapeType, bb_height, bb_bottomLeftCorner):
+        # OSM shapes need to always be above the terrain in order for the brep created from them to be successfully cut from the terrain.
+        # check how much OSM shapes need to be lifted above the terrain
+        
+        # all _shapes are plannar because they come from "OSM shapes" component. Therefor they all have the same Z coordinate.
+        for shapesL in shapesDataTree.Branches:
+            if (len(shapesL) > 0) and (shapesL[0] != None):
+                if (shapeType == 0):
+                    # polygons
+                    OSMshapes_Zcoord = shapesL[0].PointAtStart.Z
+                    break
+                elif (shapeType == 1):
+                    # polylines
+                    OSMshapes_Zcoord = shapesL[0].PointAtStart.Z
+                    break
+                elif (shapeType == 2):
+                    # points
+                    OSMshapes_Zcoord = shapesL[0].Location.Z
+                    break
+        
+        terrainHeighestPt_Zcoord = bb_bottomLeftCorner.Z + bb_height
+        
+        if (terrainHeighestPt_Zcoord >= OSMshapes_Zcoord):
+            # highest terrain point is above the shapes plane. Move the shapes upwards
+            liftingOSMshapesHeight = 2 * (terrainHeighestPt_Zcoord - OSMshapes_Zcoord)  # "2" is a dummy value
+        elif (terrainHeighestPt_Zcoord < OSMshapes_Zcoord):
+            # highest terrain point is below the shapes plane. This is fine, but still move the shapes upwards in case some unexpected issue arises
+            liftingOSMshapesHeight = 1.2 * (OSMshapes_Zcoord - terrainHeighestPt_Zcoord)  # "1.2" is a dummy value
+        
+        return liftingOSMshapesHeight
     
     
     def flatten_dataTree(self, dataTree):
