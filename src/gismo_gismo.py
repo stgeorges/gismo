@@ -33,7 +33,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.2\nJUN_16_2017"
+ghenv.Component.Message = "VER 0.0.2\nDEC_27_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
@@ -840,10 +840,12 @@ class Preparation(object):
         # checking for "minB" and "maxB"
         minValue = min(values)
         maxValue = max(values)
-        if minB != None:
-            minValue = minB
-        if maxB != None:
-            maxValue = maxB
+        if (minB != None):
+            if (minB >= minValue):  # check in case "minValue_" is smaller than the smallest value in "values"
+                minValue = minB
+        if (maxB != None):
+            if (maxB <= maxValue):  # check in case "maxValue_" is larger than the largest value in "values"
+                maxValue = maxB
         
         # edit all "values" so that they are not smaller than "minValue", and larger than "maxValue"
         valuesChangedFor_minB_maxB = []
@@ -1247,13 +1249,32 @@ class CreateGeometry():
         return newPolyline
     
     
-    def createLegend(self, geometryL, values, legendBakePar, legendUnit=None, customCellNumbers=[]):
+    def createLegend(self, geometryL, values_uncorrected, legendBakePar, legendUnit=None, customCellNumbers=[]):
         """
         create a legend for the given "values"
         """
         # read the "legendBakePar_"
         gismo_preparation = Preparation()
         legendStyle, legendPlane, maxValue, minValue, customColors, numLegendCells, fontName, fontSize, numDecimals, customLegendUnit, customTitle, scale, layerName, layerColor, layerCategoryName = gismo_preparation.read_legendBakePar(legendBakePar)
+        
+        # modify "values_uncorrected" accorind to "maxValue_" and "minValue_" inputs
+        maxValue_modified = False
+        minValue_modified = False
+        maxValue_uncorrected = max(values_uncorrected)
+        minValue_uncorrected = min(values_uncorrected)
+        values = []
+        for value in values_uncorrected:
+            if (maxValue != None):
+                if (maxValue < maxValue_uncorrected):  # check in case "maxValue_" is larger than the largest value in "values"
+                    maxValue_modified = True
+                    if value > maxValue:
+                        value = maxValue
+            if (minValue != None):
+                if (minValue > minValue_uncorrected):  # check in case "minValue_" is smaller than the smallest value in "values"
+                    minValue_modified = True
+                    if value < minValue:
+                        value = minValue
+            values.append(value)
         
         if (len(customColors) == 0):
             customColors = gismo_preparation.defaultCustomColors()
@@ -1388,6 +1409,12 @@ class CreateGeometry():
                     cellNumber_string = "%0.5f" % cellNumber_string
                 elif (numDecimals == 6):
                     cellNumber_string = "%0.6f" % cellNumber_string
+            
+            # add "<" to the first legend cell number, and ">" to the last one, in case "minValue_" and "maxValue_" have been defined
+            if (i == 0) and (minValue_modified == True):
+                cellNumber_string = "< " + cellNumber_string
+            elif (i == (numLegendCells-1)) and (maxValue_modified == True):
+                cellNumber_string = "> " + cellNumber_string
             
             cellNumber_mesh = gismo_preparation.text2srfOrMesh("mesh", [cellNumber_string], cellNumber_startPt, cellNumber_textSize, fontName, bold=False, italic=False, justificationIndex=0)
             cellNumber_joinedMesh.Append(cellNumber_mesh)
