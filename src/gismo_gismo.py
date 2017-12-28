@@ -1438,17 +1438,6 @@ class CreateGeometry():
             return legend_allMeshes_joined, legendStartPlane
     
     
-    def colorMesh_plus_createLegend(self, values, legendBakePar):
-        legendStyle, legendPlane, maxValue, minValue, customColors, numLegendCells, fontName, fontSize, numDecimals, legendUnit, customTitle, scale, layerName, layerColor, layerCategoryName = gismo_preparation.read_legendBakePar(legendBakePar)
-        colors = gismo_preparation.numberToColor(values, customColors)
-        coloredMesh = gismo_createGeometry.colorMeshVertices(mesh, colors)
-        time10 = time.time()
-        ####print "time10: ", time10-time9
-        
-        legend_allMeshes_joined, legendStartPlane = gismo_createGeometry.createLegend([brep], values, legendBakePar, legendUnit, numLegendCells)
-        
-    
-    
     def compassDirections(self, originPt, radius, scale, northVec, textSize=None):
         """
         create compass directions curves and labels for 30 degrees increment
