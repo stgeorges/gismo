@@ -29,11 +29,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Address To Location"
 ghenv.Component.NickName = "AddressToLocation"
-ghenv.Component.Message = "VER 0.0.2\nMAR_29_2017"
+ghenv.Component.Message = "VER 0.0.2\nDEC_28_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | Gismo"
-#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
+#compatibleGismoVersion = VER 0.0.2\nDEC_28_2017
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
@@ -43,10 +43,10 @@ import urllib
 import json
 import httplib
 
-def main(address):
+def main(_address):
     timeZone = 0; elevation = 0  # default. These two inputs are not important for OSM and terrain components
     url = "http://nominatim.openstreetmap.org/search"
-    address = urllib.quote_plus(address.encode("utf-8"))
+    address = urllib.quote_plus(_address.encode("utf-8"))
     format="jsonv2"
     addressdetails="0"
     polygon_="0"
@@ -63,10 +63,11 @@ def main(address):
         results = json.load(request)
         if 0 < len(results):
             r = results[0]
+            correctedAddress = gismo_preparation.cleanString(_address)  # removing "/", "\", " ", "," from _address (locationName_)
             printMsg = "Cool, it worked!\n\nHere is the URL if you want to see the location found :\n"+url_check+"\n\nHere is the URL used :\n"+url_totale
             validInputData = True
             location = "Site:Location,\n" + \
-               "%s,\n" % address + \
+               "%s,\n" % correctedAddress + \
                "%s,      !Latitude\n" % r['lat'] + \
                "%s,     !Longitude\n" % r['lon'] + \
                "%s,     !Time Zone\n" % timeZone + \
