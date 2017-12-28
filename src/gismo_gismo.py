@@ -33,7 +33,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.2\nDEC_27_2017"
+ghenv.Component.Message = "VER 0.0.2\nDEC_28_2017"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
@@ -1412,9 +1412,9 @@ class CreateGeometry():
             
             # add "<" to the first legend cell number, and ">" to the last one, in case "minValue_" and "maxValue_" have been defined
             if (i == 0) and (minValue_modified == True):
-                cellNumber_string = "< " + cellNumber_string
+                cellNumber_string = "≤ " + cellNumber_string
             elif (i == (numLegendCells-1)) and (maxValue_modified == True):
-                cellNumber_string = "> " + cellNumber_string
+                cellNumber_string = "≥ " + cellNumber_string
             
             cellNumber_mesh = gismo_preparation.text2srfOrMesh("mesh", [cellNumber_string], cellNumber_startPt, cellNumber_textSize, fontName, bold=False, italic=False, justificationIndex=0)
             cellNumber_joinedMesh.Append(cellNumber_mesh)
@@ -1436,6 +1436,17 @@ class CreateGeometry():
             return legend_allMeshes_joined, legendPlane
         else:
             return legend_allMeshes_joined, legendStartPlane
+    
+    
+    def colorMesh_plus_createLegend(self, values, legendBakePar):
+        legendStyle, legendPlane, maxValue, minValue, customColors, numLegendCells, fontName, fontSize, numDecimals, legendUnit, customTitle, scale, layerName, layerColor, layerCategoryName = gismo_preparation.read_legendBakePar(legendBakePar)
+        colors = gismo_preparation.numberToColor(values, customColors)
+        coloredMesh = gismo_createGeometry.colorMeshVertices(mesh, colors)
+        time10 = time.time()
+        ####print "time10: ", time10-time9
+        
+        legend_allMeshes_joined, legendStartPlane = gismo_createGeometry.createLegend([brep], values, legendBakePar, legendUnit, numLegendCells)
+        
     
     
     def compassDirections(self, originPt, radius, scale, northVec, textSize=None):
