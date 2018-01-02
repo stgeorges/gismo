@@ -42,6 +42,7 @@ import Grasshopper
 import urllib
 import json
 import httplib
+import webbrowser as wb
 
 def main(_address):
     timeZone = 0; elevation = 0  # default. These two inputs are not important for OSM and terrain components
@@ -72,7 +73,7 @@ def main(_address):
                "%s,     !Longitude\n" % r['lon'] + \
                "%s,     !Time Zone\n" % timeZone + \
                "%s;       !Elevation" % elevation
-            return location,validInputData,printMsg
+            return location,validInputData,printMsg, url_check
         else:
             printMsg = "HTTP GET Request failed from adress to coordinates (nominatim). TRY another address\n\nHere is the URL if you want to see what's doing :\n"+url_check
             validInputData = False
@@ -90,6 +91,8 @@ if sc.sticky.has_key("gismoGismo_released"):
         gismo_preparation = sc.sticky["gismo_Preparation"]()
         if _address:
             location, validInputData, printMsg = main(_address)
+            if _openweb:
+               wb.open(weblink,2,True)
         else:
             printMsg = "Please add an address as a string panel"
             validInputData = False
