@@ -29,7 +29,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Address To Location"
 ghenv.Component.NickName = "AddressToLocation"
-ghenv.Component.Message = "VER 0.0.2\nDEC_28_2017"
+ghenv.Component.Message = "VER 0.0.2\nJAN_12_2018"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | Gismo"
@@ -59,7 +59,7 @@ def main(_address):
     except:
         printMsg = "ERROR\nSeems that there are no internet connection...."
         validInputData = False
-        return [],validInputData,printMsg 
+        return [],[],validInputData,printMsg 
     try:
         results = json.load(request)
         if 0 < len(results):
@@ -73,15 +73,15 @@ def main(_address):
                "%s,     !Longitude\n" % r['lon'] + \
                "%s,     !Time Zone\n" % timeZone + \
                "%s;       !Elevation" % elevation
-            return location,validInputData,printMsg, url_check
+            return location,url_check,validInputData,printMsg
         else:
             printMsg = "HTTP GET Request failed from adress to coordinates (nominatim). TRY another address\n\nHere is the URL if you want to see what's doing :\n"+url_check
             validInputData = False
-            return [],validInputData,printMsg 
+            return [],[],validInputData,printMsg 
     except:
         printMsg = 'JSON decode failed: '+str(request)
         validInputData = False
-        return [],validInputData,printMsg 
+        return [],[],validInputData,printMsg 
 
 
 level = Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning
@@ -90,13 +90,13 @@ if sc.sticky.has_key("gismoGismo_released"):
     if validVersionDate:
         gismo_preparation = sc.sticky["gismo_Preparation"]()
         if _address:
-            location, validInputData, printMsg = main(_address)
+            location, weblink, validInputData, printMsg = main(_address)
             if _openweb:
                wb.open(weblink,2,True)
         else:
             printMsg = "Please add an address as a string panel"
+            print printMsg
             validInputData = False
-        print printMsg
         if not validInputData:
             ghenv.Component.AddRuntimeMessage(level, printMsg)
     else:
