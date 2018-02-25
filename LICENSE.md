@@ -92,6 +92,12 @@ http://www.marine-geo.org/portals/gmrt
 
 ===============
 
+Gismo uses Ladybug "angle2northClockwise" method python code written by Mostapha Sadeghipour Roudsari, used to calculate north angle in radians and north vector for given either of these two in "Gismo Gismo" component. Please refer to the original code at:
+
+https://github.com/mostaphaRoudsari/ladybug/blob/master/src/ladybug_ladybug.py
+
+===============
+
 Gismo uses JavaScript code written by Chris Veness, re-written in Python by Djordje Spasic and is used to calculate distance, bearing and point location on Earth ellipsoid in "Terrain shading mask" component. Please refer to the original code at:
 
 http://www.movable-type.co.uk/scripts/latlong-vincenty.html
