@@ -22,7 +22,7 @@ Gismo enables automatic generation of urban environment and terrain geometry bas
 
 # Requirements:
 
-- McNeel [Rhinoc 5](http://www.rhino3d.com/download/rhino/5/latest) 32bit or 64bit ≥ SR9 or [Rhino 6](https://www.rhino3d.com/download/rhino-for-windows/6/latest). Rhino 7 WIP is not supported at the moment!
+- McNeel [Rhino 5](http://www.rhino3d.com/download/rhino/5/latest) 32bit or 64bit ≥ SR9 or [Rhino 6](https://www.rhino3d.com/download/rhino-for-windows/6/latest). Rhino 7 WIP is not supported at the moment!
 - [Grasshopper](http://www.rhino3d.com/download/grasshopper/1.0/wip) 0.9.0075 or 0.9.0076.
 - [Ghpython](http://www.food4rhino.com/app/ghpython) plugin 0.6.0.3
 - [MapWinGIS](https://github.com/MapWindow/MapWinGIS/releases) 32bit or 64bit 4.9.4.2 or higher
