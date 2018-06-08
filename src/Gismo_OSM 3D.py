@@ -87,7 +87,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM 3D"
 ghenv.Component.NickName = "OSM3D"
-ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
+ghenv.Component.Message = "VER 0.0.2\nJUN_08_2018"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -188,8 +188,8 @@ def checkInputData(shapes, keys, values, heightPerLevel, randomHeightRange, tree
     else:
         # randomHeightRangeStart can be larger than randomHeightRangeEnd, the random.uniform will still generate a random value between those two numbers.
         # randomHeightRangeStart == randomHeightRangeEnd, the a single value will always be generated (equal to randomHeightRangeStart and randomHeightRangeEnd)
-        randomHeightRangeStart = randomHeightRange.T0
-        randomHeightRangeEnd = randomHeightRange.T1
+        randomHeightRangeStart = randomHeightRange.T0/unitConversionFactor
+        randomHeightRangeEnd = randomHeightRange.T1/unitConversionFactor
     
     
     if (treeType == None):
