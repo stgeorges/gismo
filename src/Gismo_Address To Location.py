@@ -29,7 +29,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Address To Location"
 ghenv.Component.NickName = "AddressToLocation"
-ghenv.Component.Message = "VER 0.0.3\nAPR_07_2018"
+ghenv.Component.Message = "VER 0.0.2\nJUL_06_2018"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | Gismo"
