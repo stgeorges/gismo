@@ -17,11 +17,11 @@
 Use this component to find coordinates of a specific location using an address.
 It uses Nominatim API
 -
-Provided by Gismo 0.0.2
+Provided by Gismo 0.0.3
     
     input:
         _address: A string representing the address for which location (latitude and longitude coordinates) is suppose to be found.
-    
+        _openweb : If True, open the browser with nominatim (False by default)
     output:
         readMe!: explained result of the query
         location: [address, latitude, longitude coordinates) of the input.
@@ -29,7 +29,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Address To Location"
 ghenv.Component.NickName = "AddressToLocation"
-ghenv.Component.Message = "VER 0.0.2\nJAN_12_2018"
+ghenv.Component.Message = "VER 0.0.3\nAPR_07_2018"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | Gismo"
@@ -44,6 +44,28 @@ import json
 import httplib
 import webbrowser as wb
 
+
+from System.Net import WebRequest
+from System.IO import StreamReader
+from System.Text import Encoding
+
+def UrlOpen(uri, parameters=None):
+    request = WebRequest.Create(uri)
+    if parameters is not None:
+        #request.ContentType = "application/x-www-form-urlencoded"
+        request.ContentType = "text/plain;charset=utf-8"
+        request.Method = "POST"
+        bytes = Encoding.UTF8.GetBytes(parameters)
+        #ASCII
+        request.ContentLength = bytes.Length
+        reqStream = request.GetRequestStream()
+        reqStream.Write(bytes, 0, bytes.Length)
+        reqStream.Close()
+
+    response = request.GetResponse()
+    result = StreamReader(response.GetResponseStream()).ReadToEnd()
+    return result
+
 def main(_address):
     timeZone = 0; elevation = 0  # default. These two inputs are not important for OSM and terrain components
     url = "http://nominatim.openstreetmap.org/search"
@@ -55,13 +77,14 @@ def main(_address):
     url_totale = url+"?q="+address+"&format="+format+"&addressdetails="+addressdetails+"&polygon_="+polygon_+"&limit="+limit+"&email=https://github.com/Alliages"
     url_check = url+".php?q="+address+"&polygon=1&viewbox="
     try:
-        request = urllib.urlopen(url_totale)
+        request = UrlOpen(url_totale)
+        #request = urllib.urlopen(url_totale)
     except:
         printMsg = "ERROR\nSeems that there are no internet connection...."
         validInputData = False
         return [],[],validInputData,printMsg 
     try:
-        results = json.load(request)
+        results = json.loads(request)
         if 0 < len(results):
             r = results[0]
             correctedAddress = gismo_preparation.cleanString(_address)  # removing "/", "\", " ", "," from _address (locationName_)
@@ -83,7 +106,6 @@ def main(_address):
         validInputData = False
         return [],[],validInputData,printMsg 
 
-
 level = Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning
 if sc.sticky.has_key("gismoGismo_released"):
     validVersionDate, printMsg = sc.sticky["gismo_check"].versionDate(ghenv.Component)
@@ -91,6 +113,7 @@ if sc.sticky.has_key("gismoGismo_released"):
         gismo_preparation = sc.sticky["gismo_Preparation"]()
         if _address:
             location, weblink, validInputData, printMsg = main(_address)
+            print printMsg
             if _openweb:
                wb.open(weblink,2,True)
         else:
