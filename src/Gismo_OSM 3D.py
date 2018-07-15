@@ -4,7 +4,7 @@
 #
 # This file is part of Gismo.
 #
-# Copyright (c) 2017, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2018, Djordje Spasic <djordjedspasic@gmail.com>
 # with assistance of Vladimir Elistratov and his Blender OSM project <https://github.com/vvoovv/blender-osm>
 # Component icon based on free OSM icon from: <https://icons8.com/web-app/13398/osm> and <http://www.freeiconspng.com/free-images/3d-icon-9783>
 #
@@ -87,7 +87,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM 3D"
 ghenv.Component.NickName = "OSM3D"
-ghenv.Component.Message = "VER 0.0.2\nJUN_08_2018"
+ghenv.Component.Message = "VER 0.0.2\nJUL_15_2018"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -505,7 +505,7 @@ def createThreeDeeShapes(shapesDataTree, keys, valuesDataTree, heightPerLevel, r
                         trunkRadius = height/random.uniform(44, 48)  # lower values (than 44,48) can result in "bottomCrown_brep" not being able to be created
                         if isNumber(valueDiameterCrown):
                             # there is a valid "valueDiameterCrown" value
-                            crownRadius = valueDiameterCrown
+                            crownRadius = float(valueDiameterCrown) / 2
                         else: 
                             # valueDiameterCrown == ""
                             crownRadius = height/random.uniform(2, 5)
