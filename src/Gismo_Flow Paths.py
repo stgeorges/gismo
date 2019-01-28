@@ -4,7 +4,7 @@
 # 
 # This file is part of Gismo.
 # 
-# Copyright (c) 2017, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
 # Gismo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -22,7 +22,7 @@ Component based on:
 "Finding the downhill direction vector when given a plane defined by a normal and a point", stackoverflow.com topic by Zach Helms, 2016
 http://stackoverflow.com/q/14369233/3137724
 -
-Provided by Gismo 0.0.2
+Provided by Gismo 0.0.3
     
     input:
         _geometry: A surface and/or polysurface and/or mesh for which you would like to conduct the flow path analysis. That can be a building, terrain, landscape or any other sort of geometry.
@@ -64,11 +64,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Flow Paths"
 ghenv.Component.NickName = "FlowPaths"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
-#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
+#compatibleGismoVersion = VER 0.0.3\nJAN_29_2019
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
