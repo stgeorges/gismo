@@ -4,7 +4,7 @@
 #
 # This file is part of Gismo.
 #
-# Copyright (c) 2017, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
 # Gismo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -16,7 +16,7 @@
 """
 Use this component to construct a location based on latitude, longitude coordinates.
 -
-Provided by Gismo 0.0.2
+Provided by Gismo 0.0.3
 
     input:
         locationName_: A name of the location.
@@ -40,11 +40,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Create Location"
 ghenv.Component.NickName = "CreateLocation"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
-#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
+#compatibleGismoVersion = VER 0.0.3\nJAN_29_2019
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
