@@ -4,7 +4,7 @@
 #
 # This file is part of Gismo.
 #
-# Copyright (c) 2017, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
 # Component icon based on free OSM icon from: <https://icons8.com/web-app/13398/osm>
 #
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -18,7 +18,7 @@
 """
 Use this dropdown list to chose an OSM object.
 -
-Provided by Gismo 0.0.2
+Provided by Gismo 0.0.3
     
     input:
     
@@ -28,15 +28,16 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM Objects"
 ghenv.Component.NickName = "OSMobjects"
-ghenv.Component.Message = "VER 0.0.2\nJUN_15_2017"
+ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.2\nJUN_15_2017
+#compatibleGismoVersion = VER 0.0.3\nJAN_29_2019
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
 
+Building              = "Building"
 Commercial building   = "Commercial building"
 Residential building  = "Residential building"
 Office building       = "Office building"
@@ -63,7 +64,9 @@ Stadium               = "Stadium"
 Park                  = "Park"
 Garden                = "Garden"
 Camping site          = "Camping site"
+Tree                  = "Tree"
 Forest                = "Forest"
+Forest (managed)      = "Forest (managed)"
 Grassland             = "Grassland"
 Waterway              = "Waterway"
 Coastline             = "Coastline"
@@ -102,6 +105,4 @@ Nuclear reactor       = "Nuclear reactor"
 -----------------     = ""
 Internet access       = "Internet access"
 Toilet                = "Toilet"
-Building              = "Building"
-Tree                  = "Tree"
 Color                 = "Color"
