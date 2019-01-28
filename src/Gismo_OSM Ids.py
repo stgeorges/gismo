@@ -4,7 +4,7 @@
 #
 # This file is part of Gismo.
 #
-# Copyright (c) 2017, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
 # Component icon based on free OSM icon from: <https://icons8.com/web-app/13398/osm>
 #
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -25,7 +25,7 @@ These lists can be used to define:
 Additional info:
 Sometimes "OSM shapes" can output invalid or unwanted shapes. In that case the purpose of this component is to remove those shapes by adding their ids to the "osm_id_Remove_" and/or "osm_way_id_Remove_" inputs.
 -
-Provided by Gismo 0.0.2
+Provided by Gismo 0.0.3
     
     input:
         osm_id_Only_: A list (or a single id) of "osm_id" which will only be included when "OSM shapes" component is ran.
@@ -50,11 +50,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM Ids"
 ghenv.Component.NickName = "OSMids"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
+#compatibleGismoVersion = VER 0.0.3\nJAN_29_2019
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
