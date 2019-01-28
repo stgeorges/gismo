@@ -4,7 +4,7 @@
 #
 # This file is part of Gismo.
 #
-# Copyright (c) 2017, Your First and Last name <youremail@address.com>
+# Copyright (c) 2019, Your First and Last name <youremail@address.com>
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
 # Gismo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -20,7 +20,7 @@
 [There will be explanations of parts of code, like how to check inputs, how to create a title, a legend... Explanations are written in square brackets. For example: [this is explanation].]
 [Rhinoscriptsyntax is used as more friendly, but you can also write directly in RhinoCommon, if you want to. Still rhinoscriptsyntax is fine.]
 -
-Provided by Gismo 0.0.2
+Provided by Gismo 0.0.3
     
     input:
         _point: A reference point which will be used to measure the distance from it to a sphere.
@@ -56,12 +56,12 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_New Component Example"   # [this string defines component's Name. It should be something like: "Gismo_Distance Point To Sphere"]
 ghenv.Component.NickName = "NewComponentExample"   # [this string defines component's Nickname. It should be something like: "DistancePointToSphere"]
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"   # [this line defines component's version and date]
+ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"   # [this line defines component's version and date]
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application   # [ do not change this line. It enables using both component icon and component name]
 ghenv.Component.Category = "Gismo"   # [do not change this line. It assigns component to the "Gismo" plugin]
 ghenv.Component.SubCategory = "3 | More"   # [this string defines the specific tab to which component belongs]
 # [the line below defines the version and date of "Gismo Gismo" component which is compatible with this component. You can simply set both the version and the date to the latest "Gismo Gismo" component's version and date]
-#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
+#compatibleGismoVersion = VER 0.0.3\nJAN_29_2019
 try: ghenv.Component.AdditionalHelpFromDocStrings = "1"   # [this string defines tab's row. For example: "1" means that, component will be located in the first row of upper defined "3 | More" tab]
 except: pass
 
