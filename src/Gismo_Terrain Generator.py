@@ -4,7 +4,7 @@
 # 
 # This file is part of Gismo.
 # 
-# Copyright (c) 2017, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
 # with assistance of Dr. Bojan Savric <savricb@geo.oregonstate.edu>
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
@@ -30,7 +30,7 @@ Component mainly based on:
 https://books.google.rs/books/about/Matemati%C4%8Dka_kartografija.html?id=GcXEMgEACAAJ&redir_esc=y
 http://www.movable-type.co.uk/scripts/latlong-vincenty.html
 -
-Provided by Gismo 0.0.2
+Provided by Gismo 0.0.3
     
     input:
         _location: The output from the "importEPW" or "constructLocation" component.  This is essentially a list of text summarizing a location on the Earth.
@@ -106,11 +106,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Terrain Generator"
 ghenv.Component.NickName = "TerrainGenerator"
-ghenv.Component.Message = "VER 0.0.2\nJUN_16_2017"
+ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
-#compatibleGismoVersion = VER 0.0.2\nMAY_05_2017
+#compatibleGismoVersion = VER 0.0.3\nJAN_29_2019
 try: ghenv.Component.AdditionalHelpFromDocStrings = "1"
 except: pass
 
