@@ -4,7 +4,7 @@
 #
 # This file is part of Gismo.
 #
-# Copyright (c) 2018, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
 # with assistance of Vladimir Elistratov and his Blender OSM project <https://github.com/vvoovv/blender-osm>
 # Component icon based on free OSM icon from: <https://icons8.com/web-app/13398/osm> and <http://www.freeiconspng.com/free-images/3d-icon-9783>
 #
@@ -24,7 +24,7 @@ Creation of 3d shapes can be done in three ways:
 3) If both of these two values are lacking (equal to ""), or the very keys are lacking, and there is a valid value ("True") for the "building" key, then the shape will be extruded, according to the supplied domain generated from the randomHeightRange_ input.
 If neither of these three ways are fulfilled, then no creation of 3d shapes will be performed.
 -
-Provided by Gismo 0.0.2
+Provided by Gismo 0.0.3
     
     input:
         _shapes: Plug in the shapes from the Gismo OSM shapes "shapes" output
@@ -87,13 +87,14 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM 3D"
 ghenv.Component.NickName = "OSM3D"
-ghenv.Component.Message = "VER 0.0.2\nJUL_15_2018"
+ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.2\nMAY_05_2017
+#compatibleGismoVersion = VER 0.0.3\nJAN_29_2019
 try: ghenv.Component.AdditionalHelpFromDocStrings = "3"
 except: pass
+
 import rhinoscriptsyntax as rs
 import scriptcontext as sc
 import Grasshopper
