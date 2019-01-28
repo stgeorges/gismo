@@ -4,7 +4,7 @@
 #
 # This file is part of Gismo.
 #
-# Copyright (c) 2017, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
 # Gismo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -16,7 +16,7 @@
 """
 If you like Gismo, use this component to see in which ways you can contribute and support it.
 -
-Provided by Gismo 0.0.2
+Provided by Gismo 0.0.3
     
     input:
         _supportIndex: Add a number from 0 to 3, to see in which ways you can support Gismo plugin.
@@ -27,11 +27,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Support Gismo"
 ghenv.Component.NickName = "SupportGismo"
-ghenv.Component.Message = "VER 0.0.2\nMAY_01_2017"
+ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "3 | More"
-#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
+#compatibleGismoVersion = VER 0.0.3\nJAN_29_2019
 try: ghenv.Component.AdditionalHelpFromDocStrings = "1"
 except: pass
 
@@ -74,7 +74,7 @@ def main(supportIndex):
     elif (supportIndex == 3):
         supportString = "Donate to services which Gismo uses.\n" + \
                         "Gismo is a free and open source plugin.\n" + \
-                        "Still Gismo depends on some services from which it take data. The most important two are: OpenStreetMap and OpenTopography.\n" + \
+                        "Still Gismo depends on some services from which it takes data. The most important two are: OpenStreetMap and OpenTopography.\n" + \
                         "In case you can, and you want, you can donate a dollar or so to either:\n \n" + \
                         "OpenStreetMap:\n" + \
                         "https://donate.openstreetmap.org\n \n" + \
