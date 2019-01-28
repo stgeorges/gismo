@@ -4,7 +4,7 @@
 # 
 # This file is part of Gismo.
 # 
-# Copyright (c) 2017, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
 # Gismo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -23,7 +23,7 @@ http://resources.solmetric.com/get/Solmetric%20SunEye%20200%20Series%20Users%20G
 "PVsyst 6 Help", PVsyst SA
 http://files.pvsyst.com/help/index.html?horizon_import.htm
 -
-Provided by Gismo 0.0.2
+Provided by Gismo 0.0.3
     
     input:
         _location: The output from the "importEPW" or "constructLocation" component.  This is essentially a list of text summarizing a location on the Earth.
@@ -103,11 +103,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Horizon Angles"
 ghenv.Component.NickName = "HorizonAngles"
-ghenv.Component.Message = "VER 0.0.2\nMAR_01_2017"
+ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
-#compatibleGismoVersion = VER 0.0.2\nMAR_01_2017
+#compatibleGismoVersion = VER 0.0.3\nJAN_29_2019
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
