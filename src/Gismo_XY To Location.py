@@ -4,7 +4,7 @@
 #
 # This file is part of Gismo.
 #
-# Copyright (c) 2017, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
 # Gismo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -17,7 +17,7 @@
 Use this component to calculate latitude and longitude coordinates of the _point in Rhino scene.
 For example: you created some building shapes with Gismo "OSM Shapes" component, and now you would like to check what are the latitude and longtitude coordinates of particular part of the building.
 -
-Provided by Gismo 0.0.2
+Provided by Gismo 0.0.3
     
     input:
         _point: A point for which we would like to calculate its latitude and longitude coordinates
@@ -34,11 +34,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_XY To Location"
 ghenv.Component.NickName = "XYtoLocation"
-ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
+ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | Gismo"
-#compatibleGismoVersion = VER 0.0.2\nMAY_05_2017
+#compatibleGismoVersion = VER 0.0.3\nJAN_29_2019
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
@@ -74,7 +74,7 @@ def main(requiredPoint, anchorLocation, anchorOrigin):
     
     
     # inputCRS
-    EPSGcode = 4326
+    EPSGcode = 4326  # WGS 84
     inputCRS_dummy = gismo_gis.CRS_from_EPSGcode(EPSGcode)
     # outputCRS
     outputCRS_dummy = gismo_gis.UTM_CRS_from_latitude(anchor_locationLatitudeD, anchor_locationLongitudeD)
@@ -99,6 +99,7 @@ def main(requiredPoint, anchorLocation, anchorOrigin):
     printMsg = "ok"
     
     return required_location, validInputData, printMsg
+
 
 level = Grasshopper.Kernel.GH_RuntimeMessageLevel.Warning
 if sc.sticky.has_key("gismoGismo_released"):
