@@ -4,7 +4,7 @@
 # 
 # This file is part of Gismo.
 # 
-# Copyright (c) 2017, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
 # Gismo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -17,7 +17,7 @@
 This component contains all Gismo classes. Other Gismo components are being run by referencing these classes.
 So in order for any other Gismo component to work, you need to run this component first. If this component is ran successfully you will hear the Gismo penquin peeping!!
 -
-Provided by Gismo 0.0.2
+Provided by Gismo 0.0.3
     input:
         mapFolder_: Optional folder path for MapWinGIS installation folder.
                     -
@@ -33,7 +33,7 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.2\nDEC_28_2017"
+ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
@@ -1633,32 +1633,33 @@ class CreateGeometry():
                     # determine which one of these two is the case
                     intersectionYes, intersectCrvs, intersectPts = Rhino.Geometry.Intersect.Intersection.BrepBrep(groundTerrain_outerEdge_extrusion, extrudedShapeBrep, tol)
                     if (len(intersectCrvs) > 0):
-                        print "terrain edges intersect with road srf"
+                        #print "terrain edges intersect with road srf"
                         # planarOffsetRoadsCrv planar srf intersects with groundTerrrain_
                         
                         # check the planarOffsetRoadsCrv oriention to determine the brep face index in "splittedBreps"
                         upDirection = Rhino.Geometry.Vector3d(0,0,1)
-                        srfProjectedOnTerrain = splittedBreps[len(splittedBreps)-1]  # ovaj radi !!!
+                        srfProjectedOnTerrain = splittedBreps[len(splittedBreps)-1]  # works!
                         #srfProjectedOnTerrain = splittedBreps[0]
-                        print "len(splittedBreps): ", len(splittedBreps)
+                        #print "len(splittedBreps): ", len(splittedBreps)
                         
                         gotPlane_success, plane = planarOffsetRoadsCrv.TryGetPlane()
-                        print "plane_ZAxis: ", plane.ZAxis
                         
                         if (planarOffsetRoadsCrv.ClosedCurveOrientation(upDirection) == Rhino.Geometry.CurveOrientation.Clockwise):
-                            ####srfProjectedOnTerrain = splittedBreps[len(splittedBreps)-1]  # ovaj radi?
+                            srfProjectedOnTerrain = splittedBreps[len(splittedBreps)-1]  # works?
                             #srfProjectedOnTerrain = splittedBreps[0]
-                            print "clockwise"
+                            ####print "clockwise"
+                            pass
                         elif (planarOffsetRoadsCrv.ClosedCurveOrientation(upDirection) == Rhino.Geometry.CurveOrientation.CounterClockwise):
-                            #srfProjectedOnTerrain = splittedBreps[0]
-                            print "counter clockwise"
+                            srfProjectedOnTerrain = splittedBreps[0]
+                            ####print "counter clockwise"
+                            pass
                         
                         
                         srfProjectedOnTerrain.Faces.ShrinkFaces()  # shrink the cutted srfProjectedOnTerrain
                         srfProjectedOnTerainL.append(srfProjectedOnTerrain)
                         
                     elif (len(intersectCrvs) == 0):
-                        print "terrain edges DO NOT intersect with road srf."
+                        ####print "terrain edges DO NOT intersect with road srf."
                         # planarOffsetRoadsCrv planar srf is inside groundTerrain_ and does not intersect it
                         srfProjectedOnTerrain = splittedBreps[len(splittedBreps)-1]
                         srfProjectedOnTerrain.Faces.ShrinkFaces()  # shrink the cutted srfProjectedOnTerrain
@@ -2248,6 +2249,7 @@ class OSM():
         tags for particular OSM objects
         """
         requiredKeyRequiredValue_dict = {
+        """Building""" : ["building", ("^",)],  # "^" means there is no specific value for this key
         """Commercial building""" : ["building", ("commercial", "retail",)],
         """Residential building""" : ["building", ("residential", "apartments", "terrace", "house", "detached")],
         """Office building""" : ["building", ("office",)],
@@ -2274,7 +2276,9 @@ class OSM():
         """Park""" : ["leisure", ("park",)],
         """Garden""" : ["leisure", ("garden",)],
         """Camping site""" : ["tourism", ("camp_site",)],
-        """Forest""" : ["landuse", ("forest",)],
+        """Tree""" : ["natural", ("tree",)],
+        """Forest""" : ["natural", ("wood",)],
+        """Forest (managed)""" : ["landuse", ("forest",)],
         """Grassland""" : ["natural", ("grassland",)],
         """Waterway""" : ["waterway", ("^",)],  # "^" means there is no specific value for this key
         """Coastline""" : ["natural", ("coastline",)],
@@ -2313,8 +2317,7 @@ class OSM():
         # -----------------
         """Internet access""" : ["internet_access", ("^",)],  # "^" means there is no specific value for this key
         """Toilet""" : ["amenity", ("toilets",)],
-        """Building""" : ["building", ("^",)],  # "^" means there is no specific value for this key
-        """Tree""" : ["natural", ("tree",)]
+        """Color""" : ["colour", ("^",)]  # "^" means there is no specific value for this key
         }
         
         return requiredKeyRequiredValue_dict
