@@ -4,7 +4,7 @@
 #
 # This file is part of Gismo.
 #
-# Copyright (c) 2017, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
 # Component icon based on free OSM icon from: <https://icons8.com/web-app/13398/osm>
 #
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -19,7 +19,7 @@
 Use this component to generate a list of keys for the "requiredKeys_" input of "OSM shapes" component.
 A list of keys depends on the chosen OSM object name (_OSMobjectName). Use "OSM Objects" dropdown list to generate the appropriate _OSMobjectName.
 -
-Provided by Gismo 0.0.2
+Provided by Gismo 0.0.3
     
     input:
         _OSMobjectName: OSM object name.
@@ -34,11 +34,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM Keys"
 ghenv.Component.NickName = "OSMKeys"
-ghenv.Component.Message = "VER 0.0.2\nJUN_15_2017"
+ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.2\nJUN_15_2017
+#compatibleGismoVersion = VER 0.0.3\nJAN_29_2019
 try: ghenv.Component.AdditionalHelpFromDocStrings = "2"
 except: pass
 
@@ -61,6 +61,31 @@ def main(OSMobjectName):
     
     
     requiredKeys_dictionary = {
+    """Building""" :
+    ["name",
+    "name:en",
+    "building",
+    "amenity",
+    "addr:country",
+    "addr:city",
+    "addr:postcode",
+    "addr:street",
+    "addr:housenumber",
+    "height",
+    "building:levels",
+    "building:min_level",
+    "building:part",
+    "min_height",
+    "roof:height",
+    "roof:shape",
+    "roof:angle",
+    "roof:material",
+    "roof:color",
+    "roof:levels",
+    "entrance",
+    "access",
+    "http://wiki.openstreetmap.org/wiki/Buildings"]
+    ,
     """Commercial building""" :
     ["name",
     "name:en",
@@ -533,9 +558,39 @@ def main(OSMobjectName):
     "internet_access:fee",
     "http://wiki.openstreetmap.org/wiki/Tag:tourism%3Dcamp_site"]
     ,
+    """Tree""" :
+    ["name",
+    "name:en",
+    "natural",
+    "landuse",
+    "leaf_type",
+    "leaf_cycle",
+    "height",
+    "circumference",
+    "diameter_crown",
+    "type",
+    "genus",
+    "species",
+    "species:en",
+    "taxon",
+    "sex",
+    "denotation",
+    "historic",
+    "http://wiki.openstreetmap.org/wiki/Tag:natural%3Dtree"]
+    ,
     """Forest""" :
     ["name",
     "name:en",
+    "natural",
+    "leaf_type",
+    "leaf_cycle",
+    "crop",
+    "https://wiki.openstreetmap.org/wiki/Tag:natural%3Dwood"]
+    ,
+    """Forest (managed)""" :
+    ["name",
+    "name:en",
+    "landuse",
     "natural",
     "leaf_type",
     "leaf_cycle",
@@ -1341,51 +1396,6 @@ def main(OSMobjectName):
     "man_made",
     "operator",
     "http://wiki.openstreetmap.org/wiki/Tag:amenity%3Dtoilets"]
-    ,
-    """Building""" :
-    ["name",
-    "name:en",
-    "building",
-    "amenity",
-    "addr:country",
-    "addr:city",
-    "addr:postcode",
-    "addr:street",
-    "addr:housenumber",
-    "height",
-    "building:levels",
-    "building:min_level",
-    "building:part",
-    "min_height",
-    "roof:height",
-    "roof:shape",
-    "roof:angle",
-    "roof:material",
-    "roof:color",
-    "roof:levels",
-    "entrance",
-    "access",
-    "http://wiki.openstreetmap.org/wiki/Buildings"]
-    ,
-    """Tree""" :
-    ["name",
-    "name:en",
-    "natural",
-    "landuse",
-    "leaf_type",
-    "leaf_cycle",
-    "height",
-    "circumference",
-    "diameter_crown",
-    "type",
-    "genus",
-    "species",
-    "species:en",
-    "taxon",
-    "sex",
-    "denotation",
-    "historic",
-    "http://wiki.openstreetmap.org/wiki/Tag:natural%3Dtree"]
     ,
     """Color""" :
     ["name",
