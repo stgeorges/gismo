@@ -4,7 +4,7 @@
 #
 # This file is part of Gismo.
 #
-# Copyright (c) 2017, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
 # with assistance of Paul Meems <bontepaarden@gmail.com>
 # Component icon based on free OSM icon from: <https://icons8.com/web-app/13398/osm>
 #
@@ -28,7 +28,7 @@ https://github.com/MapWindow/MapWinGIS/releases
 If you are using Rhino 5 x86, then download the "Win32" version.
 If you are using Rhino 5 x64, then download the "x64" version.
 -
-Provided by Gismo 0.0.2
+Provided by Gismo 0.0.3
     
     input:
         _location: Output from Gismo's \"Create Location\" component. This is essentially a text containing information (latitude, longitude, name...) about a location on the Earth.
@@ -97,11 +97,11 @@ Provided by Gismo 0.0.2
 
 ghenv.Component.Name = "Gismo_OSM Shapes"
 ghenv.Component.NickName = "OSMshapes"
-ghenv.Component.Message = "VER 0.0.2\nMAY_05_2017"
+ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
-#compatibleGismoVersion = VER 0.0.2\nMAY_05_2017
+#compatibleGismoVersion = VER 0.0.3\nJAN_29_2019
 try: ghenv.Component.AdditionalHelpFromDocStrings = "1"
 except: pass
 
