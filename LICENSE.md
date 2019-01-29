@@ -40,6 +40,26 @@ https://github.com/MapWindow/MapWinGIS
 
 ===============
 
+Gismo uses StraightSkeletonNet library developed by Ilya Builuk.
+StraightSkeletonNet is licensed under The Code Project Open License (CPOL):
+https://www.codeproject.com/info/cpol10.aspx
+
+Please refer to its source code repository for more information:
+
+https://github.com/reinterpretcat/csharp-libs/tree/master/straight_skeleton
+
+===============
+
+Gismo uses Clipper C# offsetting library developed by Angus Johnson.
+Clipper is licensed under Boost Software License (BSL1.0):
+https://sourceforge.net/directory/os:windows/license:boostlicense
+
+Please refer to its source code repository for more information:
+
+https://sourceforge.net/projects/polyclipping
+
+===============
+
 Gismo uses OpenStreetMap data with the following acknowledgement:
 - "© OpenStreetMap contributors"
 
