@@ -32,6 +32,9 @@ https://developers.google.com/maps/documentation
 
 https://developers.google.com/maps/terms
 
+In its 'libraries' folder, Gismo includes two compiled open source libraries: StraightSkeletonNet and Clipper.
+More information about both of them can be found below.
+
 ===============
 
 Gismo uses MapWinGIS, free and open source C++ based geographic information system programming ActiveX Control and application programmer interface (API), which is distributed under the terms of Mozilla Public License Version 2.0 License. Some external libraries which can be optionally used by MapWinGIS are subject to their own licensing conditions. MapWinGIS is developed by Paul Meems and Sergei Leschinsky. Please refer to its source code repository for more information:
