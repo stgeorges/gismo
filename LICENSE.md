@@ -1,6 +1,6 @@
 Gismo is a free and open source Grasshopper plugin for GIS environmental analysis.
 
-Copyright (c) 2017, Djordje Spasic
+Copyright (c) 2019, Djordje Spasic
 
 Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
@@ -15,7 +15,7 @@ The GPL-3.0+ license http://spdx.org/licenses/GPL-3.0+
 Additional permission under GNU GPL version 3 section 7:
 
 
-Gismo entirely depends on Rhinoceros 5 and Grasshopper libraries. These two along with some other external libraries used by Rhinoceros 5 are excluded from Gismo's GPL license, and are subject to their own licensing conditions. Rhinoceros 5 and Grasshopper are owned and developed by Robert McNeel & Associates (McNeel).
+Gismo entirely depends on Rhinoceros 5/6 and Grasshopper libraries. These two along with some other external libraries used by Rhinoceros 5 are excluded from Gismo's GPL license, and are subject to their own licensing conditions. Rhinoceros 5,6 and Grasshopper are owned and developed by Robert McNeel & Associates (McNeel).
 Please refer to McNeel's website for more information:
 
 http://www.mcneel.com
@@ -40,12 +40,11 @@ https://github.com/MapWindow/MapWinGIS
 
 ===============
 
-Gismo uses StraightSkeletonNet library developed by Ilya Builuk.
+Gismo uses StraightSkeletonNet library to create topological skeletons developed by Ilya Builuk.
 StraightSkeletonNet is licensed under The Code Project Open License (CPOL):
 https://www.codeproject.com/info/cpol10.aspx
 
 Please refer to its source code repository for more information:
-
 https://github.com/reinterpretcat/csharp-libs/tree/master/straight_skeleton
 
 ===============
@@ -55,7 +54,6 @@ Clipper is licensed under Boost Software License (BSL1.0):
 https://sourceforge.net/directory/os:windows/license:boostlicense
 
 Please refer to its source code repository for more information:
-
 https://sourceforge.net/projects/polyclipping
 
 ===============
