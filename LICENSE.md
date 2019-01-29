@@ -44,8 +44,8 @@ https://github.com/MapWindow/MapWinGIS
 ===============
 
 Gismo uses StraightSkeletonNet library to create topological skeletons developed by Ilya Builuk.
-StraightSkeletonNet is licensed under The Code Project Open License (CPOL):
-https://www.codeproject.com/info/cpol10.aspx
+StraightSkeletonNet is licensed under Apache 2.0 license:
+https://www.apache.org/licenses/LICENSE-2.0
 
 Please refer to its source code repository for more information:
 https://github.com/reinterpretcat/csharp-libs/tree/master/straight_skeleton
