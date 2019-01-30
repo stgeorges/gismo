@@ -59,7 +59,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_OSM 3D Road"
 ghenv.Component.NickName = "OSM3Droad"
-ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
+ghenv.Component.Message = "VER 0.0.3\nJAN_30_2019"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -462,7 +462,8 @@ def projectPlanarClosedCrvsToTerrain2(planarCrvsL, groundTerrainBrep, groundTerr
                         ####print "clockwise"
                         pass
                     elif (planarOffsetRoadsCrv.ClosedCurveOrientation(upDirection) == Rhino.Geometry.CurveOrientation.CounterClockwise):
-                        srfProjectedOnTerrain = splittedBreps[0]
+                        srfProjectedOnTerrain = splittedBreps[len(splittedBreps)-1]  # works?
+                        ####srfProjectedOnTerrain = splittedBreps[0]
                         ####print "counter clockwise"
                         pass
                     
