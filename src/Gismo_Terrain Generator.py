@@ -48,7 +48,7 @@ Provided by Gismo 0.0.3
                  In meters.
         source_: There are currently three terrain sources available:
                -
-               0 - SRTMGL1: only terrain from -55 to 59 latitude! Terrain ends at the sea level (no sea/river/lake floor terrain). Terrain resolution varies from 20 to 30 meters.
+               0 - SRTMGL1: only terrain from -55.9 to 59.9 latitude! Terrain ends at the sea level (no sea/river/lake floor terrain). Terrain resolution varies from 20 to 30 meters.
                1 - AW3D30: only terrain! Terrain ends at the sea level (no sea/river/lake floor terrain). Terrain resolution varies from 20 to 30 meters.
                2 - GMRT: terrain and underwater (sea/river/lake floor) terrain. Sea level is not presented. Terrain and underwater terrain resolution varies from 50 meter to 2000 meters.
                -
@@ -106,7 +106,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Terrain Generator"
 ghenv.Component.NickName = "TerrainGenerator"
-ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
+ghenv.Component.Message = "VER 0.0.3\nAPR_07_2019"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
@@ -235,15 +235,32 @@ def checkInputData(locationLatitudeD, maxVisibilityRadiusM, gridSize, source, _t
     # correction of maxVisibilityRadiusM length due to light refraction can not be calculated, so it is assumed that arcLength = maxVisibilityRadiusM. maxVisibilityRadiusM variable will be used from now on instead of arcLength.
     
     
-    if (source == 2)  and  ((locationLatitudeD < -55) or (locationLatitudeD > 59)):
+    if (source == 0)  and  ((locationLatitudeD < -55.9) or (locationLatitudeD > 59.9)):
         # SRTMGL1 is limited to -56 to 60 latitude
         maxVisibilityRadiusM = gridSize = source = sourceLabel = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
         validInputData = False
-        printMsg = "The \"source_ = 2\" input (SRTMGL1) has range limits: from -55 South to 59 North latitude.\n" + \
-                   "\"location_\" you chose exceeds these limits.\n" + \
-                   "Try using either \"source_ = 0\" input or \"source_ = 1\" inputs, which have higher range limits (both from -81 South to 81 North latitude)."
+        printMsg = "The \"source_ = 0\" input (SRTMGL1) has range limits: from -55.9 South to 59.9 North latitude.\n" + \
+                   "Defined \"_location\" exceeds these limits.\n" + \
+                   "Try using either \"source_ = 1\" input or \"source_ = 2\" inputs, which have higher range limits (both from -82 South to 82 North latitude)."
         return maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
     
+    if (source == 1)  and  ((locationLatitudeD < -82) or (locationLatitudeD > 82)):
+        # AW3D30 is limited to -82 to 80 latitude
+        maxVisibilityRadiusM = gridSize = source = sourceLabel = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
+        validInputData = False
+        printMsg = "The \"source_ = 1\" input (SRTMGL1) has range limits: from -82 South to 82 North latitude.\n" + \
+                   "Defined \"_location\" exceeds these limits.\n" + \
+                   "For now, no other Gismo \"source_\" supports latitude beyond this."
+        return maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
+    
+    if (source == 2)  and  ((locationLatitudeD < -82) or (locationLatitudeD > 82)):
+        # GMRT is limited to -82 to 80 latitude
+        maxVisibilityRadiusM = gridSize = source = sourceLabel = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
+        validInputData = False
+        printMsg = "The \"source_ = 2\" input (GMRT) has range limits: from -82 South to 82 North latitude.\n" + \
+                   "Defined \"_location\" exceeds these limits.\n" + \
+                   "For now, no other Gismo \"source_\" supports latitude beyond this."
+        return maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
     
     
     if (north == None):
@@ -301,7 +318,7 @@ def distanceBetweenTwoPoints(latitude1D, longitude1D, maxVisibilityRadiusM):
     # setting the latitude2D, longitude2D according to ALOS latitude range boundaries (approx. -82 to 82): http://opentopo.sdsc.edu/raster?opentopoID=OTALOS.112016.4326.2 
     if latitude1D >= 0:
         # northern hemishere:
-        latitude2D = 81  
+        latitude2D = 82  
     elif latitude1D < 0:
         # southern hemishere:
         latitude2D = -82
@@ -360,28 +377,28 @@ def distanceBetweenTwoPoints(latitude1D, longitude1D, maxVisibilityRadiusM):
     
     
     if latitude1D >= 0:
-        SRTMlimit = "81 North"
+        SRTMlimit = "82 North"
     elif latitude1D < 0:
-        SRTMlimit = "-81 South"
+        SRTMlimit = "-82 South"
     
     if distanceM < 200:
         correctedMaskRadiusM = "dummy"
         validVisibilityRadiusM = False
         printMsg = "This component dowloads free topography data from opentopography.org in order to create a terrain for the chosen _location.\n" + \
-                   "But mentioned free topography data has limits: from -81 South to 81 North latitude.\n" + \
+                   "But mentioned free topography data has limits: from -82 South to 82 North latitude.\n" + \
                    "The closer the location is to upper mentioned boundaries, the inputted \"radius_\" value may have be shrank to make sure that the boundaries are not exceeded.\n" + \
                    "In this case the _location you chose is very close (less than 200 meters) to the %s latitude boundary.\n" % SRTMlimit + \
                    "It is not possible to create a terrain for locations less than 200 meters close to mentioned boundary, as this _location is.\n" + \
                    "Try using the Ladybug \"Terrain Generator\" component instead."
     else:
-        # shortening the maxVisibilityRadiusM according to the distance remained to the ALOS latitude range boundaries (-81 to 81)
+        # shortening the maxVisibilityRadiusM according to the distance remained to the ALOS latitude range boundaries (-82 to 82)
         if distanceM < maxVisibilityRadiusM:
             print "distanceM < maxVisibilityRadiusM: ", distanceM < maxVisibilityRadiusM
             print "distanceM, maxVisibilityRadiusM: ", distanceM, maxVisibilityRadiusM
             correctedMaskRadiusM = int(distanceM)  # int(distanceM) will always perform the math.floor(distanceM)
             validVisibilityRadiusM = False
             printMsg = "This component downloads free topography data from opentopography.org in order to create a terrain for the chosen _location.\n" + \
-                       "But mentioned free topography data has limits: from -81 South to 81 North latitude.\n" + \
+                       "But mentioned free topography data has limits: from -82 South to 82 North latitude.\n" + \
                        "The closer the location is to upper mentioned boundaries, the inputted \"radius_\" value may have to be shrank to make sure that the boundaries are not exceeded.\n" + \
                        "In this case the _location you chose is %s meters away from the %s latitude boundary.\n" % (correctedMaskRadiusM, SRTMlimit) + \
                        " \n" + \
@@ -599,21 +616,21 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
         if rasterFileAlreadyExists == False:
             ## .tif file has not been downloaded up until now, download it
             
-            # first check the location before download, so that it fits the opentopography.org limits (-81 to 81(80.99999 used instead of 81) latitude):
-            if locationLatitudeD > 80.99999:
-                # location beyond the -81 to 81 latittude limits
+            # first check the location before download, so that it fits the opentopography.org limits (-82 to 82(81.99999 used instead of 82) latitude):
+            if locationLatitudeD > 81.99999:
+                # location beyond the -82 to 82 latittude limits
                 # (correctedMaskRadiusM < 1) or (correctedMaskRadiusM < maxVisibilityRadiusM)
                 terrainShadingMask = origin_0_0_0 = None
                 valid_Obj_or_Raster_file = False
                 rasterFilePath = "needless"  # dummy
                 printMsg = "This component dowloads free topography data from opentopography.org in order to create a terrain for the chosen _location.\n" + \
-                           "But mentioned free topography data has its limits: from -81 South to 81 North latitude.\n" + \
+                           "But mentioned free topography data has its limits: from -82 South to 82 North latitude.\n" + \
                            "Your _location's latitude exceeds the upper mentioned limits.\n" + \
                            " \n" + \
                            "Try using the Ladybug \"Terrain Generator\" component instead."
             else:
-                # location within the -81 to 81 latittude limits
-                # correct (shorten) the maxVisibilityRadiusM according to the distance remained to the ALOS latitude range boundaries (-81 to 81)
+                # location within the -82 to 82 latittude limits
+                # correct (shorten) the maxVisibilityRadiusM according to the distance remained to the ALOS latitude range boundaries (-82 to 82)
                 correctedMaskRadiusM, validVisibilityRadiusM, printMsg = distanceBetweenTwoPoints(locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM)
                 if validVisibilityRadiusM == True:
                     # (correctedMaskRadiusM >= maxVisibilityRadiusM)
