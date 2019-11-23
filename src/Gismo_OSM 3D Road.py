@@ -59,7 +59,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_OSM 3D Road"
 ghenv.Component.NickName = "OSM3Droad"
-ghenv.Component.Message = "VER 0.0.3\nJAN_30_2019"
+ghenv.Component.Message = "VER 0.0.3\nNOV_23_2019"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -71,6 +71,7 @@ from System.Collections.Generic import List
 import rhinoscriptsyntax as rs
 import scriptcontext as sc
 import Grasshopper
+import random
 import System
 import Rhino
 import math
@@ -396,6 +397,68 @@ def removeSelfOverlappingParts_fromCrv(crv):
     return crv_withoutOverlappingParts
 
 
+def populateBrep(brep, numOfPts):
+    # based on: https://discourse.mcneel.com/t/populate-geometry-in-rhinocommon/75724/6
+    M = Rhino.Geometry.Mesh.CreateFromBrep(brep)[0]
+    
+    faces = M.Faces
+    faces.ConvertQuadsToTriangles()
+    vertices = M.Vertices
+    # Calculating area for each face
+    # code by David Rutten from https://www.grasshopper3d.com/forum/topics/what-is-the-most-efficient-way-to-convert-mesh-faces-into-breps
+    areas = System.Collections.Generic.List[System.Double](faces.Count)
+    i = 0
+    while i < faces.Count:
+        face = faces[i]
+        area = 0
+        if face.IsTriangle:
+            p0 = vertices[face.A]
+            p1 = vertices[face.B]
+            p2 = vertices[face.C]
+            v0 = p0 - p1
+            v1 = p2 - p1
+            cp = Rhino.Geometry.Vector3d.CrossProduct(v0, v1)
+            area = 0.5 * cp.Length
+        else:
+            if face.IsQuad:
+                p0 = vertices[face.A]
+                p1 = vertices[face.B]
+                p2 = vertices[face.C]
+                p3 = vertices[face.D]
+                v0 = p0 - p1
+                v1 = p2 - p1
+                v2 = p0 - p3
+                v3 = p2 - p3
+                cp0 = Rhino.Geometry.Vector3d.CrossProduct(v0, v1)
+                cp1 = Rhino.Geometry.Vector3d.CrossProduct(v2, v3)
+                area = 0.5 * cp0.Length + 0.5 * cp1.Length
+        areas.Add(area)
+        i += 1
+    
+    pts = System.Collections.Generic.List[Rhino.Geometry.Point3d](numOfPts)
+    totalarea = 0.999999999 * (Rhino.Geometry.AreaMassProperties.Compute(M, True, False, False, False)).Area
+    fraction = totalarea / numOfPts
+    resto = 0
+    i = 0
+    while i < faces.Count:
+        nn = math.floor((areas[i] + resto) / fraction)
+        j = 0
+        while j < nn:
+            par0 = math.pow(random.random(), 1.5)
+            par1 = math.pow(random.random(), 1.5)
+            par2 = math.pow(random.random(), 1.5)
+            tot = par0 + par1 + par2
+            par0 = par0 / tot
+            par1 = par1 / tot
+            par2 = par2 / tot
+            p = M.PointAt(i, par0, par1, par2, 0.0)
+            pts.Add(p)
+            j += 1
+        resto = (areas[i] + resto) - nn * fraction
+        i += 1
+    return pts
+
+
 def projectPlanarClosedCrvsToTerrain2(planarCrvsL, groundTerrainBrep, groundTerrain_outerEdge_extrusion, bb_height):
     """
     project planar closed curves to a single face brep and make their footprints on terrain
@@ -433,6 +496,7 @@ def projectPlanarClosedCrvsToTerrain2(planarCrvsL, groundTerrainBrep, groundTerr
         srfProjectedOnTerainL = []
         planarBreps = Rhino.Geometry.Brep.CreatePlanarBreps(planarCrvsL)
         for planarBrep in planarBreps:
+            #Rhino.RhinoDoc.ActiveDoc.Objects.AddBrep(planarBrep)
             shapeStartPt = planarOffsetRoadsCrv.PointAtStart
             extrudePathCurve = Rhino.Geometry.Line(shapeStartPt, Rhino.Geometry.Point3d(shapeStartPt.X, shapeStartPt.Y, shapeStartPt.Z - (liftingOSMshapesHeight+(2 * bb_height)) )).ToNurbsCurve()
             cap = True
@@ -450,10 +514,31 @@ def projectPlanarClosedCrvsToTerrain2(planarCrvsL, groundTerrainBrep, groundTerr
                     
                     # check the planarOffsetRoadsCrv oriention to determine the brep face index in "splittedBreps"
                     upDirection = Rhino.Geometry.Vector3d(0,0,1)
-                    srfProjectedOnTerrain = splittedBreps[len(splittedBreps)-1]  # works!
+                    #srfProjectedOnTerrain = splittedBreps[len(splittedBreps)-1]  # works!
                     #srfProjectedOnTerrain = splittedBreps[0]
                     #print "len(splittedBreps): ", len(splittedBreps)
                     
+                    
+                    globalZdown = Rhino.Geometry.Vector3d(0,0,1)
+                    
+                    for brep in splittedBreps:
+                        brep.Faces.ShrinkFaces()  # shrink the cutted srfProjectedOnTerrain
+                        
+                        pt_onBrep_L = populateBrep(brep, numOfPts=20)  # it can happen that with "numOfPts=1" does not sometimes populate the brep. This is why we use approx. taken 20, instead of 1 points
+                        for pt_onBrep in pt_onBrep_L:
+                            pt_onBrep = pt_onBrep_L[0]
+                            dummZ = -1000
+                            lifted_ray_origin = Rhino.Geometry.Point3d(pt_onBrep.X, pt_onBrep.Y, dummZ)
+                            Rhino.RhinoDoc.ActiveDoc.Objects.AddPoint(lifted_ray_origin)
+                            ray = Rhino.Geometry.Ray3d(lifted_ray_origin, globalZdown)
+                            mesh = Rhino.Geometry.Mesh.CreateFromBrep(planarBrep)[0]
+                            interscPar = Rhino.Geometry.Intersect.Intersection.MeshRay(mesh, ray)
+                            if interscPar >= 0: # there is intersection
+                                srfProjectedOnTerainL.append(brep)
+                                break
+                            
+                    
+                    """
                     gotPlane_success, plane = planarOffsetRoadsCrv.TryGetPlane()
                     
                     if (planarOffsetRoadsCrv.ClosedCurveOrientation(upDirection) == Rhino.Geometry.CurveOrientation.Clockwise):
@@ -470,7 +555,7 @@ def projectPlanarClosedCrvsToTerrain2(planarCrvsL, groundTerrainBrep, groundTerr
                     
                     srfProjectedOnTerrain.Faces.ShrinkFaces()  # shrink the cutted srfProjectedOnTerrain
                     srfProjectedOnTerainL.append(srfProjectedOnTerrain)
-                    
+                    """
                 elif (len(intersectCrvs) == 0):
                     ####print "terrain edges DO NOT intersect with road srf."
                     # planarOffsetRoadsCrv planar srf is inside groundTerrain_ and does not intersect it
