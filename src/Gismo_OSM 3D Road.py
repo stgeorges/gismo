@@ -529,7 +529,6 @@ def projectPlanarClosedCrvsToTerrain2(planarCrvsL, groundTerrainBrep, groundTerr
                             pt_onBrep = pt_onBrep_L[0]
                             dummZ = -1000
                             lifted_ray_origin = Rhino.Geometry.Point3d(pt_onBrep.X, pt_onBrep.Y, dummZ)
-                            Rhino.RhinoDoc.ActiveDoc.Objects.AddPoint(lifted_ray_origin)
                             ray = Rhino.Geometry.Ray3d(lifted_ray_origin, globalZdown)
                             mesh = Rhino.Geometry.Mesh.CreateFromBrep(planarBrep)[0]
                             interscPar = Rhino.Geometry.Intersect.Intersection.MeshRay(mesh, ray)
