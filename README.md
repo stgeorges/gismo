@@ -48,7 +48,7 @@ https://github.com/stgeorges/gismo/zipball/master
 Gismo is heavily influenced by [Ladybug](https://github.com/mostaphaRoudsari/ladybug) a free and open source environmental plugin for Grasshopper. It is using its code template, and follows the Labybug code organization. Some methods from Ladybug may have also been copied.
 
 Gismo is [licensed](https://github.com/stgeorges/gismo/blob/master/LICENSE.md) under GPL-3.0+ license: <http://spdx.org/licenses/GPL-3.0+>
-
+The latest version is 0.0.3.
 
 
 # Contributors
