@@ -639,54 +639,59 @@ def createShapesKeysValues(locationName, locationLatitudeD, locationLongitudeD, 
     shapefile = MapWinGIS.ShapefileClass()
     openShapefileSuccess = MapWinGIS.ShapefileClass.Open(shapefile, shapeFile_filePath, None)
     if openShapefileSuccess:
-        numOfsuccessfullyReprojectedShapes = clr.StrongBox[System.Int32]()
-        shapefileFixedSuccess, fixedShapefile = MapWinGIS.ShapefileClass.FixUpShapes(shapefile)  # fails on MapWinGIS 4.9.4.2. Does not fail on Map Window Lite 32x
-        if shapefileFixedSuccess:
-            # shape file has been fixed
-            reprojectedShapefile = MapWinGIS.ShapefileClass.Reproject(shapefile, outputCRS, numOfsuccessfullyReprojectedShapes)
-            #reprojectedShapefile = MapWinGIS.ShapefileClass.Reproject(fixedShapefile, outputCRS, numOfsuccessfullyReprojectedShapes)
+        if shapefile.NumShapes == 0:
+            reprojectedShapefile = shapefile # Reproject returns None on empty files
         else:
-            # shapefile has NOT been fixed. Use the initial shapefile
-            reprojectedShapefile = MapWinGIS.ShapefileClass.Reproject(shapefile, outputCRS, numOfsuccessfullyReprojectedShapes)
-        
-        """
-        # testing fixing of shapes
-        print "numOfsuccessfullyReprojectedShapes: ", numOfsuccessfullyReprojectedShapes
-        print "reprojectedShapefile: ", reprojectedShapefile
-        # testing MapWinGIS.ShapefileClass.FixUpShapes
-        shapeFile_filePath_saved = shapeFile_filePath[:-4] + "_saved_" + str(int(time.time())) + ".shp"
-        print "shapeFile_filePath_saved: ", shapeFile_filePath_saved
-        #success = MapWinGIS.ShapefileClass.SaveAs(reprojectedShapefile, shapeFile_filePath_saved, None)
-        #print "success: ", success
-        """
-        
-        if reprojectedShapefile == None:
-            # reprojection failed
-            
-            utils = MapWinGIS.UtilsClass()
-            convertErrorNo = MapWinGIS.GlobalSettingsClass().GdalLastErrorNo
-            convertErrorMsg = MapWinGIS.GlobalSettingsClass().GdalLastErrorMsg
-            convertErrorType = MapWinGIS.GlobalSettingsClass().GdalLastErrorType
-            reprojectErrorMsg = MapWinGIS.GlobalSettingsClass().GdalReprojectionErrorMsg
+            numOfsuccessfullyReprojectedShapes = clr.StrongBox[System.Int32]()
+            shapefileFixedSuccess, fixedShapefile = MapWinGIS.ShapefileClass.FixUpShapes(shapefile)  # fails on MapWinGIS 4.9.4.2. Does not fail on Map Window Lite 32x
+            if shapefileFixedSuccess:
+                # shape file has been fixed
+                reprojectedShapefile = MapWinGIS.ShapefileClass.Reproject(shapefile, outputCRS, numOfsuccessfullyReprojectedShapes)
+                #reprojectedShapefile = MapWinGIS.ShapefileClass.Reproject(fixedShapefile, outputCRS, numOfsuccessfullyReprojectedShapes)
+            else:
+                # shapefile has NOT been fixed. Use the initial shapefile
+                reprojectedShapefile = MapWinGIS.ShapefileClass.Reproject(shapefile, outputCRS, numOfsuccessfullyReprojectedShapes)
+            shapefile.Close()
+            fixedShapefile.Close()
+            """
+            # testing fixing of shapes
             print "numOfsuccessfullyReprojectedShapes: ", numOfsuccessfullyReprojectedShapes
-            print "convertErrorNo: ", convertErrorNo
-            print "convertErrorMsg: ", convertErrorMsg
-            print "convertErrorType: ", convertErrorType
-            print "reprojectErrorMsg: ", reprojectErrorMsg
-            print "utils.ErrorMsg: ", utils.ErrorMsg
-            print "utils.LastErrorCode: ", utils.LastErrorCode
+            print "reprojectedShapefile: ", reprojectedShapefile
+            # testing MapWinGIS.ShapefileClass.FixUpShapes
+            shapeFile_filePath_saved = shapeFile_filePath[:-4] + "_saved_" + str(int(time.time())) + ".shp"
+            print "shapeFile_filePath_saved: ", shapeFile_filePath_saved
+            #success = MapWinGIS.ShapefileClass.SaveAs(reprojectedShapefile, shapeFile_filePath_saved, None)
+            #print "success: ", success
+            """
             
-            reprojectionError = fixedShapefile.ErrorMsg(fixedShapefile.LastErrorCode)
-            shpLinesFile_filePath = shpMultilinestringsFile_filePath = shpMultipolygonsFile_filePath = shpPointsFile_filePath = None
-            validShapes = False
-            printMsg = "The following error emerged while processing the data:\n" + \
-                       " \n" + \
-                       "\"%s\"\n" % reprojectionError + \
-                       "numOfsuccessfullyReprojectedShapes: %s\n" % numOfsuccessfullyReprojectedShapes + \
-                       " \n" + \
-                       "Restart Rhino and Grasshopper (close them, then run again) and run this component again.\n" + \
-                       "If this same message appears again open a new topic about it on: www.grasshopper3d.com/group/gismo/forum."
-            return None, None, None, validShapes, printMsg
+            
+            if reprojectedShapefile == None:
+                # reprojection failed
+                
+                utils = MapWinGIS.UtilsClass()
+                convertErrorNo = MapWinGIS.GlobalSettingsClass().GdalLastErrorNo
+                convertErrorMsg = MapWinGIS.GlobalSettingsClass().GdalLastErrorMsg
+                convertErrorType = MapWinGIS.GlobalSettingsClass().GdalLastErrorType
+                reprojectErrorMsg = MapWinGIS.GlobalSettingsClass().GdalReprojectionErrorMsg
+                print "numOfsuccessfullyReprojectedShapes: ", numOfsuccessfullyReprojectedShapes
+                print "convertErrorNo: ", convertErrorNo
+                print "convertErrorMsg: ", convertErrorMsg
+                print "convertErrorType: ", convertErrorType
+                print "reprojectErrorMsg: ", reprojectErrorMsg
+                print "utils.ErrorMsg: ", utils.ErrorMsg
+                print "utils.LastErrorCode: ", utils.LastErrorCode
+                
+                reprojectionError = fixedShapefile.ErrorMsg(fixedShapefile.LastErrorCode)
+                shpLinesFile_filePath = shpMultilinestringsFile_filePath = shpMultipolygonsFile_filePath = shpPointsFile_filePath = None
+                validShapes = False
+                printMsg = "The following error emerged while processing the data:\n" + \
+                           " \n" + \
+                           "\"%s\"\n" % reprojectionError + \
+                           "numOfsuccessfullyReprojectedShapes: %s\n" % numOfsuccessfullyReprojectedShapes + \
+                           " \n" + \
+                           "Restart Rhino and Grasshopper (close them, then run again) and run this component again.\n" + \
+                           "If this same message appears again open a new topic about it on: www.grasshopper3d.com/group/gismo/forum."
+                return None, None, None, validShapes, printMsg
     
     
     originPtProjected_meters = gismo_gis.projectedLocationCoordinates(locationLatitudeD, locationLongitudeD)  # in meters!
@@ -786,8 +791,6 @@ def createShapesKeysValues(locationName, locationLatitudeD, locationLongitudeD, 
                 del shapesL_filtered
             subShape = None
     
-    shapefile.Close()  # naknadno dodat - proveriti da li pravi neke probleme
-    fixedShapefile.Close()
     reprojectedShapefile.Close()
     
     
