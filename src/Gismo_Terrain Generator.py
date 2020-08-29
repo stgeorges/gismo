@@ -106,7 +106,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Terrain Generator"
 ghenv.Component.NickName = "TerrainGenerator"
-ghenv.Component.Message = "VER 0.0.3\nAPR_07_2019"
+ghenv.Component.Message = "VER 0.0.3\nAUG_27_2020"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
@@ -639,14 +639,15 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
                     
                     if source == 0:
                         # based on: http://www.opentopography.org/developers
-                        downloadRasterLink_withCorrectedMaskRadiusKM = "http://opentopo.sdsc.edu/otr/getdem?demtype=SRTMGL1&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff" % (longitudeLeftD,latitudeBottomD,longitudeRightD,latitudeTopD)  # SRTM 1 arc second
+                        #downloadRasterLink_withCorrectedMaskRadiusKM = "http://opentopo.sdsc.edu/otr/getdem?demtype=SRTMGL1&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff" % (longitudeLeftD,latitudeBottomD,longitudeRightD,latitudeTopD)  # SRTM 1 arc second (old link)
+                        downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/globaldem?demtype=SRTMGL1&south={}&north={}&west={}&east={}&outputFormat=GTiff".format(latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD)  # SRTM 1 arc second (new link)
                     elif source == 1:
                         # based on: http://www.opentopography.org/developers
-                        downloadRasterLink_withCorrectedMaskRadiusKM = "http://opentopo.sdsc.edu/otr/getdem?demtype=AW3D30&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff" % (longitudeLeftD,latitudeBottomD,longitudeRightD,latitudeTopD)  # ALOS 1 arc second (AW3D30)
+                        #downloadRasterLink_withCorrectedMaskRadiusKM = "http://opentopo.sdsc.edu/otr/getdem?demtype=AW3D30&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff" % (longitudeLeftD,latitudeBottomD,longitudeRightD,latitudeTopD)  # ALOS 1 arc second (AW3D30) (old link)
+                        downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/globaldem?demtype=AW3D30&south={}&north={}&west={}&east={}&outputFormat=GTiff".format(latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD)  # ALOS 1 arc second (AW3D30) (new link)
                     elif source == 2:
                         # based on: http://www.marine-geo.org/tools/gridserverinfo.php#!/tools/getGMRTGrid
-                        #downloadRasterLink_withCorrectedMaskRadiusKM = "http://www.marine-geo.org/services/GridServer?north=%s&west=%s&east=%s&south=%s&layer=topo&format=geotiff&resolution=high" % (latitudeTopD,longitudeLeftD,longitudeRightD,latitudeBottomD)  # GMRT
-                        downloadRasterLink_withCorrectedMaskRadiusKM = "http://www.marine-geo.org/services/GridServer?north=%s&west=%s&east=%s&south=%s&layer=topo&format=geotiff&resolution=max" % (latitudeTopD,longitudeLeftD,longitudeRightD,latitudeBottomD)  # GMRT
+                        downloadRasterLink_withCorrectedMaskRadiusKM = "http://www.marine-geo.org/services/GridServer?north={}&west={}&east={}&south={}&layer=topo&format=geotiff&resolution=max".format(latitudeTopD, longitudeLeftD, longitudeRightD, latitudeBottomD)  # GMRT
                     
                     # new rasterFileNamePlusExtension and rasterFilePath corrected according to new correctedMaskRadiusM
                     rasterFileNamePlusExtension_withCorrectedMaskRadiusKM = fileNameIncomplete + "_visibility=" + str(round(maxVisibilityRadiusM/1000, 2)) + "KM" + "_source=" + sourceLabel + ".tif"  # IMPORTANT: rasterFileNamePlusExtension_withCorrectedMaskRadiusKM will always be used instead of rasterFilePath from line 647 !!!
