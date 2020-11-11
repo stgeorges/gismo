@@ -1017,7 +1017,7 @@ def scaleTerrainShadingMask(context, terrainShadingMaskUnscaledUnrotated, origin
     return scale, terrainShadingMaskScaled_radius, contextRadius, contextCentroid, validContextCentroid, printMsg
 
 
-def compassCrvs_title_scalingRotating(origin_0_0_0, contextCentroid, scale, northVec, terrainShadingMaskUnscaledUnrotated, locationName, locationLatitudeD, locationLongitudeD, heightM, elevationM, minVisibilityRadiusM, maxVisibilityRadiusM, unitConversionFactor):
+def compassCrvs_title_scalingRotating(origin_0_0_0, contextCentroid, scale, northVec, terrainShadingMaskUnscaledUnrotated, locationName, locationLatitudeD, locationLongitudeD, heightM, elevationM, minVisibilityRadiusM, maxVisibilityRadiusM, unitConversionFactor, rasterFilePath):
     
     skyDomeRadius = 200 / unitConversionFactor  # in meters
     outerBaseCrv = Rhino.Geometry.Circle(origin_0_0_0, 1.08*skyDomeRadius).ToNurbsCurve()  # compassCrv outerBaseCrv
@@ -1073,14 +1073,15 @@ def compassCrvs_title_scalingRotating(origin_0_0_0, contextCentroid, scale, nort
     
     
     ## FIX ##
-    # for Rhino 6 - by default export .obj from Rhino 6 is using 'Map Rhinp Z to OBJ Y' option checked.
+    # for Rhino 6 - by default export .obj from Rhino 6 is using 'Map Rhino Z to OBJ Y' option checked.
     # when importing .obj file, by default in Rhino 6, this option is not checked.
-    # to fix this, we will assume that both import,export .obj Rhino 6 options have not been changed, so we will rotate the terrain mask around the +X axis by 90 degrees, to accommodate for the checked "Map Rhinp Z to OBJ Y" when .obj is exported
+    # to fix this, we will assume that both import,export .obj default Rhino 6 options have not been changed, so we will rotate the terrain mask around the +X axis by 90 degrees, to accommodate for the checked "Map Rhino Z to OBJ Y" when .obj is exported.
     
-    rotAngleR = math.radians(90)
-    rotAx = Rhino.Geometry.Vector3d(1,0,0)
-    transformMatrixRotate2 = Rhino.Geometry.Transform.Rotation(rotAngleR, rotAx, contextCentroid)
-    terrainShadingMaskScaledRotated.Transform(transformMatrixRotate2)
+    if (rasterFilePath == "needless"):  # apply this fix only when .obj terrain shading mask is imported. But not when it is created for the first time directly from the terrain raster file!
+        rotAngleR = math.radians(90)
+        rotAx = Rhino.Geometry.Vector3d(1,0,0)
+        transformMatrixRotate2 = Rhino.Geometry.Transform.Rotation(rotAngleR, rotAx, contextCentroid)
+        terrainShadingMaskScaledRotated.Transform(transformMatrixRotate2)
     ## FIX ##
     
     
@@ -1167,7 +1168,7 @@ if sc.sticky.has_key("gismoGismo_released"):
                             scale, terrainShadingMaskScaled_radius, contextRadius, contextCentroid, validContextCentroid, printMsg = scaleTerrainShadingMask(context_, terrainShadingMaskUnscaledUnrotated, origin_0_0_0, locationLatitudeD)
                             originPt = contextCentroid
                             if validContextCentroid:
-                                terrainShadingMaskScaledRotated, compassCrvs, titleDescriptionLabelMeshes = compassCrvs_title_scalingRotating(origin_0_0_0, contextCentroid, scale, northVec, terrainShadingMaskUnscaledUnrotated, locationName, locationLatitudeD, locationLongitudeD, heightM, elevationM, minVisibilityRadiusM, maxVisibilityRadiusM, unitConversionFactor)
+                                terrainShadingMaskScaledRotated, compassCrvs, titleDescriptionLabelMeshes = compassCrvs_title_scalingRotating(origin_0_0_0, contextCentroid, scale, northVec, terrainShadingMaskUnscaledUnrotated, locationName, locationLatitudeD, locationLongitudeD, heightM, elevationM, minVisibilityRadiusM, maxVisibilityRadiusM, unitConversionFactor, rasterFilePath)
                                 if bakeIt_: bakingGrouping(locationName, locationLatitudeD, locationLongitudeD, heightM, minVisibilityRadiusM, maxVisibilityRadiusM, maskStyleLabel, contextCentroid, terrainShadingMaskScaledRotated, compassCrvs, titleDescriptionLabelMeshes)
                                 printOutput(northRad, locationLatitudeD, locationLongitudeD, locationName, heightM, minVisibilityRadiusM, maxVisibilityRadiusM, maskStyle, workingSubFolderPath, downloadTSVLink)
                                 terrainShadingMask = terrainShadingMaskScaledRotated; title = titleDescriptionLabelMeshes; maskRadius = terrainShadingMaskScaled_radius; elevation = elevationM
