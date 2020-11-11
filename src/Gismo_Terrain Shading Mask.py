@@ -147,7 +147,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Terrain Shading Mask"
 ghenv.Component.NickName = "TerrainShadingMask"
-ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
+ghenv.Component.Message = "VER 0.0.3\nNOV_11_2020"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
@@ -650,7 +650,8 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
                     # generate download link for raster region
                     latitudeTopD, dummyLongitudeTopD, latitudeBottomD, dummyLongitudeBottomD, dummyLatitudeLeftD, longitudeLeftD, dummyLatitudeRightD, longitudeRightD = gismo_gis.destinationLatLon(locationLatitudeD, locationLongitudeD, correctedMaskRadiusM)
                     # based on: http://www.opentopography.org/developers
-                    downloadRasterLink_withCorrectedMaskRadiusKM = "http://opentopo.sdsc.edu/otr/getdem?demtype=SRTMGL3&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff" % (longitudeLeftD,latitudeBottomD,longitudeRightD,latitudeTopD)  # 3 arc-second SRTMGL3
+                    #downloadRasterLink_withCorrectedMaskRadiusKM = "http://opentopo.sdsc.edu/otr/getdem?demtype=SRTMGL3&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff" % (longitudeLeftD,latitudeBottomD,longitudeRightD,latitudeTopD)  # 3 arc-second SRTMGL3 (old link)
+                    downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/globaldem?demtype=SRTMGL3&south={}&north={}&west={}&east={}&outputFormat=GTiff".format(latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD)  # 3 arc-second SRTMGL3 (new link)
                     
                     # new rasterFileNamePlusExtension and rasterFilePath corrected according to new correctedMaskRadiusM
                     rasterFileNamePlusExtension_withCorrectedMaskRadiusKM = fileNameIncomplete + "_visibility=" + str(int(maxVisibilityRadiusM/1000)) + "KM" + ".tif"  # rasterFileNamePlusExtension_withCorrectedMaskRadiusKM will always be used instead of rasterFilePath from line 647 !!!
@@ -1068,6 +1069,20 @@ def compassCrvs_title_scalingRotating(origin_0_0_0, contextCentroid, scale, nort
     # hide compassCrvs, title outputs, because they are not hidden in "Horizon angles" component
     ghenv.Component.Params.Output[3].Hidden = True
     ghenv.Component.Params.Output[4].Hidden = True
+    
+    
+    
+    ## FIX ##
+    # for Rhino 6 - by default export .obj from Rhino 6 is using 'Map Rhinp Z to OBJ Y' option checked.
+    # when importing .obj file, by default in Rhino 6, this option is not checked.
+    # to fix this, we will assume that both import,export .obj Rhino 6 options have not been changed, so we will rotate the terrain mask around the +X axis by 90 degrees, to accommodate for the checked "Map Rhinp Z to OBJ Y" when .obj is exported
+    
+    rotAngleR = math.radians(90)
+    rotAx = Rhino.Geometry.Vector3d(1,0,0)
+    transformMatrixRotate2 = Rhino.Geometry.Transform.Rotation(rotAngleR, rotAx, contextCentroid)
+    terrainShadingMaskScaledRotated.Transform(transformMatrixRotate2)
+    ## FIX ##
+    
     
     return terrainShadingMaskScaledRotated, compassCrvs, titleDescriptionLabelMeshes
 
