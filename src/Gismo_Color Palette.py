@@ -4,7 +4,7 @@
 #
 # This file is part of Gismo.
 #
-# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2020, Djordje Spasic <djordjedspasic@gmail.com>
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
 # Gismo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -43,6 +43,7 @@ Provided by Gismo 0.0.3
                        19 - PiYG diverging
                        20 - PRGn diverging
                        21 - Spectral diverging
+                       22 - Dark red - yellow - white
     
     output:
         readMe!: ...
@@ -52,7 +53,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Color Palette"
 ghenv.Component.NickName = "ColorPalette"
-ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
+ghenv.Component.Message = "VER 0.0.3\nDEC_16_2020"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "3 | More"
@@ -90,7 +91,8 @@ def main(paletteIndex):
     "Centennial map custom",
     "PiYG diverging",
     "PRGn diverging",
-    "Spectral diverging"]
+    "Spectral diverging",
+    "Dark red - yellow - white"]
     
     
     # check input
@@ -245,7 +247,7 @@ def main(paletteIndex):
     [255, 0, 0],
     [0, 0, 0]]
     ,
-    """bathymetry 1""" :
+    """Bathymetry 1""" :
     [["blue"], ["cyan"], ["green"], ["yellow"], ["red"]]
     ,
     """Bathymetry 2""" :
@@ -346,6 +348,12 @@ def main(paletteIndex):
     [244, 109, 67],
     [213, 62, 79],
     [158, 1, 66]]
+    ,
+    """Dark red - yellow - white""" :
+    [[255, 255, 255],
+    [255, 172, 0],
+    [255, 0, 0],
+    [130, 18, 0]]
     }
     
     
