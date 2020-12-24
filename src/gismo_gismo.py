@@ -4,7 +4,7 @@
 # 
 # This file is part of Gismo.
 # 
-# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2020, Djordje Spasic <djordjedspasic@gmail.com>
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
 # Gismo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -33,15 +33,17 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
+ghenv.Component.Message = "VER 0.0.3\nDEC_24_2020"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
 try: ghenv.Component.AdditionalHelpFromDocStrings = "1"
 except: pass
 
+from System.Runtime.InteropServices import Marshal
 import ghpythonlib.components as ghc
 import rhinoscriptsyntax as rs
+import Rhino.Geometry as rg
 import scriptcontext as sc
 import Grasshopper
 import datetime
@@ -54,6 +56,9 @@ import math
 import sys
 import clr
 import os
+
+
+tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance
 
 
 class Check(object):
@@ -321,6 +326,51 @@ class mainComponent(object):
             return iteropMapWinGIS_dll_folderPath, gdalDataPath_folderPath, validInputData, printMsg
 
 
+class Transform(object):
+    """
+    methods used to perform transformation
+    """
+    def copy(self, obj):
+        """copy the object. Use this func instead of 'ds.CopyObj!'"""
+        if isinstance(obj, Rhino.Geometry.GeometryBase):
+            obj2 = obj.Duplicate()
+        else:
+            obj2 = System.ICloneable.Clone(obj)
+            
+            if (obj2 == None):
+                try:
+                    obj2 = copy.copy(obj)  # does not work on Rhino.Geometry.Leader
+                except Exception, e:
+                    print "%s of type %s couldn't be copied" % (obj, type(obj))
+        
+        return obj2
+    
+    
+    def move(self, obj, transVec):
+        """moves a copy of obj"""
+        obj2 = self.copy(obj)
+        
+        if hasattr(transVec, "__iter__"):  # supports list, tuple, Array, List
+            transVec = rg.Vector3d(transVec[0], transVec[1], transVec[2])
+        
+        tm = rg.Transform.Translation(transVec)
+        obj2.Transform(tm)
+        return obj2
+    
+    
+    def scale(self, obj, pln, scaleFac):
+        """scale the object uniformly in all directions
+        input:
+            obj to scale
+            scaling pln
+            scaleFactor number"""
+        obj_c = self.copy(obj)
+        
+        xform = rg.Transform.Scale(pln, scaleFac, scaleFac, scaleFac)
+        obj_c.Transform(xform)
+        return obj_c
+
+
 class Preparation(object):
     """
     methods used to prepare components before performing analysis/running results
@@ -386,6 +436,20 @@ class Preparation(object):
                 # invalid folderPath
                 folderCreated = False
                 return folderCreated
+    
+    
+    def splitFolderAndFile(self, fileFolderPath):
+        """
+        split joined folder and file string into separate folder and file strings. It can have extension at the end of the filename or not.
+        input: file with folder string. Example: "C:/libraries/someFolder/someLib.dll"
+        output: 
+            folder path
+            fileName
+            example: print ds.SplitFolderAndFile("C:/libraries/someFolder/someLib.dll")  # "C:/libraries/someFolder", "someLib.dll"  """
+        folder = os.path.dirname(fileFolderPath)
+        filename = os.path.basename(fileFolderPath)
+        
+        return folder, filename
     
     
     def checkInternetConnection(self):
@@ -626,6 +690,59 @@ class Preparation(object):
         
         del dataTree
         return shiftedPathsTree
+    
+    
+    def grasshopperDTtoLL(self, DT):
+        """convert grasshoppper data tree to a list of lists"""
+        LL = []
+        for i in xrange(DT.BranchCount):
+            branch_dotNET_L = DT.Branches[i]
+            branch_L = [DT.Branches[i][g]    for g in xrange(DT.Branches[i].Count)]
+            LL.append(branch_L)
+        return LL
+    
+    
+    def flattenLL(self, LL):
+        """flatten (convert to a regular list) a list of lists"""
+        L = [item     for subL in LL     for item in subL]
+        return L
+    
+    
+    def joinMeshes(self, mesh_L):
+        """join a list of meshes in to a single mesh"""
+        joinedMesh = Rhino.Geometry.Mesh()
+        joinedMesh.Append(mesh_L)
+        
+        return joinedMesh
+    
+    
+    def toMesh(self, brep, minEdgeLength=tol, maxEdgeLength=0, jaggedSeams=False, simplePlanes=False):
+        """convert brep to mesh"""
+        
+        meshParam = Rhino.Geometry.MeshingParameters()
+        
+        # mesh parameters
+        meshParam.JaggedSeams = jaggedSeams
+        meshParam.SimplePlanes = simplePlanes
+        
+        # assign 'minEdgeLength' and 'maxEdgeLength' parameters only if they do not contain default func values (because if I remember correctly they created issues with non default values, at some point in past)
+        if (minEdgeLength != tol):
+            meshParam.MinimumEdgeLength = minEdgeLength  # in mm
+        if (maxEdgeLength != 0):
+            meshParam.MaximumEdgeLength = maxEdgeLength  # in mm
+        
+        
+        
+        if (type(brep) == Rhino.Geometry.Extrusion):
+            brep = brep.ToBrep()
+        
+        # convert brep to mesh
+        meshes = Rhino.Geometry.Mesh.CreateFromBrep(brep, meshParam)
+        joinedMesh = Rhino.Geometry.Mesh()
+        for mesh in meshes:
+            joinedMesh.Append(mesh)
+        
+        return joinedMesh
     
     
     def boundingBox_properties(self, geometryL, accurate=True):
@@ -1098,12 +1215,174 @@ class Preparation(object):
         Rhino.RhinoDoc.ActiveDoc.Groups.AddToGroup(groupIndex, geometryIds)
         del geometryIds
         return groupIndex
+    
+    
+    def arrayToList2(self, arr):
+        """convert a dotNET array (and NOT nested dotNET array!) to a python list.
+        This function can be used to convert StrongBox[Array[type]] to python list, because 'ds.ArrayToList' fails."""
+        
+        L = []
+        
+        enumerator = arr.GetEnumerator()
+        
+        while enumerator.MoveNext():
+            item = enumerator.Current
+            L.append( item )
+        
+        return L
+
 
 
 class CreateGeometry():
     """
     methods which create some sort of geometry
     """
+    def polygonCrv(self, pln, radius=10, numOfSeg=4, filletRadius=0):
+        """create a polygon at the 'pln'. Polygon's starting point will be at 'pln's Y+, counter-clockwise oriented.
+        input:
+            pln - plane 
+            radius - cirle radius on which polygon points lie
+            numOfseg - number of polygon segments
+            filletRadius - the fillet of polygon corners. By default it is set to 0 - no fillet. ## WARNING ## Too big filletRadius (depending on 'radius' value) may create corrupted crv.
+        output: polygon crv"""
+        # based on: https://blenderartists.org/t/what-is-a-good-way-to-create-polygons-via-python/589082/2
+        
+        # create polygon crv in XY plane, then transform it to 'pln' input
+        
+        angleD_max = 360  # do not change. Full circle
+        angleD = 0  # initial value
+        step = angleD_max / numOfSeg  # initial value
+        
+        controlPt_L = []
+        for i in range(numOfSeg):
+            angleR = math.radians(angleD)
+            controlPt = rg.Point3d(math.sin(angleR)*radius, math.cos(angleR)*radius, 0) 
+            angleD += step
+            
+            controlPt_L.append(controlPt)
+        
+        controlPt_L.append(controlPt_L[0])  # close the ply
+        
+        # upper code creates controlPt clockwise starting from Y+ (the starting point is at Y+)
+        controlPt_L.reverse()
+        
+        # fillet
+        polygon_ply = rg.Polyline(controlPt_L)
+        polygon_crv = polygon_ply.ToPolylineCurve()  # conver ply to crv
+        if (filletRadius > 0):
+            polygonFillet_crv = rg.Curve.CreateFilletCornersCurve(polygon_crv, filletRadius, tol, tolAngleD)
+        else: polygonFillet_crv = polygon_crv
+        
+        # transfrom 'polygonFillet_crv' from XY plane to 'pln'
+        worldXY = rg.Plane(rg.Point3d(0,0,0), rg.Vector3d(0,0,1))
+        xform = rg.Transform.PlaneToPlane(worldXY, pln)
+        polygonFillet_crv.Transform(xform)
+        
+        return polygonFillet_crv
+    
+    
+    def explodeCrv(self, crv, returnItselfIfLine=False):
+        """Explodes, or un-joins, one curves. Unlike rs.ExplodeCurves this method returns crv objects not guids
+        ## WARNING ## if a crv can not be exploded, and empty list will be returned !!! To prevent this, and return the crv itself, set the input 'returnItselfIfLine=True'.
+        input: crv's object or guid
+        output:
+            a list of exploded crv objects
+            or if 'crv' is a line then:
+                and empty list if 'returnItselfIfLine=False'
+                or the input '[crv]' itself if 'returnItselfIfLine=True'.
+        """
+        if type(crv) == System.Guid:
+            crv = rs.coercecurve(crv)
+        
+        if type(crv) == rg.Polyline:
+            segL = []
+            for i in range(crv.SegmentCount):
+                segL.append( crv.SegmentAt(i) )
+            return segL
+        else:
+            segL = crv.DuplicateSegments()
+            if (len(segL) == 0):  # 'crv' is a line
+                if returnItselfIfLine:
+                    return [transform.Copy(crv)]  # return the line itself, instead of an empty list
+                else:
+                    return []
+            else:
+                return segL
+    
+    
+    def srfDivide(self, BF, U, V):
+        """create a grid of pts on a surface.
+        input:
+            BF
+            U - number of divisions in U direction + 1
+            V - number of divisions in V direction + 1
+        output:
+            divPt_L, divPtNormal_L, UV_LL"""
+        
+        Udomain = BF.Domain(0)
+        Vdomain = BF.Domain(1)
+        
+        U_step = 1 / U
+        V_step = 1 / V
+        
+        U_t_normalized = 0
+        V_t_normalized = 0
+        
+        
+        
+        # output lists
+        divPt_L = []
+        divPtNormal_L = []
+        UV_LL = []
+        
+        for i in xrange(U + 1):
+            for g in xrange(V + 1):
+                
+                U_t = Udomain.ParameterAt(U_t_normalized)
+                V_t = Vdomain.ParameterAt(V_t_normalized)
+                
+                divPt = BF.PointAt(U_t, V_t)
+                isPtOnBF = BF.IsPointOnFace(U_t, V_t)
+                if (isPtOnBF == rg.PointFaceRelation.Exterior):  # add 'None' for divPt which is outside of BF. This is consistent with grasshopper 'Divide Surface' component
+                    # pt is outside of BF. Add 'None'
+                    divPt = None
+                    divPtNormal = None
+                else:
+                    divPtNormal = BF.NormalAt(U_t, V_t)
+                
+                
+                # append to lists
+                divPt_L.append( divPt )
+                divPtNormal_L.append( divPtNormal )
+                UV_LL.append( (U_t, V_t) )
+                
+                
+                V_t_normalized += V_step
+            
+            V_t_normalized = 0  # reset V_t_normalized
+            U_t_normalized += U_step
+        
+        
+        return divPt_L, divPtNormal_L, UV_LL
+    
+    
+    def explodeMesh(self, mesh):
+        """explode a mesh to mesh faces, and then convert them to individual meshes.
+        input:
+            mesh to explode
+        output:
+            a) a list of exploded mesh faces converted to individual meshes on success.
+            b) if input mesh has only one mesh face, then the copy itself will be returned
+            c) if explode failed, then 'None' will be returned."""
+        
+        mesh_EM_L = rg.Mesh.ExplodeAtUnweldedEdges(mesh)
+        
+        if (mesh_EM_L.Count == 0):  # I think this happens when input mesh has only one mesh face, so the explode is not possible
+            return [mesh]
+        
+        return mesh_EM_L
+    
+    
     def calculateMeshFaceAreas(self, mesh):
         """
         calculate each mesh face area
@@ -2146,6 +2425,349 @@ class GIS():
         return distanceM
     
     
+    def constructLocationFromShapefileMidExtent(self, shpFilePath):
+        """
+        get mid extent coordinate from shapefile
+        """
+        # open shapefile to get its extends
+        utils = MapWinGIS.UtilsClass()
+        shapefile = MapWinGIS.ShapefileClass()
+        openShapefileSuccess = MapWinGIS.ShapefileClass.Open(shapefile, shpFilePath, None)
+        if (not shapefile) or (not openShapefileSuccess):
+            
+            printMsg = "Shapefile reading failed. Check: \n" +\
+                       "1) If '_shpFile' file path is correct. If it is: \n" +\
+                       "2) In the same folder where the .shp file is, check if there are .shx,.dbf,.prj files with the same file name. These two files are essential, in order to open the .shx file.\n" +\
+                       "3) If both upper two checks are fine: post a question about this issue on Gismo forum (grasshopper3d.com/group/gismo) with .shp and its files attached, and a screenshot of the message coming from 'readMe!' output."
+            
+            print "shapefile.ErrorMsg: ", shapefile.ErrorMsg
+            
+            utils = MapWinGIS.UtilsClass()
+            convertErrorNo = MapWinGIS.GlobalSettingsClass().GdalLastErrorNo
+            convertErrorMsg = MapWinGIS.GlobalSettingsClass().GdalLastErrorMsg
+            convertErrorType = MapWinGIS.GlobalSettingsClass().GdalLastErrorType
+            reprojectErrorMsg = MapWinGIS.GlobalSettingsClass().GdalReprojectionErrorMsg
+            print "convertErrorNo: ", convertErrorNo
+            print "convertErrorMsg: ", convertErrorMsg
+            print "convertErrorType: ", convertErrorType
+            print "reprojectErrorMsg: ", reprojectErrorMsg
+            print "utils.ErrorMsg: ", utils.ErrorMsg
+            print "utils.LastErrorCode: ", utils.LastErrorCode
+            
+            return None, printMsg
+        
+        elif openShapefileSuccess:
+            # check1
+            # if CRS information has been imported as well (this happens when .prj file in the same folder where .shp is missing)
+            proj4_str = shapefile.Projection
+            
+            if (len(proj4_str) == 0):
+                printMsg = "'SHP to location' component failed to extract the middle location from a shapefile (.shp).\nThis happens when .prj file does not exist in the same folder as .shp file, or .prj file is defective.\nUse the 'Gismo_Construct Location' component instead."
+                return None, printMsg
+            
+            
+            # check2
+            # if shapefile .prj is geographic CRS (because we need to create a location at the end of this method, and Gismo's locations are always in geographic coordinates)
+            if "+proj=longlat" not in proj4_str:  # geographic coordinate CRS have '+proj=longlat' in proj4_str
+                printMsg = "'SHP to location' component can only extract the middle location from a shapefile (.shp) which has geographic coordinate system.\nThis is not the case with the current shapefile.\nUse the 'Gismo_Construct Location' component instead."
+                return None, printMsg
+            
+            
+            
+            extents = shapefile.Extents
+            
+            x_dom = Rhino.Geometry.Interval(extents.xMin, extents.xMax)  # latitude degrees or meters, depending on shapefile CRS
+            y_dom = Rhino.Geometry.Interval(extents.yMin, extents.yMax)  # longitude degrees or meters, depending on shapefile CRS
+            y_dom = Rhino.Geometry.Interval(extents.yMin, extents.yMax)  # longitude degrees or meters, depending on shapefile CRS
+            z_dom = Rhino.Geometry.Interval(extents.zMin, extents.zMax)  # longitude degrees or meters, depending on shapefile CRS
+            #midLocaction = Rhino.Geometry.Point3d(y_dom.Mid, x_dom.Mid, z_dom.Mid)
+            
+            # locationName
+            shpFolder, shpFileName = os.path.split(shpFilePath)
+            shpFileName = shpFileName.replace(".shp", "")  # remove .shp at the end
+            
+            preparation = Preparation()
+            locationStr = preparation.constructLocation(locationName = shpFileName, latitude = y_dom.Mid, longitude = x_dom.Mid, timeZone = 0, elevation = z_dom.Mid)
+            
+            
+            shapefile.Close()
+            printMsg = "ok"
+            
+            return locationStr, printMsg
+    
+    
+    def readSHPfile(self, shpFilePath, locationLatitudeD, locationLongitudeD, northRad=0, originPt=rg.Point3d(0,0,0), unitConversionFactor=1, osm_id_Only=[], osm_way_id_Only=[], osm_id_Remove=[], osm_way_id_Remove=[]):
+        """ read shapefile """
+        
+        # shapefile is always reprojected to UTM in Gismo
+        outputCRS = self.UTM_CRS_from_latitude(locationLatitudeD, locationLongitudeD)
+        
+        
+        # fix invalid shapes, overlapping shape issues, shape vertices direction ...
+        utils = MapWinGIS.UtilsClass()
+        shapefile = MapWinGIS.ShapefileClass()
+        openShapefileSuccess = MapWinGIS.ShapefileClass.Open(shapefile, shpFilePath, None)
+        
+        
+        if (not openShapefileSuccess) or (not shapefile):
+            # maybe the 'shpFilePath' is incorrect, or shapefile type is not supported (SHP_MULTIPATCH)
+            shapefileShapeType = proj4_str = shortenedName_keys = values = shapes = None
+            
+            validShapes = False
+            printMsg = "Shapefile reading failed. Check: \n" +\
+                       "1) If '_shpFile' file path is correct. If it is: \n" +\
+                       "2) In the same folder where the .shp file is, check if there are .shx,.dbf,.prj files with the same file name. These two files are essential, in order to open the .shx file.\n" +\
+                       "3) If both upper two checks are fine: post a question about this issue on Gismo forum (grasshopper3d.com/group/gismo) with .shp and its files attached, and a screenshot of the message coming from 'readMe!' output."
+            
+            print "shapefile.ErrorMsg: ", shapefile.ErrorMsg
+            
+            utils = MapWinGIS.UtilsClass()
+            convertErrorNo = MapWinGIS.GlobalSettingsClass().GdalLastErrorNo
+            convertErrorMsg = MapWinGIS.GlobalSettingsClass().GdalLastErrorMsg
+            convertErrorType = MapWinGIS.GlobalSettingsClass().GdalLastErrorType
+            reprojectErrorMsg = MapWinGIS.GlobalSettingsClass().GdalReprojectionErrorMsg
+            print "convertErrorNo: ", convertErrorNo
+            print "convertErrorMsg: ", convertErrorMsg
+            print "convertErrorType: ", convertErrorType
+            print "reprojectErrorMsg: ", reprojectErrorMsg
+            print "utils.ErrorMsg: ", utils.ErrorMsg
+            print "utils.LastErrorCode: ", utils.LastErrorCode
+            
+            return shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg
+        
+        elif openShapefileSuccess:
+            
+            # direct reprojection
+            numOfsuccessfullyReprojectedShapes_sb = clr.StrongBox[System.Int32]()  # instance of clr.StrongBox
+            shapefileFixedSuccess, fixedShapefile = MapWinGIS.ShapefileClass.FixUpShapes(shapefile)  # fails on MapWinGIS 4.9.4.2. Does not fail on Map Window Lite 32x
+            
+            """
+            print "shapefileFixedSuccess: ", shapefileFixedSuccess
+            print "fixedShapefile: ", fixedShapefile
+            """
+            
+            if shapefileFixedSuccess:
+                # shape file has been fixed
+                #reprojectedShapefile = MapWinGIS.ShapefileClass.Reproject(shapefile, outputCRS, numOfsuccessfullyReprojectedShapes_sb)
+                reprojectedShapefile = MapWinGIS.ShapefileClass.Reproject(fixedShapefile, outputCRS, numOfsuccessfullyReprojectedShapes_sb)
+            else:
+                # shapefile has NOT been fixed. Use the initial shapefile
+                reprojectedShapefile = MapWinGIS.ShapefileClass.Reproject(shapefile, outputCRS, numOfsuccessfullyReprojectedShapes_sb)
+            
+            numOfsuccessfullyReprojectedShapes = numOfsuccessfullyReprojectedShapes_sb.Value
+            
+            """
+            print "numOfsuccessfullyReprojectedShapes: ", numOfsuccessfullyReprojectedShapes
+            print "type(numOfsuccessfullyReprojectedShapes): ", type(numOfsuccessfullyReprojectedShapes)
+            print "reprojectedShapefile: ", reprojectedShapefile
+            """
+            
+            """
+            # testing fixing of shapes
+            print "reprojectedShapefile: ", reprojectedShapefile
+            # testing MapWinGIS.ShapefileClass.FixUpShapes
+            shpFilePath_saved = shpFilePath[:-4] + "_saved_" + str(int(time.time())) + ".shp"
+            print "shpFilePath_saved: ", shpFilePath_saved
+            success = MapWinGIS.ShapefileClass.SaveAs(reprojectedShapefile, shpFilePath_saved, None)
+            print "success: ", success
+            """
+        
+        
+        if (numOfsuccessfullyReprojectedShapes == 0) or (reprojectedShapefile == None):
+            # reprojection failed
+            print "REPROJECTION FAILED"
+            convertErrorNo = MapWinGIS.GlobalSettingsClass().GdalLastErrorNo
+            convertErrorMsg = MapWinGIS.GlobalSettingsClass().GdalLastErrorMsg
+            convertErrorType = MapWinGIS.GlobalSettingsClass().GdalLastErrorType
+            reprojectErrorMsg = MapWinGIS.GlobalSettingsClass().GdalReprojectionErrorMsg
+            print "numOfsuccessfullyReprojectedShapes: ", numOfsuccessfullyReprojectedShapes
+            print "convertErrorNo: ", convertErrorNo
+            print "convertErrorMsg: ", convertErrorMsg
+            print "convertErrorType: ", convertErrorType
+            print "reprojectErrorMsg: ", reprojectErrorMsg
+            print "utils.ErrorMsg: ", utils.ErrorMsg
+            print "utils.LastErrorCode: ", utils.LastErrorCode
+            
+            reprojectionError = fixedShapefile.ErrorMsg(fixedShapefile.LastErrorCode)
+            
+            shapefileShapeType = proj4_str = shortenedName_keys = values = shapes = None
+            validShapes = False
+            printMsg = "The following error emerged while processing the data:\n" + \
+                       " \n" + \
+                       "\"%s\"\n" % reprojectionError + \
+                       "numOfsuccessfullyReprojectedShapes: %s\n" % numOfsuccessfullyReprojectedShapes + \
+                       " \n" + \
+                       "Open new topic about it on: www.grasshopper3d.com/group/gismo/forum, and attached .shp and all its files (.shx, .dbf, .prj)."
+            return shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg
+        
+        
+        originPtProjected_meters = self.projectedLocationCoordinates(locationLatitudeD, locationLongitudeD)  # in meters!
+        originPtProjected = Rhino.Geometry.Point3d(originPtProjected_meters.X/unitConversionFactor, originPtProjected_meters.Y/unitConversionFactor, originPtProjected_meters.Z/unitConversionFactor)  # in Rhino units
+        
+        # rotation due to north angle position
+        #transformMatrixRotate = Rhino.Geometry.Transform.Rotation(-northRad, Rhino.Geometry.Vector3d(0,0,1), originPt)  # counter-clockwise
+        transformMatrixRotate = Rhino.Geometry.Transform.Rotation(northRad, Rhino.Geometry.Vector3d(0,0,1), originPt)  # clockwise
+        
+        
+        # open reprojectedShapefile
+        
+        # ShapeType of a whole shapefile (.shp) and also of each 'shape' in the shapefile (.shp)
+        shapeShapeType_dict = {}
+        shapeShapeType_dict[0] = 'SHP_NULLSHAPE'
+        shapeShapeType_dict[1] = 'SHP_POINT'
+        shapeShapeType_dict[3] = 'SHP_POLYLINE'
+        shapeShapeType_dict[5] = 'SHP_POLYGON'
+        shapeShapeType_dict[8] = 'SHP_MULTIPOINT'
+        shapeShapeType_dict[11] = 'SHP_POINTZ'
+        shapeShapeType_dict[13] = 'SHP_POLYLINEZ'
+        shapeShapeType_dict[15] = 'SHP_POLYGONZ'
+        shapeShapeType_dict[18] = 'SHP_MULTIPOINTZ'
+        shapeShapeType_dict[21] = 'SHP_POINTM'
+        shapeShapeType_dict[23] = 'SHP_POLYLINEM'
+        shapeShapeType_dict[23] = 'SHP_POLYGONM'
+        shapeShapeType_dict[28] = 'SHP_MULTIPOINTM'
+        shapeShapeType_dict[31] = 'SHP_MULTIPATCH'
+        
+        # loop through shortenedName_keys (these are shapefile fields (":" is replaced with "_" and maximal size is 10 characters))
+        shortenedName_keys = []
+        for i in xrange(reprojectedShapefile.NumFields):
+            field = reprojectedShapefile.Field(i)
+            shortenedName_keys.append(field.Name)
+        
+        
+        values = Grasshopper.DataTree[object]()
+        shapes = Grasshopper.DataTree[object]()
+        
+        for i in xrange(reprojectedShapefile.NumShapes):
+            shape_com = reprojectedShapefile.Shape[i]
+            shape = Marshal.CreateWrapperOfType(shape_com, MapWinGIS.ShapeClass)
+            if not shape.IsValid:
+                fixedShape = MapWinGIS.ShapeClass.FixUp(shape)
+                if (fixedShape != None):
+                    shape = fixedShape
+                
+            
+            
+            moveVector = originPt - originPtProjected
+            if (shape.ShapeType == 0):  # NULL_SHAPE
+                # ShapeType: NULL_SHAPE
+                
+                # values
+                subValuesL = []
+                for g in xrange(reprojectedShapefile.NumFields):
+                    value = reprojectedShapefile.CellValue(g,i)
+                    subValuesL.append(value)
+                values.AddRange(subValuesL, Grasshopper.Kernel.Data.GH_Path(i))
+                
+                # pts
+                ptsPerShape = [None]
+                shapes.AddRange(ptsPerShape, Grasshopper.Kernel.Data.GH_Path(i))
+            
+            if (shape.ShapeType == 1):  # SHP_POINT
+                # ShapeType: POINT
+                
+                # values
+                subValuesL = []
+                for g in xrange(reprojectedShapefile.NumFields):
+                    value = reprojectedShapefile.CellValue(g,i)
+                    if value == "yes": value = True  # for example: "building=yes"
+                    subValuesL.append(value)
+                
+                # pts
+                ptsPerShape = []
+                for k in xrange(shape.numPoints):
+                    pt = shape.Point[k]
+                    point3dProjected = Rhino.Geometry.Point3d(pt.x/unitConversionFactor, pt.y/unitConversionFactor, pt.z/unitConversionFactor)
+                    point3dMoved = point3dProjected + moveVector
+                    succ = point3dMoved.Transform(transformMatrixRotate)
+                    ptsPerShape.append(point3dMoved)
+                
+                subValuesL_filtered, ptsPerShape_filtered = self.filterShapes(shortenedName_keys, subValuesL, ptsPerShape, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove)
+                
+                values.AddRange(subValuesL_filtered, Grasshopper.Kernel.Data.GH_Path(i))
+                shapes.AddRange(ptsPerShape_filtered, Grasshopper.Kernel.Data.GH_Path(i))
+                del ptsPerShape
+            
+            elif (shape.ShapeType == 3) or (shape.ShapeType == 13) or (shape.ShapeType == 5) or (shape.ShapeType == 15):
+                # ShapeType: POLYLINE, POLYLINEZ, POLYGON, POLYGONZ
+                
+                for n in xrange(shape.NumParts):
+                    # values
+                    subValuesL = []
+                    for g in xrange(reprojectedShapefile.NumFields):
+                        value = reprojectedShapefile.CellValue(g,i)
+                        if value == "yes": value = True  # for example: "building=yes"
+                        subValuesL.append(value)
+                    
+                    
+                    # points
+                    ptsPerPart = []
+                    subShape = shape.PartAsShape(n)
+                    for k in xrange(subShape.numPoints):
+                        pt = subShape.Point[k]
+                        
+                        X = pt.x/unitConversionFactor
+                        Y = pt.y/unitConversionFactor
+                        Z = pt.z/unitConversionFactor
+                        
+                        """
+                        elif (shape.ShapeType != 13):  # POLYLINEZ
+                            ## FIX ##
+                            #if (k == 0):
+                            if (k == subShape.numPoints-1):
+                                #Z = subShape.Point[subShape.numPoints-1].z
+                                Z = subShape.Point[0].z
+                            else:
+                                Z = pt.z/unitConversionFactor
+                            ## FIX ##
+                        """
+                        
+                        point3dProjected = Rhino.Geometry.Point3d(X, Y, Z)  # in Rhino document units
+                        point3dMoved = point3dProjected + moveVector
+                        succ = point3dMoved.Transform(transformMatrixRotate)
+                        ptsPerPart.append(point3dMoved)
+                    polyline = Rhino.Geometry.Polyline(ptsPerPart)
+                    
+                    subValuesL_filtered, shapesL_filtered = self.filterShapes(shortenedName_keys, subValuesL, [polyline], osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove)
+                    
+                    values.AddRange(subValuesL_filtered, Grasshopper.Kernel.Data.GH_Path(i,n))
+                    shapes.AddRange(shapesL_filtered, Grasshopper.Kernel.Data.GH_Path(i,n))
+                    del subValuesL
+                    del ptsPerPart
+                    del polyline
+                    del subValuesL_filtered
+                    del shapesL_filtered
+                subShape = None
+            
+            elif (shape.ShapeType == 31):  # MULTI_PATCH
+                # ShapeType: MULTI_PATCH
+                shapefileShapeType = proj4_str = shortenedName_keys = values = shapes = None
+                validShapes = False
+                printMsg = "Gismo at the moment does not support MULTI_PATCH shapefile shapes."
+                return shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg
+            
+            else:
+                shapeShapeType = shapeShapeType_dict[shape.ShapeType]
+                
+                shapefileShapeType = proj4_str = shortenedName_keys = values = shapes = None
+                validShapes = False
+                printMsg = "Gismo at the moment does not support {} shapefile type shapes.\nAsk a question on the forum (https://www.grasshopper3d.com/group/gismo/forum) if this type can be added to Gismo.".format(shapeShapeType)
+                return shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg
+        
+        
+        shapefileShapeType = shapeShapeType_dict[shapefile.ShapefileType]
+        proj4_str = shapefile.Projection
+        
+        shapefile.Close()
+        reprojectedShapefile.Close()
+        
+        
+        validShapes = True
+        printMsg = "ok"
+        
+        return shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg
+    
+    
     def filterShapes(self, shortenedName_keys, subValuesL, shapesL, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove):
         """
         filter values and shapes for the four inputs from "OSM ids" component
@@ -2333,6 +2955,7 @@ def raiseWarning(booleanValue, printMsg):
 # send classes to sticky
 sc.sticky["gismo_check"] = Check()
 sc.sticky["gismo_mainComponent"] = mainComponent
+sc.sticky["gismo_Transfrom"] = Transform
 sc.sticky["gismo_Preparation"] = Preparation
 sc.sticky["gismo_CreateGeometry"] = CreateGeometry
 sc.sticky["gismo_EnvironmentalAnalysis"] = EnvironmentalAnalysis
