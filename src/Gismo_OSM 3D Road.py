@@ -4,7 +4,7 @@
 #
 # This file is part of Gismo.
 #
-# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2020, Djordje Spasic <djordjedspasic@gmail.com>
 # Component icon based on free OSM icon from: <https://icons8.com/web-app/13398/osm>
 #
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -59,7 +59,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_OSM 3D Road"
 ghenv.Component.NickName = "OSM3Droad"
-ghenv.Component.Message = "VER 0.0.3\nNOV_23_2019"
+ghenv.Component.Message = "VER 0.0.3\nDEC_24_2020"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -607,7 +607,7 @@ def createThreeDeeRoads(offsetPolylines_withoutOverlap, groundTerrain, roadWidth
     
     
     # create planar breps from offset polylines
-    if (Rhino.RhinoApp.Version.Major == 6):
+    if (Rhino.RhinoApp.Version.Major >= 6):
         road_srfs = Rhino.Geometry.Brep.CreatePlanarBreps(offsetPolylines_withoutOverlap, tol)
     elif (Rhino.RhinoApp.Version.Major == 5):
         road_srfs = Rhino.Geometry.Brep.CreatePlanarBreps(offsetPolylines_withoutOverlap)
