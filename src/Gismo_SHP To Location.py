@@ -15,6 +15,7 @@
 
 """
 Use this component to extract middle location from a shapefile (.shp).
+The shapefile has to be in Georgraphic Coordinate system.
 -
 Provided by Gismo 0.0.3
     
@@ -27,7 +28,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_SHP To Location"
 ghenv.Component.NickName = "ShapefileToLocation"
-ghenv.Component.Message = "VER 0.0.3\nDEC_20_2020"
+ghenv.Component.Message = "VER 0.0.3\nDEC_24_2020"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | Gismo"
