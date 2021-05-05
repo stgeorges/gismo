@@ -4,7 +4,7 @@
 #
 # This file is part of Gismo.
 #
-# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2021, Djordje Spasic <djordjedspasic@gmail.com>
 # Component icon based on free OSM icon from: <https://icons8.com/web-app/13398/osm>
 #
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -67,7 +67,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_OSM 3D Roof"
 ghenv.Component.NickName = "OSM3Droof"
-ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
+ghenv.Component.Message = "VER 0.0.3\nMAY_05_2021"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -525,7 +525,7 @@ def roof3d_straightSkel_polylines(osmShapeCrvs, roof2d_straightSkel_polylines, r
         if (polylineCrv.IsClosed):
             if (Rhino.RhinoApp.ExeVersion == 5):
                 breps = Rhino.Geometry.Brep.CreatePlanarBreps(polylineCrv)
-            elif (Rhino.RhinoApp.ExeVersion == 6):
+            elif (Rhino.RhinoApp.ExeVersion >= 6):
                 breps = Rhino.Geometry.Brep.CreatePlanarBreps(polylineCrv, tol)
             if (breps != None):
                 roof3d_straightSkel_srfL.extend(breps)
