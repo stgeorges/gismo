@@ -4,7 +4,7 @@
 # 
 # This file is part of Gismo.
 # 
-# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2021, Djordje Spasic <djordjedspasic@gmail.com>
 # with assistance of Dr. Bojan Savric <savricb@geo.oregonstate.edu>
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
@@ -36,6 +36,13 @@ Provided by Gismo 0.0.3
         _location: The output from the "importEPW" or "constructLocation" component.  This is essentially a list of text summarizing a location on the Earth.
                    -
                    "timeZone" and "elevation" data from the location, are not important for the creation of a terrain.
+        _APIkey: OpenTopography key in order to generate terrain data. It represents a text with numbers.
+                 To obtain this key for free:
+                    1) go to the following link:  https://github.com/stgeorges/gismo/blob/master/resources/tutorials/Get_OpenTopo_APIkey.mp4
+                    2) click on 'Download' and watch the video tutorial
+                    3) repeat the steps in the tutorial
+                 
+                 
         radius_: Horizontal distance to which the surrounding terrain will be taken into account.
                  -
                  It can not be shorter than 20 meters or longer than 100 000 meters.
@@ -48,11 +55,12 @@ Provided by Gismo 0.0.3
                  In meters.
         source_: There are currently three terrain sources available:
                -
-               0 - SRTMGL1: only terrain from -55.9 to 59.9 latitude! Terrain ends at the sea level (no sea/river/lake floor terrain). Terrain resolution varies from 20 to 30 meters.
-               1 - AW3D30: only terrain! Terrain ends at the sea level (no sea/river/lake floor terrain). Terrain resolution varies from 20 to 30 meters.
-               2 - GMRT: terrain and underwater (sea/river/lake floor) terrain. Sea level is not presented. Terrain and underwater terrain resolution varies from 50 meter to 2000 meters.
+               0 - NASADEM: only terrain from -55.9 to 59.9 latitude! Terrain ends at the sea level (no sea/river/lake floor terrain). Terrain resolution varies from 20 to 30 meters. Based mainly on modified SRTM, but also ASTER GDEM, NED
+               1 - AW3D30: only terrain! Terrain ends at the sea level (no sea/river/lake floor terrain). Terrain resolution varies from 20 to 30 meters. Based on Japanese ALOS dataset
+               2 - COP30: only terrain! Terrain ends at the sea level (no sea/river/lake floor terrain). Terrain resolution varies from 20 to 30 meters. Based on European WorldDEM dataset
+               3 - GMRT: terrain and underwater (sea/river/lake floor) terrain. Sea level is not presented. Terrain and underwater terrain resolution varies from 50 meter to 2000 meters.
                -
-               If nothing supplied, 0 will be used as a default (SRTMGL1 terrain only).
+               If nothing supplied, 0 will be used as a default (NASADEM terrain only).
         type_: There are four terrain types:
                -
                0 - terrain will be created as a mesh with rectangular edges
@@ -106,7 +114,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Terrain Generator"
 ghenv.Component.NickName = "TerrainGenerator"
-ghenv.Component.Message = "VER 0.0.3\nAUG_27_2020"
+ghenv.Component.Message = "VER 0.0.3\nJUN_12_2021"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
@@ -129,7 +137,7 @@ import os
 import gc
 
 
-def checkInputData(locationLatitudeD, maxVisibilityRadiusM, gridSize, source, _type, origin, north, standThickness, numOfContours, downloadTSVLink):
+def checkInputData(locationLatitudeD, opentopo_APIkey, maxVisibilityRadiusM, gridSize, source, _type, origin, north, standThickness, numOfContours, downloadTSVLink):
     
     # check if MapWinGIS is properly installed
     gismoGismoComponentNotRan = False  # initial value
@@ -137,8 +145,8 @@ def checkInputData(locationLatitudeD, maxVisibilityRadiusM, gridSize, source, _t
         mapFolder_ = sc.sticky["gismo_mapwingisFolder"]
         iteropMapWinGIS_dll_folderPath, gdalDataPath_folderPath, validInputData, printMsg = gismo_mainComponent.mapWinGIS(mapFolder_)
         if not validInputData:
-            maxVisibilityRadiusM = gridSize = source = sourceLabel = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
-            return maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
+            maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
+            return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
         if sc.sticky.has_key("MapWinGIS"):
             global MapWinGIS
             import MapWinGIS
@@ -148,30 +156,43 @@ def checkInputData(locationLatitudeD, maxVisibilityRadiusM, gridSize, source, _t
         gismoGismoComponentNotRan = True
     
     if (gismoGismoComponentNotRan == True):
-        maxVisibilityRadiusM = gridSize = source = sourceLabel = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
+        maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
         validInputData = False
         printMsg = "The \"Gismo Gismo\" component has not been run. Run it before running this component."
-        return maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
+        return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
     
     
     # check inputs
+    if (opentopo_APIkey == None):
+        maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
+        validInputData = False
+        printMsg = "\"_APIkey\" input has not been added. To obtain it for free:\n" + \
+                    "1) go to the following link:  https://github.com/stgeorges/gismo/blob/master/resources/tutorials/Get_OpenTopo_APIkey.mp4\n" + \
+                    "2) click on 'Download' and watch the video tutorial\n" + \
+                    "3) repeat the steps in the tutorial"
+        return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
+    
+    
     if (source == None):
         source = 0  # default
-        sourceLabel = "SRTMGL1"  # default
+        sourceLabel = "NASADEM"  # default
     elif (source == 0):
-        # SRTM 1 arc second: only terrain
-        sourceLabel = "SRTMGL1"
+        # NASADEM 1 arc second: only terrain
+        sourceLabel = "NASADEM"
     elif (source == 1):
         # ALOS 1 arc second (AW3D30): only terrain
         sourceLabel = "AW3D30"
     elif (source == 2):
+        # COP30 1 arc second: only terrain
+        sourceLabel = "COP30"
+    elif (source == 3):
         # GMRT from 10 meter (0.33 arc-second) to 2000 meter (66.66 arc second): terrain and underwater terrain
         sourceLabel = "GMRT"
-    elif (source < 0) or (source > 2):
+    elif (source < 0) or (source > 3):
         source = 0
-        sourceLabel = "SRTMGL1"
+        sourceLabel = "NASADEM"
         print "source_ input only supports values 0 to 2.\n" + \
-              "source_ input set to 0 (SRTMGL1 = terrain only)."
+              "source_ input set to 0 (NASADEM = terrain only)."
     
     
     if (_type == None):  # "type" is a reserved python word. Use "_type" instead
@@ -218,17 +239,17 @@ def checkInputData(locationLatitudeD, maxVisibilityRadiusM, gridSize, source, _t
     elif (maxVisibilityRadiusM >= 20) and (maxVisibilityRadiusM < 200):
         maxVisibilityRadiusM = 200  # values less than 150m can download invalid .tif file from opentopography.org. So the .tif file will always be downloaded with the minimal radius of 200 meters
     elif (maxVisibilityRadiusM < 20):
-        maxVisibilityRadiusM = gridSize = source = sourceLabel = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
+        maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
         validInputData = False
         printMsg = "radius_ input only supports values equal or larger than 20 meters."
-        return maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
+        return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
     elif (maxVisibilityRadiusM > 100000):
-        maxVisibilityRadiusM = gridSize = source = sourceLabel = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
+        maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
         validInputData = False
         printMsg = "Radii longer than 100 000 meters (100 kilometers) are not supported, due to possibility of crashing the Rhino.\n" + \
                    " \n" + \
                    "ATTENTION!!! Have in mind that even radii of a couple of thousands of meters may require stronger PC configurations and 64 bit version of Rhino 5. Otherwise Rhino 5 may crash."
-        return maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
+        return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
     
     #arcAngleD = math.degrees( math.atan( maxVisibilityRadiusM / (6371000+elevation) ) )  # assumption of Earth being a sphere
     #arcLength = (arcAngleD*math.pi*R)/180
@@ -236,31 +257,31 @@ def checkInputData(locationLatitudeD, maxVisibilityRadiusM, gridSize, source, _t
     
     
     if (source == 0)  and  ((locationLatitudeD < -55.9) or (locationLatitudeD > 59.9)):
-        # SRTMGL1 is limited to -56 to 60 latitude
-        maxVisibilityRadiusM = gridSize = source = sourceLabel = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
+        # NASADEM is limited to -56 to 61 latitude
+        maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
         validInputData = False
-        printMsg = "The \"source_ = 0\" input (SRTMGL1) has range limits: from -55.9 South to 59.9 North latitude.\n" + \
+        printMsg = "The \"source_ = 0\" input (NASADEM) has range limits: from -55.9 South to 59.9 North latitude.\n" + \
                    "Defined \"_location\" exceeds these limits.\n" + \
                    "Try using either \"source_ = 1\" input or \"source_ = 2\" inputs, which have higher range limits (both from -82 South to 82 North latitude)."
-        return maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
+        return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
     
     if (source == 1)  and  ((locationLatitudeD < -82) or (locationLatitudeD > 82)):
         # AW3D30 is limited to -82 to 80 latitude
-        maxVisibilityRadiusM = gridSize = source = sourceLabel = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
+        maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
         validInputData = False
-        printMsg = "The \"source_ = 1\" input (SRTMGL1) has range limits: from -82 South to 82 North latitude.\n" + \
+        printMsg = "The \"source_ = 1\" input (NASADEM) has range limits: from -82 South to 82 North latitude.\n" + \
                    "Defined \"_location\" exceeds these limits.\n" + \
                    "For now, no other Gismo \"source_\" supports latitude beyond this."
-        return maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
+        return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
     
     if (source == 2)  and  ((locationLatitudeD < -82) or (locationLatitudeD > 82)):
         # GMRT is limited to -82 to 80 latitude
-        maxVisibilityRadiusM = gridSize = source = sourceLabel = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
+        maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
         validInputData = False
         printMsg = "The \"source_ = 2\" input (GMRT) has range limits: from -82 South to 82 North latitude.\n" + \
                    "Defined \"_location\" exceeds these limits.\n" + \
                    "For now, no other Gismo \"source_\" supports latitude beyond this."
-        return maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
+        return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
     
     
     if (north == None):
@@ -270,10 +291,10 @@ def checkInputData(locationLatitudeD, maxVisibilityRadiusM, gridSize, source, _t
         try:  # check if it's a number
             north = float(north)
             if north < 0 or north > 360:
-                maxVisibilityRadiusM = gridSize = source = sourceLabel = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
+                maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
                 validInputData = False
                 printMsg = "Please input north angle value from 0 to 360."
-                return maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
+                return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
         except Exception, e:  # check if it's a vector
             north.Unitize()
         
@@ -288,12 +309,12 @@ def checkInputData(locationLatitudeD, maxVisibilityRadiusM, gridSize, source, _t
     workingSubFolderPath = os.path.join(gismoFolderPath, "terrain_files")
     folderCreatedSuccess = gismo_preparation.createFolder(workingSubFolderPath)
     if folderCreatedSuccess == False:
-        maxVisibilityRadiusM = gridSize = source = sourceLabel = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
+        maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
         validInputData = False
         printMsg = "The file path you added to \"gismoFolder_\" input of Gismo Gismo component is invalid.\n" + \
                    "Input the string in the following format (example): c:\someFolder\gismo.\n" + \
                    "Or do not input anything, in which case a default Gismo folder will be used instead: C:\gismo."
-        return maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
+        return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
     
     if downloadTSVLink == None:
         downloadTSVLink = "https://raw.githubusercontent.com/stgeorges/terrainShadingMask/master/objFiles/0_terrain_shading_masks_download_links.tsv"
@@ -307,7 +328,7 @@ def checkInputData(locationLatitudeD, maxVisibilityRadiusM, gridSize, source, _t
     validInputData = True
     printMsg = "ok"
     
-    return maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
+    return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
 
 
 def distanceBetweenTwoPoints(latitude1D, longitude1D, maxVisibilityRadiusM):
@@ -377,9 +398,9 @@ def distanceBetweenTwoPoints(latitude1D, longitude1D, maxVisibilityRadiusM):
     
     
     if latitude1D >= 0:
-        SRTMlimit = "82 North"
+        NASADEMlimit = "82 North"
     elif latitude1D < 0:
-        SRTMlimit = "-82 South"
+        NASADEMlimit = "-82 South"
     
     if distanceM < 200:
         correctedMaskRadiusM = "dummy"
@@ -387,7 +408,7 @@ def distanceBetweenTwoPoints(latitude1D, longitude1D, maxVisibilityRadiusM):
         printMsg = "This component dowloads free topography data from opentopography.org in order to create a terrain for the chosen _location.\n" + \
                    "But mentioned free topography data has limits: from -82 South to 82 North latitude.\n" + \
                    "The closer the location is to upper mentioned boundaries, the inputted \"radius_\" value may have be shrank to make sure that the boundaries are not exceeded.\n" + \
-                   "In this case the _location you chose is very close (less than 200 meters) to the %s latitude boundary.\n" % SRTMlimit + \
+                   "In this case the _location you chose is very close (less than 200 meters) to the %s latitude boundary.\n" % NASADEMlimit + \
                    "It is not possible to create a terrain for locations less than 200 meters close to mentioned boundary, as this _location is.\n" + \
                    "Try using the Ladybug \"Terrain Generator\" component instead."
     else:
@@ -400,7 +421,7 @@ def distanceBetweenTwoPoints(latitude1D, longitude1D, maxVisibilityRadiusM):
             printMsg = "This component downloads free topography data from opentopography.org in order to create a terrain for the chosen _location.\n" + \
                        "But mentioned free topography data has limits: from -82 South to 82 North latitude.\n" + \
                        "The closer the location is to upper mentioned boundaries, the inputted \"radius_\" value may have to be shrank to make sure that the boundaries are not exceeded.\n" + \
-                       "In this case the _location you chose is %s meters away from the %s latitude boundary.\n" % (correctedMaskRadiusM, SRTMlimit) + \
+                       "In this case the _location you chose is %s meters away from the %s latitude boundary.\n" % (correctedMaskRadiusM, NASADEMlimit) + \
                        " \n" + \
                        "Please supply the \"radius_\" input with value: %s.\n" % correctedMaskRadiusM
         elif distanceM >= maxVisibilityRadiusM:
@@ -485,7 +506,7 @@ def import_export_origin_0_0_0_and_terrainShadingMask_from_objFile(importExportO
         return terrainShadingMask, origin_0_0_0
 
 
-def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink, heightM, minVisibilityRadiusM, maxVisibilityRadiusM, maskStyleLabel, source, sourceLabel):
+def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink, heightM, minVisibilityRadiusM, maxVisibilityRadiusM, maskStyleLabel, source, sourceLabel, opentopo_APIkey):
     
     # convert the float to integer if minVisibilityRadiusM == 0 (to avoid "0.0" in the .obj fileName)
     if minVisibilityRadiusM == 0:
@@ -638,20 +659,25 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
                     # generate download link for raster region
                     
                     if source == 0:
-                        # based on: http://www.opentopography.org/developers
-                        #downloadRasterLink_withCorrectedMaskRadiusKM = "http://opentopo.sdsc.edu/otr/getdem?demtype=SRTMGL1&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff" % (longitudeLeftD,latitudeBottomD,longitudeRightD,latitudeTopD)  # SRTM 1 arc second (old link)
-                        downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/globaldem?demtype=SRTMGL1&south={}&north={}&west={}&east={}&outputFormat=GTiff".format(latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD)  # SRTM 1 arc second (new link)
+                        # based on: https://portal.opentopography.org/apidocs/#/Public/getGlobalDem
+                        downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/globaldem?demtype=NASADEM&south={}&north={}&west={}&east={}&outputFormat=GTiff&API_Key={}".format( latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD, opentopo_APIkey )  # NASADEM 1 arc second
                     elif source == 1:
-                        # based on: http://www.opentopography.org/developers
-                        #downloadRasterLink_withCorrectedMaskRadiusKM = "http://opentopo.sdsc.edu/otr/getdem?demtype=AW3D30&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff" % (longitudeLeftD,latitudeBottomD,longitudeRightD,latitudeTopD)  # ALOS 1 arc second (AW3D30) (old link)
-                        downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/globaldem?demtype=AW3D30&south={}&north={}&west={}&east={}&outputFormat=GTiff".format(latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD)  # ALOS 1 arc second (AW3D30) (new link)
+                        # based on: https://portal.opentopography.org/apidocs/#/Public/getGlobalDem
+                        downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/globaldem?demtype=AW3D30&south={}&north={}&west={}&east={}&outputFormat=GTiff&API_Key={}".format( latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD, opentopo_APIkey )  # ALOS 1 arc second (AW3D30)
                     elif source == 2:
-                        # based on: http://www.marine-geo.org/tools/gridserverinfo.php#!/tools/getGMRTGrid
-                        downloadRasterLink_withCorrectedMaskRadiusKM = "http://www.marine-geo.org/services/GridServer?north={}&west={}&east={}&south={}&layer=topo&format=geotiff&resolution=max".format(latitudeTopD, longitudeLeftD, longitudeRightD, latitudeBottomD)  # GMRT
+                        # based on: https://portal.opentopography.org/apidocs/#/Public/getGlobalDem
+                        downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/globaldem?demtype=COP30&south={}&north={}&west={}&east={}&outputFormat=GTiff&API_Key={}".format( latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD, opentopo_APIkey )  # COP30 1 arc second
+                    elif source == 3:
+                        # based on: https://www.gmrt.org/services/gridserverinfo.php#!/services/getGMRTGridAttribution
+                        # 'opentopo_APIkey' is not needed for 'source == 3'
+                        downloadRasterLink_withCorrectedMaskRadiusKM = "http://www.gmrt.org/services/GridServer?north={}&west={}&east={}&south={}&layer=topo&format=geotiff&resolution=high".format( latitudeTopD,longitudeLeftD,longitudeRightD,latitudeBottomD )  # GMRT
                     
+                    
+                    print 'downloadRasterLink_withCorrectedMaskRadiusKM: ', downloadRasterLink_withCorrectedMaskRadiusKM
                     # new rasterFileNamePlusExtension and rasterFilePath corrected according to new correctedMaskRadiusM
                     rasterFileNamePlusExtension_withCorrectedMaskRadiusKM = fileNameIncomplete + "_visibility=" + str(round(maxVisibilityRadiusM/1000, 2)) + "KM" + "_source=" + sourceLabel + ".tif"  # IMPORTANT: rasterFileNamePlusExtension_withCorrectedMaskRadiusKM will always be used instead of rasterFilePath from line 647 !!!
                     rasterFilePath_withCorrectedMaskRadiusKM = os.path.join(workingSubFolderPath, rasterFileNamePlusExtension_withCorrectedMaskRadiusKM)
+                    
                     tifFileDownloaded = gismo_preparation.downloadFile(downloadRasterLink_withCorrectedMaskRadiusKM, rasterFilePath_withCorrectedMaskRadiusKM)
                     if tifFileDownloaded:
                         terrainShadingMask = origin_0_0_0 = None
@@ -1073,10 +1099,10 @@ if sc.sticky.has_key("gismoGismo_released"):
         if validLocationData:
             fileNameIncomplete = locationName + "_" + str(locationLatitudeD) + "_" + str(locationLongitudeD) + "_TERRAIN"  # incomplete due to missing "_visibility=2KM_source=AW3D30" part (for example)
             heightM = 0; minVisibilityRadiusM = 0; maskStyle = 0; maskStyleLabel = "sph"; downloadUrl_ = None; downloadTSVLink = None;   gridSize_ = 10  # dummy value
-            maxVisibilityRadiusM, gridSize, source, sourceLabel, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg = checkInputData(locationLatitudeD, radius_, gridSize_, source_, type_, origin_, north_, standThickness_, numOfContours_, downloadTSVLink)
+            maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg = checkInputData(locationLatitudeD, _APIkey, radius_, gridSize_, source_, type_, origin_, north_, standThickness_, numOfContours_, downloadTSVLink)
             if validInputData:
                 if _runIt:
-                    terrainShadingMaskUnscaledUnrotated, origin_0_0_0, fileName, objFilePath, rasterFilePath, rasterReprojectedFilePath, rasterReprojectedFileNamePlusExtension, vrtFilePath, elevationM, valid_Obj_or_Raster_file, printMsg = checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink, heightM, minVisibilityRadiusM, maxVisibilityRadiusM, maskStyleLabel, source, sourceLabel)
+                    terrainShadingMaskUnscaledUnrotated, origin_0_0_0, fileName, objFilePath, rasterFilePath, rasterReprojectedFilePath, rasterReprojectedFileNamePlusExtension, vrtFilePath, elevationM, valid_Obj_or_Raster_file, printMsg = checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink, heightM, minVisibilityRadiusM, maxVisibilityRadiusM, maskStyleLabel, source, sourceLabel, opentopo_APIkey)
                     if valid_Obj_or_Raster_file:
                         if (rasterFilePath != "needless") and (rasterFilePath != "download failed"):  # terrain shading mask NEEDS to be created
                             terrainMesh, terrainBrep, locationPt, elevationM = createTerrainMeshBrep(rasterFilePath, rasterReprojectedFilePath, locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM, unitConversionFactor2)
