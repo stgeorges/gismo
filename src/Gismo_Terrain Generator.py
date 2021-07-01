@@ -38,9 +38,10 @@ Provided by Gismo 0.0.3
                    "timeZone" and "elevation" data from the location, are not important for the creation of a terrain.
         _APIkey: OpenTopography key in order to generate terrain data. It represents a text with numbers.
                  To obtain this key for free:
-                    1) go to the following link:  https://github.com/stgeorges/gismo/blob/master/resources/tutorials/Get_OpenTopo_APIkey.mp4
-                    2) click on 'Download' and watch the video tutorial
-                    3) repeat the steps in the tutorial
+                    1) go to the following link:  https://portal.opentopography.org/lidarAuthorizationInfo
+                    2) go to the following link:  https://github.com/stgeorges/gismo/blob/master/resources/tutorials/Get_OpenTopo_APIkey.mp4
+                    3) click on 'Download' and watch the video tutorial
+                    4) repeat the steps in the tutorial
                  
                  
         radius_: Horizontal distance to which the surrounding terrain will be taken into account.
@@ -114,7 +115,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Terrain Generator"
 ghenv.Component.NickName = "TerrainGenerator"
-ghenv.Component.Message = "VER 0.0.3\nJUN_12_2021"
+ghenv.Component.Message = "VER 0.0.3\nJUL_01_2021"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
@@ -167,9 +168,10 @@ def checkInputData(locationLatitudeD, opentopo_APIkey, maxVisibilityRadiusM, gri
         maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
         validInputData = False
         printMsg = "\"_APIkey\" input has not been added. To obtain it for free:\n" + \
-                    "1) go to the following link:  https://github.com/stgeorges/gismo/blob/master/resources/tutorials/Get_OpenTopo_APIkey.mp4\n" + \
-                    "2) click on 'Download' and watch the video tutorial\n" + \
-                    "3) repeat the steps in the tutorial"
+                    "1) go to the following link:  https://portal.opentopography.org/lidarAuthorizationInfo\n" + \
+                    "2) go to the following link:  https://github.com/stgeorges/gismo/blob/master/resources/tutorials/Get_OpenTopo_APIkey.mp4\n" + \
+                    "3) click on 'Download' and watch the video tutorial\n" + \
+                    "4) repeat the steps in the tutorial"
         return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
     
     
