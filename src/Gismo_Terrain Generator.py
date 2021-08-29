@@ -115,7 +115,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Terrain Generator"
 ghenv.Component.NickName = "TerrainGenerator"
-ghenv.Component.Message = "VER 0.0.3\nJUL_01_2021"
+ghenv.Component.Message = "VER 0.0.3\nAUG_29_2021"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
@@ -675,7 +675,7 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
                         downloadRasterLink_withCorrectedMaskRadiusKM = "http://www.gmrt.org/services/GridServer?north={}&west={}&east={}&south={}&layer=topo&format=geotiff&resolution=high".format( latitudeTopD,longitudeLeftD,longitudeRightD,latitudeBottomD )  # GMRT
                     
                     
-                    print 'downloadRasterLink_withCorrectedMaskRadiusKM: ', downloadRasterLink_withCorrectedMaskRadiusKM
+                    ####print 'downloadRasterLink_withCorrectedMaskRadiusKM: ', downloadRasterLink_withCorrectedMaskRadiusKM  # uncomment for actual download link
                     # new rasterFileNamePlusExtension and rasterFilePath corrected according to new correctedMaskRadiusM
                     rasterFileNamePlusExtension_withCorrectedMaskRadiusKM = fileNameIncomplete + "_visibility=" + str(round(maxVisibilityRadiusM/1000, 2)) + "KM" + "_source=" + sourceLabel + ".tif"  # IMPORTANT: rasterFileNamePlusExtension_withCorrectedMaskRadiusKM will always be used instead of rasterFilePath from line 647 !!!
                     rasterFilePath_withCorrectedMaskRadiusKM = os.path.join(workingSubFolderPath, rasterFileNamePlusExtension_withCorrectedMaskRadiusKM)
@@ -689,12 +689,17 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
                         rasterFilePath = "download failed"
                         terrainShadingMask = origin_0_0_0 = elevationM = None
                         valid_Obj_or_Raster_file = False
-                        printMsg = "This component requires topography data to be downloaded from opentopography.org as a prerequisite for creating a terrain. It has just failed to do that. Try the following two fixes:\n" + \
+                        printMsg = "This component requires topography data to be downloaded from opentopography.org as a prerequisite for creating a terrain. It has just failed to do that. Try the following three fixes:\n" + \
                                    " \n" + \
-                                   "1) Sometimes due to large number of requests, the component fails to download the topography data even if opentopography.org website and their services are up and running.\n" + \
+                                   "1) '_APIkey' is incorrect: \n" + \
+                                   "Go to the following link:  https://portal.opentopography.org/lidarAuthorizationInfo\n" + \
+                                   "and download the video tutorial on how to obtain a valid APIkey: \n" + \
+                                   "https://github.com/stgeorges/gismo/blob/master/resources/tutorials/Get_OpenTopo_APIkey.mp4\n" + \
+                                   " \n" + \
+                                   "2) Sometimes due to large number of requests, the component fails to download the topography data even if opentopography.org website and their services are up and running.\n" + \
                                    "In this case, wait a couple of seconds and try reruning the component.\n" + \
                                    " \n" + \
-                                   "2) opentopography.org website could be up and running, but their terrain service (RESTful Web service) may be down (this already happened before).\n" + \
+                                   "3) opentopography.org website could be up and running, but their terrain service (RESTful Web service) may be down (this already happened before).\n" + \
                                    "Try again in a couple of hours.\n" + \
                                    " \n" + \
                                    "If each of two mentioned advices fails, open a new topic about this issue on: www.grasshopper3d.com/group/gismo/forum."
@@ -970,7 +975,7 @@ def split_createStand_colorTerrain(terrainMesh, terrainBrep, locationPt, origin,
 
 
 def createElevationContours(terrainUnoriginUnscaledUnrotated, numOfContours, _type):
-    
+    #Rhino.RhinoDoc.ActiveDoc.Objects.Add( terrainUnoriginUnscaledUnrotated )
     scaleFactor = 0.01
     tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance
     
@@ -989,11 +994,12 @@ def createElevationContours(terrainUnoriginUnscaledUnrotated, numOfContours, _ty
     elif (_type == 2) or (_type == 3):
         elevationContours = []
         for plane in elevationContours_planes:
-            success, elevationContoursSubList, elevationContourPointsSubList = Rhino.Geometry.Intersect.Intersection.BrepPlane(terrainUnoriginUnscaledUnrotated, plane, tol/(1/scaleFactor))  # divide the "tol" with "1/scaleFactor" to account for the 100 times scalling in "title_scalingRotating" function
-            #elevationContoursSubList_closedCrvs = [crv  for crv in elevationContoursSubList  if crv.IsClosed] # remove elevationContours crvs which are not closed
-            elevationContoursSubList_closedCrvs = [crv  for crv in elevationContoursSubList]
-            if len(elevationContoursSubList_closedCrvs) > 0:  # or success == True
-                elevationContours.extend(elevationContoursSubList_closedCrvs)
+            succ, elevationContoursSubList, elevationContourPointsSubList = Rhino.Geometry.Intersect.Intersection.BrepPlane(terrainUnoriginUnscaledUnrotated, plane, tol/(1/scaleFactor))  # divide the "tol" with "1/scaleFactor" to account for the 100 times scalling in "title_scalingRotating" function
+            
+            if (elevationContoursSubList != None):  # rhino 7 may return 'None' instead of an empty array sometimes, when there is no intersection between the mesh/brep and a pln
+                elevationContoursSubList_closedCrvs = [crv   for crv in elevationContoursSubList]
+                if len(elevationContoursSubList_closedCrvs) > 0:  # or succ == True
+                    elevationContours.extend(elevationContoursSubList_closedCrvs)
     
     return elevationContours
 
