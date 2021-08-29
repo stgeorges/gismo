@@ -974,8 +974,17 @@ def split_createStand_colorTerrain(terrainMesh, terrainBrep, locationPt, origin,
             return terrain_withStand_colored
 
 
+def remapNum(n, domainStart, domainEnd):
+    """remap a number from 0 to 1 according to domain"""
+    divisor = (domainEnd - domainStart)
+    if (divisor == 0): return 0  # prevention to divide with zero
+    else:
+        n_norm = (n - domainStart) / divisor
+    return n_norm
+
+
 def createElevationContours(terrainUnoriginUnscaledUnrotated, numOfContours, _type):
-    #Rhino.RhinoDoc.ActiveDoc.Objects.Add( terrainUnoriginUnscaledUnrotated )
+    
     scaleFactor = 0.01
     tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance
     
@@ -983,22 +992,31 @@ def createElevationContours(terrainUnoriginUnscaledUnrotated, numOfContours, _ty
     accurate = True
     terrainBB_edges = terrainUnoriginUnscaledUnrotated.GetBoundingBox(accurate).GetEdges()
     terrainBB_verticalEdge = terrainBB_edges[8]  # "Rhino.Geometry.Line" type
-    includeEnds = False
-    terrainBB_edges_t_parameters = terrainBB_verticalEdge.ToNurbsCurve().DivideByCount(numOfContours, includeEnds)
-    elevationContours_planeOrigins = [Rhino.Geometry.Line.PointAt(terrainBB_verticalEdge, t)  for t in terrainBB_edges_t_parameters]
+    
+    includeEnds = True
+    terrainBB_edges_t_param_L_ = terrainBB_verticalEdge.ToNurbsCurve().DivideByCount(numOfContours, includeEnds)
+    
+    if (Rhino.RhinoApp.Version.Major <= 6):
+        terrainBB_edges_t_param_L = terrainBB_edges_t_param_L_[1:-1]  # '[1:-1]' to remove the start and end values
+    else:
+        # on rhino 7, for some unknown reason the upper 'DivideByCount' method has been changed, and it does not return normalized t parameters (from 0 to 1), but larger than 1. We will correct this:
+        terrainBB_edges_t_param_L = [remapNum(n,  min(terrainBB_edges_t_param_L_),  max(terrainBB_edges_t_param_L_))    for n in terrainBB_edges_t_param_L_]   [1:-1]  # '[1:-1]' to remove the start and end values
+    
+    elevationContours_planeOrigins = [Rhino.Geometry.Line.PointAt(terrainBB_verticalEdge, t)  for t in terrainBB_edges_t_param_L]
     elevationContours_planes = [Rhino.Geometry.Plane(origin, Rhino.Geometry.Vector3d(0,0,1))  for origin in elevationContours_planeOrigins]
     
     if (_type == 0) or (_type == 1):
         elevationContours_Polylines = list(Rhino.Geometry.Intersect.Intersection.MeshPlane(terrainUnoriginUnscaledUnrotated, elevationContours_planes))
-        elevationContours = [crv.ToNurbsCurve()  for crv in elevationContours_Polylines]  # curves
+        elevationContours = [crv.ToNurbsCurve()     for crv in elevationContours_Polylines]  # crvs
+    
     elif (_type == 2) or (_type == 3):
         elevationContours = []
         for plane in elevationContours_planes:
             succ, elevationContoursSubList, elevationContourPointsSubList = Rhino.Geometry.Intersect.Intersection.BrepPlane(terrainUnoriginUnscaledUnrotated, plane, tol/(1/scaleFactor))  # divide the "tol" with "1/scaleFactor" to account for the 100 times scalling in "title_scalingRotating" function
             
             if (elevationContoursSubList != None):  # rhino 7 may return 'None' instead of an empty array sometimes, when there is no intersection between the mesh/brep and a pln
-                elevationContoursSubList_closedCrvs = [crv   for crv in elevationContoursSubList]
-                if len(elevationContoursSubList_closedCrvs) > 0:  # or succ == True
+                elevationContoursSubList_closedCrvs = [crv     for crv in elevationContoursSubList]
+                if (len(elevationContoursSubList_closedCrvs) > 0):  # or succ == True
                     elevationContours.extend(elevationContoursSubList_closedCrvs)
     
     return elevationContours
