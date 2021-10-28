@@ -4,7 +4,7 @@
 #
 # This file is part of Gismo.
 #
-# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2021, Djordje Spasic <djordjedspasic@gmail.com>
 # with assistance of Paul Meems <bontepaarden@gmail.com>
 # Component icon based on free OSM icon from: <https://icons8.com/web-app/13398/osm>
 #
@@ -97,7 +97,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_OSM Shapes"
 ghenv.Component.NickName = "OSMshapes"
-ghenv.Component.Message = "VER 0.0.3\nJAN_29_2019"
+ghenv.Component.Message = "VER 0.0.3\nOCT_28_2021"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -375,7 +375,7 @@ def setupOsmconf_ini_File(requiredKeys, shapeType, overpassFile_filePathL, osmco
     
     points_tagPassed = False; lines_tagPassed = False; multipolygons_tagPassed = False; multilinestrings_tagPassed = False; other_relations_tagPassed = False  # setting them back to "False" values
     osmconf_ini_File.close()
-    os.remove(osmconf_ini_filePath)  # delete the original "osmconf.ini" file
+    #os.remove(osmconf_ini_filePath)  # delete the original "osmconf.ini" file
     
     
     # create the new osmconf.ini file
@@ -663,7 +663,6 @@ def createShapesKeysValues(locationName, locationLatitudeD, locationLongitudeD, 
         if reprojectedShapefile == None:
             # reprojection failed
             
-            utils = MapWinGIS.UtilsClass()
             convertErrorNo = MapWinGIS.GlobalSettingsClass().GdalLastErrorNo
             convertErrorMsg = MapWinGIS.GlobalSettingsClass().GdalLastErrorMsg
             convertErrorType = MapWinGIS.GlobalSettingsClass().GdalLastErrorType
@@ -686,7 +685,6 @@ def createShapesKeysValues(locationName, locationLatitudeD, locationLongitudeD, 
                        " \n" + \
                        "Restart Rhino and Grasshopper (close them, then run again) and run this component again.\n" + \
                        "If this same message appears again open a new topic about it on: www.grasshopper3d.com/group/gismo/forum."
-            return None, None, None, validShapes, printMsg
     
     
     originPtProjected_meters = gismo_gis.projectedLocationCoordinates(locationLatitudeD, locationLongitudeD)  # in meters!
