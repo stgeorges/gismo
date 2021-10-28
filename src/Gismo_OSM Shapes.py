@@ -662,7 +662,7 @@ def createShapesKeysValues(locationName, locationLatitudeD, locationLongitudeD, 
         
         if reprojectedShapefile == None:
             # reprojection failed
-            
+            utils = MapWinGIS.UtilsClass()
             convertErrorNo = MapWinGIS.GlobalSettingsClass().GdalLastErrorNo
             convertErrorMsg = MapWinGIS.GlobalSettingsClass().GdalLastErrorMsg
             convertErrorType = MapWinGIS.GlobalSettingsClass().GdalLastErrorType
@@ -685,6 +685,8 @@ def createShapesKeysValues(locationName, locationLatitudeD, locationLongitudeD, 
                        " \n" + \
                        "Restart Rhino and Grasshopper (close them, then run again) and run this component again.\n" + \
                        "If this same message appears again open a new topic about it on: www.grasshopper3d.com/group/gismo/forum."
+            
+            return None, None, None, validShapes, printMsg
     
     
     originPtProjected_meters = gismo_gis.projectedLocationCoordinates(locationLatitudeD, locationLongitudeD)  # in meters!
