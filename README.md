@@ -6,7 +6,7 @@ Gismo is a free and open source Grasshopper plugin for GIS environmental analysi
 
 
 # Description:
-Gismo enables automatic generation of urban environment and terrain geometry based on location's latitude-longitude coordinates and radius. This includes connection with openstreetmap website and generation of buildings, trees, roads, rivers and other map elements. 3d building elements can also be used as a context for further analysis types: isovist (visibility), solar radiation, thermal/wind comfort, cfd analysis...
+Gismo enables automatic generation of urban environment and terrain geometry based on location's latitude-longitude coordinates and radius. This includes connection with openstreetmap and opentopography websites and generation of buildings, terrain, trees, roads, rivers and other map elements. 3d building elements can also be used as a context for further analysis types: isovist (visibility), solar radiation, thermal/wind comfort, cfd analysis...
 
 <p align="center">
   <img src="https://github.com/stgeorges/gismo/blob/master/resources/images/gismo_components_tabs.png" width="350"/>
@@ -22,10 +22,8 @@ Gismo enables automatic generation of urban environment and terrain geometry bas
 
 # Requirements:
 
-- McNeel [Rhino 5](http://www.rhino3d.com/download/rhino/5/latest) 32bit or 64bit ≥ SR9 or [Rhino 6](https://www.rhino3d.com/download/rhino-for-windows/6/latest) or [Rhino 7](https://www.rhino3d.com/download/rhino-for-windows/evaluation).
-- [Grasshopper](http://www.rhino3d.com/download/grasshopper/1.0/wip) 0.9.0075 or 0.9.0076.
-- [Ghpython](http://www.food4rhino.com/app/ghpython) plugin 0.6.0.3
-- [MapWinGIS](https://github.com/MapWindow/MapWinGIS/releases) 32bit or 64bit any version from 4.9.4.2 to 4.9.6.1 (Gismo still does not support the 5 version!!!) 
+- McNeel [Rhino 5](http://www.rhino3d.com/download/rhino/5/latest) or [Rhino 6](https://www.rhino3d.com/download/rhino-for-windows/6/latest) or [Rhino 7](https://www.rhino3d.com/download/rhino-for-windows/evaluation).
+- [MapWinGIS v4.9.6.1 x64](https://github.com/MapWindow/MapWinGIS/releases/download/v4.9.6.0/MapWinGIS-only-v4.9.6.1-x64.exe)
 - Active internet connection.
 
 
