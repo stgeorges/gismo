@@ -4,7 +4,7 @@
 # 
 # This file is part of Gismo.
 # 
-# Copyright (c) 2019, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2022, Djordje Spasic <djordjedspasic@gmail.com>
 # with assistance of Dr. Bojan Savric <savricb@geo.oregonstate.edu>
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
@@ -42,6 +42,12 @@ Provided by Gismo 0.0.3
         _location: The output from the "importEPW" or "constructLocation" component.  This is essentially a list of text summarizing a location on the Earth.
                    -
                    "timeZone" and "elevation" data from the location, are not important for the creation of a Terrain shading mask.
+        _APIkey: OpenTopography key in order to generate terrain data. It represents a text with numbers.
+                 To obtain this key for free:
+                    1) go to the following link:  https://portal.opentopography.org/lidarAuthorizationInfo
+                    2) go to the following link:  https://github.com/stgeorges/gismo/blob/master/resources/tutorials/Get_OpenTopo_APIkey.mp4
+                    3) click on 'Download' and watch the video tutorial
+                    4) repeat the steps in the tutorial
         context_: Input every kind of context to this input: buildings, houses, trees; and all the other objects: PV/SWHsurfaces or planar "_geometry" (surface) on which the future analysis (view, sunlight hours, radiation...) will be conducted.
                   -
                   This input is important for calculation of the final radius of the Terrain shading mask (that's "maskRadius" output). The larger the context_ input, the Terrain shading mask radius might be longer.
@@ -147,7 +153,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Terrain Shading Mask"
 ghenv.Component.NickName = "TerrainShadingMask"
-ghenv.Component.Message = "VER 0.0.3\nNOV_11_2020"
+ghenv.Component.Message = "VER 0.0.3\nAPR_02_2022"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
@@ -169,7 +175,7 @@ import os
 import gc
 
 
-def checkInputData(minVisibilityRadiusKM, maxVisibilityRadiusKM, north, maskStyle, workingFolderPath, downloadTSVLink):
+def checkInputData(opentopo_APIkey, minVisibilityRadiusKM, maxVisibilityRadiusKM, north, maskStyle, workingFolderPath, downloadTSVLink):
     
     # check if MapWinGIS is properly installed
     gismoGismoComponentNotRan = False  # initial value
@@ -196,6 +202,18 @@ def checkInputData(minVisibilityRadiusKM, maxVisibilityRadiusKM, north, maskStyl
     
     
     # check inputs
+    if (opentopo_APIkey == None):
+        heightM = minVisibilityRadiusM = maxVisibilityRadiusM = northRad = northVec = maskStyle = maskStyleLabel = workingSubFolderPath = downloadTSVLink = unitConversionFactor = None
+        validInputData = False
+        printMsg = "\"_APIkey\" input has not been added. To obtain it for free:\n" + \
+                    "1) go to the following link:  https://portal.opentopography.org/lidarAuthorizationInfo\n" + \
+                    "2) go to the following link:  https://github.com/stgeorges/gismo/blob/master/resources/tutorials/Get_OpenTopo_APIkey.mp4\n" + \
+                    "3) click on 'Download' and watch the video tutorial\n" + \
+                    "4) repeat the steps in the tutorial"
+        return heightM, minVisibilityRadiusM, maxVisibilityRadiusM, northRad, northVec, maskStyle, maskStyleLabel, iteropMapWinGIS_dll_folderPath, gdalDataPath_folderPath, workingSubFolderPath, downloadTSVLink, unitConversionFactor, validInputData, printMsg
+    
+    
+    
     heightM = 2
     if (heightM == None):
         heightM = 2  # default 2 meters
@@ -650,8 +668,10 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
                     # generate download link for raster region
                     latitudeTopD, dummyLongitudeTopD, latitudeBottomD, dummyLongitudeBottomD, dummyLatitudeLeftD, longitudeLeftD, dummyLatitudeRightD, longitudeRightD = gismo_gis.destinationLatLon(locationLatitudeD, locationLongitudeD, correctedMaskRadiusM)
                     # based on: http://www.opentopography.org/developers
-                    #downloadRasterLink_withCorrectedMaskRadiusKM = "http://opentopo.sdsc.edu/otr/getdem?demtype=SRTMGL3&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff" % (longitudeLeftD,latitudeBottomD,longitudeRightD,latitudeTopD)  # 3 arc-second SRTMGL3 (old link)
-                    downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/globaldem?demtype=SRTMGL3&south={}&north={}&west={}&east={}&outputFormat=GTiff".format(latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD)  # 3 arc-second SRTMGL3 (new link)
+                    #downloadRasterLink_withCorrectedMaskRadiusKM = "http://opentopo.sdsc.edu/otr/getdem?demtype=SRTMGL3&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff" % (longitudeLeftD,latitudeBottomD,longitudeRightD,latitudeTopD)  # 3 arc-second SRTMGL3 (old1 link)
+                    #downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/globaldem?demtype=SRTMGL3&south={}&north={}&west={}&east={}&outputFormat=GTiff".format(latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD)  # 3 arc-second SRTMGL3 (old2 link)
+                    downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/globaldem?demtype=SRTMGL3&south={}&north={}&west={}&east={}&outputFormat=GTiff&API_Key={}".format(latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD, _APIkey)  # 3 arc-second SRTMGL3 (old2 link)
+                    ####print "downloadRasterLink_withCorrectedMaskRadiusKM: ", downloadRasterLink_withCorrectedMaskRadiusKM
                     
                     # new rasterFileNamePlusExtension and rasterFilePath corrected according to new correctedMaskRadiusM
                     rasterFileNamePlusExtension_withCorrectedMaskRadiusKM = fileNameIncomplete + "_visibility=" + str(int(maxVisibilityRadiusM/1000)) + "KM" + ".tif"  # rasterFileNamePlusExtension_withCorrectedMaskRadiusKM will always be used instead of rasterFilePath from line 647 !!!
@@ -1157,7 +1177,7 @@ if sc.sticky.has_key("gismoGismo_released"):
         locationName, locationLatitudeD, locationLongitudeD, timeZone, elevation, validLocationData, printMsg = gismo_preparation.checkLocationData(_location)
         if validLocationData:
             fileNameIncomplete = locationName + "_" + str(locationLatitudeD) + "_" + str(locationLongitudeD) + "_TERRAIN_MASK"  # incomplete due to missing "_visibility=100KM_sph" part (for example)
-            heightM, minVisibilityRadiusM, maxVisibilityRadiusM, northRad, northVec, maskStyle, maskStyleLabel, iteropMapWinGIS_dll_folderPath, gdalDataPath_folderPath, workingSubFolderPath, downloadTSVLink, unitConversionFactor, validInputData, printMsg = checkInputData(minVisibilityRadius_, maxVisibilityRadius_, north_, maskStyle_, workingFolder_, downloadUrl_)
+            heightM, minVisibilityRadiusM, maxVisibilityRadiusM, northRad, northVec, maskStyle, maskStyleLabel, iteropMapWinGIS_dll_folderPath, gdalDataPath_folderPath, workingSubFolderPath, downloadTSVLink, unitConversionFactor, validInputData, printMsg = checkInputData(_APIkey, minVisibilityRadius_, maxVisibilityRadius_, north_, maskStyle_, workingFolder_, downloadUrl_)
             if validInputData:
                 if _runIt:
                     if validInputData:
