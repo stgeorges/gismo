@@ -86,7 +86,7 @@ def main(valueRhinoUnit_DT):
     if (valueMeter_DT.DataCount == 0):
         validInputData = False
         printMsg = "'_valueRhinoUnit' input contains no valid values."
-        unitConversionFactor, valueMeter_DT, validInputData, printMsg
+        return unitConversionFactor, valueMeter_DT, validInputData, printMsg
     
     else:
         validInputData = True
