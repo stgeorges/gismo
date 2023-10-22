@@ -33,7 +33,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.3\nDEC_24_2020"
+ghenv.Component.Message = "VER 0.0.3\nOCT_22_2023"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
@@ -2533,7 +2533,7 @@ class GIS():
             print "utils.ErrorMsg: ", utils.ErrorMsg
             print "utils.LastErrorCode: ", utils.LastErrorCode
             
-            return shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg
+            return shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, moveVector, validShapes, printMsg
         
         elif openShapefileSuccess:
             
@@ -2598,11 +2598,12 @@ class GIS():
                        "numOfsuccessfullyReprojectedShapes: %s\n" % numOfsuccessfullyReprojectedShapes + \
                        " \n" + \
                        "Open new topic about it on: www.grasshopper3d.com/group/gismo/forum, and attached .shp and all its files (.shx, .dbf, .prj)."
-            return shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg
+            return shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, moveVector, validShapes, printMsg
         
         
         originPtProjected_meters = self.projectedLocationCoordinates(locationLatitudeD, locationLongitudeD)  # in meters!
         originPtProjected = Rhino.Geometry.Point3d(originPtProjected_meters.X/unitConversionFactor, originPtProjected_meters.Y/unitConversionFactor, originPtProjected_meters.Z/unitConversionFactor)  # in Rhino units
+        moveVector = originPt - originPtProjected  # later
         
         # rotation due to north angle position
         #transformMatrixRotate = Rhino.Geometry.Transform.Rotation(-northRad, Rhino.Geometry.Vector3d(0,0,1), originPt)  # counter-clockwise
@@ -2648,7 +2649,6 @@ class GIS():
                 
             
             
-            moveVector = originPt - originPtProjected
             if (shape.ShapeType == 0):  # NULL_SHAPE
                 # ShapeType: NULL_SHAPE
                 
@@ -2744,7 +2744,7 @@ class GIS():
                 shapefileShapeType = proj4_str = shortenedName_keys = values = shapes = None
                 validShapes = False
                 printMsg = "Gismo at the moment does not support MULTI_PATCH shapefile shapes."
-                return shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg
+                return shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, moveVector, validShapes, printMsg
             
             else:
                 shapeShapeType = shapeShapeType_dict[shape.ShapeType]
@@ -2752,7 +2752,7 @@ class GIS():
                 shapefileShapeType = proj4_str = shortenedName_keys = values = shapes = None
                 validShapes = False
                 printMsg = "Gismo at the moment does not support {} shapefile type shapes.\nAsk a question on the forum (https://www.grasshopper3d.com/group/gismo/forum) if this type can be added to Gismo.".format(shapeShapeType)
-                return shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg
+                return shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, moveVector, validShapes, printMsg
         
         
         shapefileShapeType = shapeShapeType_dict[shapefile.ShapefileType]
@@ -2765,7 +2765,7 @@ class GIS():
         validShapes = True
         printMsg = "ok"
         
-        return shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg
+        return shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, moveVector, validShapes, printMsg
     
     
     def filterShapes(self, shortenedName_keys, subValuesL, shapesL, osm_id_Only, osm_way_id_Only, osm_id_Remove, osm_way_id_Remove):
