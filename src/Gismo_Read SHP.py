@@ -42,11 +42,13 @@ Provided by Gismo 0.0.3
               For example: address, type of the building, area etc.
         values: Values corresponding to each key, for each shape.
                 Each upper shape contains a value which corresponds to a certain key (example: "key=addr_street; value=Second Avenue 14/2", "key=building; value=yes", "key:area; value=100" etc.)
+        moveVec: Vector used to move the output "shapes" from its original projected location to "origin_" input location.
+                 By reversing the direction of this vector, we can use it to move the "shapes" geometry back to its original projected location.
 """
 
 ghenv.Component.Name = "Gismo_Read SHP"
 ghenv.Component.NickName = "ReadShapefile"
-ghenv.Component.Message = "VER 0.0.3\nDEC_24_2020"
+ghenv.Component.Message = "VER 0.0.3\nOCT_22_2023"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | Gismo"
@@ -70,26 +72,26 @@ def main(shpFile, anchorLocation, north, originPt):
     
     # _shpFile
     if (shpFile == None):
-        locationName = latitude = longitude = northDeg = originPt = shortenedName_keys = values = shapes = shapefileShapeType = proj4_str = None
+        locationName = latitude = longitude = northDeg = originPt = shortenedName_keys = values = shapes = shapefileShapeType = proj4_str = moveVector = None
         validShapes = False
         printMsg = "Please add file path of the shapefile(.shp) to '_shpFile' input."
-        return locationName, latitude, longitude, northDeg, originPt,  shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg
+        return locationName, latitude, longitude, northDeg, originPt,  shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, moveVector, validShapes, printMsg
     else:
         filePathValid = os.path.isfile(shpFile)
         if (filePathValid == False):
-            locationName = latitude = longitude = northDeg = originPt = shortenedName_keys = values = shapes = shapefileShapeType = proj4_str = None
+            locationName = latitude = longitude = northDeg = originPt = shortenedName_keys = values = shapes = shapefileShapeType = proj4_str = moveVector = None
             validShapes = False
             printMsg = "'_shpFile' input is incorrect. Correct its filepath."
-            return locationName, latitude, longitude, northDeg, originPt,  shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg
+            return locationName, latitude, longitude, northDeg, originPt,  shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, moveVector, validShapes, printMsg
     
     
     # _anchorLocation
     if (anchorLocation == None):
-        locationName = latitude = longitude = northDeg = originPt = shortenedName_keys = values = shapes = shapefileShapeType = proj4_str = None
+        locationName = latitude = longitude = northDeg = originPt = shortenedName_keys = values = shapes = shapefileShapeType = proj4_str = moveVector = None
         validShapes = False
         printMsg = "Please add location to '_location' input.\n" + \
                    "Use 'Gismo_SHP to Location' component, or 'Gismo_Construct Location' components for this input."
-        return locationName, latitude, longitude, northDeg, originPt,  shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg
+        return locationName, latitude, longitude, northDeg, originPt,  shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, moveVector, validShapes, printMsg
     else:
         locationName, latitude, longitude, timeZone, elevation = gismo_prep.deconstructLocation(anchorLocation)
     
@@ -100,10 +102,10 @@ def main(shpFile, anchorLocation, north, originPt):
     
     # _runIt
     if (_runIt == False):
-        locationName = latitude = longitude = northDeg = originPt = shortenedName_keys = values = shapes = shapefileShapeType = proj4_str = None
+        locationName = latitude = longitude = northDeg = originPt = shortenedName_keys = values = shapes = shapefileShapeType = proj4_str = moveVector = None
         validShapes = False
         printMsg = "All inputs are ok. Please set \"_runIt\" to True, in order to run the Read SHP component."
-        return locationName, latitude, longitude, northDeg, originPt,  shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg
+        return locationName, latitude, longitude, northDeg, originPt,  shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, moveVector, validShapes, printMsg
     
     
     
@@ -112,12 +114,12 @@ def main(shpFile, anchorLocation, north, originPt):
     unitConversionFactor, unitSystemLabel = gismo_prep.checkUnits()
     
     # read SHP
-    shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg = gismo_gis.readSHPfile(shpFile, float(latitude), float(longitude), northRad, originPt, unitConversionFactor, osm_id_Only=[], osm_way_id_Only=[], osm_id_Remove=[], osm_way_id_Remove=[])  # from 'unitConversionFactor' input onwards, inputs are default - do not change them
+    shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, moveVector, validShapes, printMsg = gismo_gis.readSHPfile(shpFile, float(latitude), float(longitude), northRad, originPt, unitConversionFactor, osm_id_Only=[], osm_way_id_Only=[], osm_id_Remove=[], osm_way_id_Remove=[])  # from 'unitConversionFactor' input onwards, inputs are default - do not change them
     
     if not validShapes:
-        locationName = latitude = longitude = northDeg = originPt = shortenedName_keys = values = shapes = shapefileShapeType = proj4_str = None
+        locationName = latitude = longitude = northDeg = originPt = shortenedName_keys = values = shapes = shapefileShapeType = proj4_str = moveVector = None
         validShapes = False
-        return locationName, latitude, longitude, northDeg, originPt,  shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg
+        return locationName, latitude, longitude, northDeg, originPt,  shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, moveVector, validShapes, printMsg
     
     
     
@@ -147,7 +149,7 @@ def main(shpFile, anchorLocation, north, originPt):
     validShapes = True
     printMsg = "ok"
     
-    return locationName, latitude, longitude, northDeg, originPt,  shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg
+    return locationName, latitude, longitude, northDeg, originPt,  shortenedName_keys, values, shapes, shapefileShapeType, proj4_str, moveVector, validShapes, printMsg
 
 
 def printOutput(locationName, latitude, longitude, northDeg, originPt, shapefileShapeType, proj4_str):
@@ -180,13 +182,14 @@ if sc.sticky.has_key("gismoGismo_released"):
         gismo_prep = sc.sticky["gismo_Preparation"]()
         gismo_gis = sc.sticky["gismo_GIS"]()
         
-        locationName, latitude, longitude, northDeg, originPt, keys, values, shapes, shapefileShapeType, proj4_str, validShapes, printMsg = main(_shpFile, _location, north_, origin_)
+        locationName, latitude, longitude, northDeg, originPt, keys, values, shapes, shapefileShapeType, proj4_str, moveVec, validShapes, printMsg = main(_shpFile, _location, north_, origin_)
         if not validShapes:
             print printMsg
             if not printMsg.startswith("All inputs"):  # if '_runIt=False'
                 ghenv.Component.AddRuntimeMessage(level, printMsg)
         else:
-            printOutput(locationName, latitude, longitude, northDeg, originPt, shapefileShapeType, proj4_str)
+            #printOutput(locationName, latitude, longitude, northDeg, originPt, shapefileShapeType, proj4_str)
+            pass
             #print "Read SHP component successfully ran."
     else:
         print printMsg
