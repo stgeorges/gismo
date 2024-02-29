@@ -22,14 +22,14 @@ Gismo enables automatic generation of urban environment and terrain geometry bas
 
 # Requirements:
 
-- McNeel [Rhino 5](http://www.rhino3d.com/download/rhino/5/latest) or [Rhino 6](https://www.rhino3d.com/download/rhino-for-windows/6/latest) or [Rhino 7](https://www.rhino3d.com/download/rhino-for-windows/evaluation).
+- McNeel [Rhino 5](http://www.rhino3d.com/download/rhino/5/latest) or [Rhino 6](https://www.rhino3d.com/download/rhino-for-windows/6/latest) or [Rhino 7](https://www.rhino3d.com/download/rhino-for-windows/evaluation) or [Rhino 8](https://www.rhino3d.com/download/rhino-for-windows/evaluation).
 - [MapWinGIS v4.9.6.1 x64](https://github.com/MapWindow/MapWinGIS/releases/download/v4.9.6.0/MapWinGIS-only-v4.9.6.1-x64.exe)
 - Active internet connection.
 
 
 
 # Installation
-- 1) Install the upper mentioned requirements (Rhino 5/6/7, Grasshopper, Ghpython, MapWinGIS).
+- 1) Install the upper mentioned requirements (Rhino 5/6/7/8, Grasshopper, Ghpython, MapWinGIS).
   Always unblock the ```MapWinGIS-only-v4.9.6.1-x64.exe``` file after download!!! (right click on it, and check ```Unblock```).
 - 2) Download the latest Gismo plugin files as a single .zip file from here:
 https://github.com/stgeorges/gismo/zipball/master
