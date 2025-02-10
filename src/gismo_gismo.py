@@ -33,7 +33,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.3\nOCT_22_2023"
+ghenv.Component.Message = "VER 0.0.3\nFEB_10_2025"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
@@ -55,6 +55,7 @@ import time
 import math
 import sys
 import clr
+import csv
 import os
 
 
@@ -375,14 +376,6 @@ class Preparation(object):
     """
     methods used to prepare components before performing analysis/running results
     """
-    def cleanString(self, string):
-        """
-        for a given string, replace "/", "\", " ", "," with "_"
-        """
-        stringCorrected = System.String.Replace(   System.String.Replace(  System.String.strip(System.String.Replace(System.String.Replace(string,"\\","_"), "/", "_") )  ," ", "_")   ,",", "_") # removing "/", "\", " ", ","
-        return stringCorrected
-    
-    
     def checkUnits(self):
         """
         calculate unitConversionFactor for appropriate Rhino document Model unit. And check Rhino Model units
@@ -414,6 +407,68 @@ class Preparation(object):
         toMeters = Rhino.UnitSystem.Meters
         unitConversionFactor = Rhino.RhinoMath.UnitScale(fromUnitSystem, toMeters)
         return unitConversionFactor, unitSystem
+    
+    
+    def cleanString(self, string):
+        """
+        for a given string, replace "/", "\", " ", "," with "_"
+        """
+        stringCorrected = System.String.Replace(   System.String.Replace(  System.String.strip(System.String.Replace(System.String.Replace(string,"\\","_"), "/", "_") )  ," ", "_")   ,",", "_") # removing "/", "\", " ", ","
+        return stringCorrected
+    
+    
+    def isNum(self, obj):
+        """check if 'obj' is integer or float. Strings in form of number are NOT considered (example: "3.23")"""
+        return isinstance(obj, (int, float))
+    
+    
+    def strToNum(self, n_str):
+        """convert a string number to a float or integer number
+        a string number can have either '.' or ',' as its decimal separator (in case it is a decimal, and not an integer)."""
+        if self.isNum(n_str): return n_str  # in case 'n_str' is a int() or float()
+        
+        if "," in n_str: 
+            # n_str is a decimal number with "," as decimal
+            n_str2 = n_str.replace(",",".")
+            n = float(n_str2)
+        elif "." in n_str:
+            # n_str is a decimal number with "." as decimal
+            n = float(n_str)
+        else: n = float(n_str)
+        
+        # interger or not
+        if n == int(n): return int(n)  # happens for example 2400.000 == 2400 results in True
+        else: return n
+    
+    
+    def epsilonEquals(self, n1, n2, tol=0.001):
+        """compare two numbers within the tolerance
+        input:
+            two numbers
+        output:
+            True if they are equal within the tolerance (if n1 and n2 are less or equal than 'tol' different)
+            False if they are NOT equal within the tolerance"""
+        
+        areEqual = abs(n1 - n2) <= tol
+        return areEqual
+    
+    
+    def isFileWithFullPath(self, filefullWithEXT):
+        """check if a file exists.
+        Add "r" at it's beginning if python escape char "\" is present inside it.
+        
+        input: 
+            fileFolderPathWithExt - a full file folder path (WITH extension)
+        output:
+            full file folder path if it exists. 
+            False if it does not"""
+        
+        fileFolderPathWithExt2 = fileFolderPathWithExt.replace("\\", "/")  # "\" is an escaped characater in python
+        
+        folderExists = os.path.isfile(fileFolderPathWithExt2)
+        
+        if (folderExists == False): return False
+        elif (folderExists != False): return fileFolderPathWithExt2
     
     
     def createFolder(self, folderPath):
@@ -450,6 +505,23 @@ class Preparation(object):
         filename = os.path.basename(fileFolderPath)
         
         return folder, filename
+    
+    
+    def dateNow(self, delimiter='.'):
+        """return current date as a string"""
+    
+        now = datetime.datetime.now()
+        
+        date_now = now.strftime( '%Y{}%m{}%d'.format(delimiter, delimiter) )
+        return date_now
+    
+    
+    def timeNow(self, delimiter=':'):
+        """return current time (hour,minute,second) as a string"""
+        now = datetime.datetime.now()
+        
+        time_now = now.strftime( '%H{}%M{}%S'.format(delimiter, delimiter) )
+        return time_now
     
     
     def checkInternetConnection(self):
@@ -496,6 +568,36 @@ class Preparation(object):
         
         fileDownloaded_success = True
         return fileDownloaded_success
+    
+    
+    def urlReader(self, _link):
+        """
+        return a http GET request as a string
+        If faied, return 'file failed'
+        """
+        import subprocess
+        
+        # a) first try to download - via System.Net.WebClient.DownloadString
+        with System.Net.WebClient() as client:
+            try:
+                JSON_asStr = client.DownloadString(_link);
+            except System.Net.WebException as ex:
+                #ex_str = str(ex)
+                #raise ValueError(ex_str)
+                JSON_asStr = 'file failed'
+        
+        
+        # b) second try to download - via Windows CommandPrompt
+        if (JSON_asStr == 'file failed'):
+            # call url via Windows CommandPrompt
+            cmd_str = 'curl -H "Accept: application/json" -X GET "{}"'.format(_link)  # do not change
+            
+            # return the results of the call in 'JSONasString' variable
+            JSON_asStr2 = subprocess.Popen(cmd_str, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
+            return JSON_asStr2
+        
+        
+        return JSON_asStr
     
     
     def constructLocation(self, locationName, latitude, longitude, timeZone = 0, elevation = 0):
@@ -706,6 +808,42 @@ class Preparation(object):
         """flatten (convert to a regular list) a list of lists"""
         L = [item     for subL in LL     for item in subL]
         return L
+    
+    
+    def LLtranspose(self, LL, emptyItem=None):
+        """replace rows with columns in a list of list
+        This func supports row_L with equal or different length.
+        
+        input:
+            LL
+            emptyItem - if not equal to None, then that value will be used to fill in gaps between row_L of different sizes
+        output:
+            LL_flip"""
+        
+        # a) find longest length among all row_L
+        maxCol = len(LL[0])  # iniv
+        
+        for row_L in LL:
+            rowLength = len(row_L)
+            if rowLength > maxCol:
+                maxCol = rowLength
+        
+        
+        # b) create 'LL_flip'
+        LL_flip = []
+        
+        for colIndex in xrange(maxCol):
+            
+            LL_flip.append([])
+            for row_L in LL:
+                if colIndex < len(row_L):
+                    LL_flip[colIndex].append(row_L[colIndex])
+                else:
+                    # optional addition of 'emptyItem'
+                    if emptyItem:
+                        LL_flip[colIndex].append( emptyItem )
+        
+        return LL_flip
     
     
     def joinMeshes(self, mesh_L):
@@ -943,16 +1081,20 @@ class Preparation(object):
         return joinedTitleTextGeometry, textStartPt, textSize
     
     
-    def numberToColor(self, values, customColors, minB=None, maxB=None):
+    def numberToColor(self, values, customColors, minB=None, maxB=None, tol=0.001):
         """
         interpolate numbers to a gradient between a list of colors
         """
         if (len(customColors) == 0):
             customColors = self.defaultCustomColors()
         
-        if sum(values) == (len(values)*values[0]):
+        # check if all values in input 'values' are the same
+        sum_values = sum(values)
+        sum_values2 = len(values)*values[0]
+        if self.epsilonEquals(sum_values, sum_values2, tol):
             # all items in "values" are the same. Return the bottom most color
             return [customColors[0]] * len(values)
+        
         
         # checking for "minB" and "maxB"
         minValue = min(values)
@@ -1019,6 +1161,17 @@ class Preparation(object):
                     break
         
         return legendColors
+    
+    
+    def isNumber(self, str2):
+        """
+        check if a string can be converted to a number
+        """
+        try:
+            number = float(str2)
+            return True
+        except:
+            return False
     
     
     def createLayer(self, layParentName, laySubName, projectName, newLayer, category, laySubName_color=None, category_color=None, legendBakePar=Grasshopper.DataTree[object]() ):
@@ -1219,7 +1372,7 @@ class Preparation(object):
     
     def arrayToList2(self, arr):
         """convert a dotNET array (and NOT nested dotNET array!) to a python list.
-        This function can be used to convert StrongBox[Array[type]] to python list, because 'ds.ArrayToList' fails."""
+        This function can be used to convert StrongBox[Array[type]] to python list"""
         
         L = []
         
@@ -1231,6 +1384,81 @@ class Preparation(object):
         
         return L
 
+
+class IO():
+    """
+    methods to read and export files
+    """
+    def localizeFloats(self, row, decimal=','):
+        return [
+            str(el).replace('.', decimal) if isinstance(el, float) else el 
+            for el in row]
+    
+    
+    def readCSV(self, CSV_filefull, delimiter_=';'):
+        """read the csv file as the List of Lists"""
+        
+        import codecs
+        
+        with open(CSV_filefull) as csv_file:
+            csv_reader = csv.reader(codecs.EncodedFile(csv_file, 'utf-8', 'utf-8-sig'), delimiter=delimiter_)
+            
+            csvValue_LL = []
+            
+            for row_splitted_L in csv_reader:
+                row_splitted_encoded_L = [str2.encode('utf-8')  if isinstance(str2, str) else str2  for str2 in row_splitted_L]
+                csvValue_LL.append(row_splitted_encoded_L)
+        
+        return csvValue_LL
+    
+    
+    def exportCSV(self, csvValueLL, filename, folder, delimiter_=';', decimal=',', _encode='utf-8'):
+        """export a list of values a .csv file
+        input:
+            csvValueLL - a list of lists, where each sublist represents a single line (row)
+        output:
+            if .csv file successfully saved, then its full folder path.
+            Otherwise None"""
+        
+        
+        # create the 'folder'
+        prep_gismo = Preparation()
+        folder_created = prep_gismo.createFolder(folder)
+        
+        if (folder_created == False):
+            raise ValueError("@@    'exportCSV' func terminated. Input folder: '{}' can not be found/created.".format(folder))
+        
+        elif (folder_created != False):
+            CSV_filefullWithExt = os.path.join(folder, filename + '.csv')
+            
+            # test if .csv file can be created
+            try:
+                with open(CSV_filefullWithExt, mode='w') as csvfile:
+                    pass
+            except:
+                printMsg = "@@    'exportCSV' func terminated because csv file could not be created. Due to: \n" + \
+                                  "1) CSV file is already OPENED. Close it.  or \n" + \
+                                  "2) folder path is incorrect (no such partion exists, or folder parth contains invalid characters. or \n" + \
+                                  "3) filename is invalid"
+                
+                raise ValueError(printMsg)
+            
+            
+            
+            # finally write values to a .csv file
+            with open(CSV_filefullWithExt, mode='w') as csvfile:
+                csvwriter = csv.writer(csvfile, delimiter=delimiter_, quotechar='"', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+                for subL in csvValueLL:
+                    localizedFloat_L = self.localizeFloats(subL, decimal)
+                    
+                    if _encode:
+                        localizedFloat_and_encoding_L = [str2.encode(_encode)  if isinstance(str2, str) else str2  for str2 in localizedFloat_L]
+                    else:
+                        localizedFloat_and_encoding_L = [str2  for str2 in localizedFloat_L]
+                    
+                    csvwriter.writerow(localizedFloat_and_encoding_L)
+            
+            return CSV_filefullWithExt
 
 
 class CreateGeometry():
@@ -2299,6 +2527,49 @@ class GIS():
         return originPtProjected
     
     
+    def XYtoLocation(self, pt_req, anchorLocation, anchorOriginPt=rg.Point3d(0,0,0)):
+        """calculate latitude and longitude coordinates of the 'pt_req' in Rhino scene.
+        output: 'pt_req' converted to latitude, longitude degrees"""
+        
+        
+        # extract latitude, longitude from input 'anchorLocation'
+        gismo_prep = Preparation()
+        
+        locationName, anchor_locationLatitudeD, anchor_locationLongitudeD, timeZone, elevation, validLocationData, printMsg = gismo_prep.checkLocationData(anchorLocation)
+        
+        unitConversionFactor, unitSystemLabel = gismo_prep.checkUnits()
+        anchorOriginPt_meters = rg.Point3d(anchorOriginPt.X*unitConversionFactor, anchorOriginPt.Y*unitConversionFactor, anchorOriginPt.Z*unitConversionFactor)
+        pt_req_meters = rg.Point3d(pt_req.X*unitConversionFactor, pt_req.Y*unitConversionFactor, pt_req.Z*unitConversionFactor)
+        
+        
+        
+        # inputCRS
+        EPSGcode = 4326  # WGS 84
+        inputCRS_dummy = self.CRS_from_EPSGcode(EPSGcode)
+        # outputCRS
+        outputCRS_dummy = self.UTM_CRS_from_latitude(anchor_locationLatitudeD, anchor_locationLongitudeD)
+        
+        anchor_originProjected_meters = self.convertBetweenTwoCRS(inputCRS_dummy, outputCRS_dummy, anchor_locationLongitudeD, anchor_locationLatitudeD)  # in meters
+        
+        
+        
+        
+        # inputCRS
+        # based on assumption that both anchorLocation_ input and required_location belong to the same UTM zone
+        inputCRS = self.UTM_CRS_from_latitude(anchor_locationLatitudeD, anchor_locationLongitudeD, anchor_locationLatitudeD, anchor_locationLongitudeD)
+        
+        # outputCRS
+        EPSGcode = 4326
+        outputCRS = self.CRS_from_EPSGcode(EPSGcode)
+        
+        
+        latitudeLongitudePt = self.convertBetweenTwoCRS(inputCRS, outputCRS, (anchor_originProjected_meters.X - anchorOriginPt_meters.X) + pt_req_meters.X, (anchor_originProjected_meters.Y - anchorOriginPt_meters.Y) + pt_req_meters.Y)
+        latitude = latitudeLongitudePt.Y
+        longitude = latitudeLongitudePt.X
+        
+        return latitude, longitude
+    
+    
     def destinationLatLon(self, latitude1D, longitude1D, radiusM):
         """
         calculate latitude-location for cardinal directions around the central latitude1D, longitude1D, for a given geodesic distance (radiusM). By Vincenty solution
@@ -2959,6 +3230,7 @@ sc.sticky["gismo_Transfrom"] = Transform
 sc.sticky["gismo_Preparation"] = Preparation
 sc.sticky["gismo_CreateGeometry"] = CreateGeometry
 sc.sticky["gismo_EnvironmentalAnalysis"] = EnvironmentalAnalysis
+sc.sticky["gismo_IO"] = IO
 sc.sticky["gismo_GIS"] = GIS
 sc.sticky["gismo_OSM"] = OSM
 sc.sticky["gismo_mapwingisFolder"] = mapFolder_
