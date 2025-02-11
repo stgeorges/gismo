@@ -6,9 +6,10 @@ Gismo is a free and open source Grasshopper plugin for GIS environmental analysi
 
 
 # Description:
-Gismo enables automatic generation of urban environment and terrain geometry based on location's latitude-longitude coordinates/or address and radius. This includes connection with openstreetmap and opentopography websites and generation of 3D buildings, terrain, trees, roads, rivers and other map elements, based on only upper two inputs.
+Gismo enables automatic generation of 2D and 3D urban environment and terrain geometry based on location's latitude-longitude coordinates/or address and radius. This includes connection with openstreetmap and opentopography websites and generation of buildings, terrain, trees, roads, rivers and other map elements - based only on upper two inputs.
+
 Additionally Gismo posseses the following functionalities:
-Air pollution analysis, tree CO2 sequestering, greenness index analyis, terrain and water flow analysis, terrain shading mask creation and its export to climate and PV software (Meteonorm, PV*SOL, PVsyst).
+Air pollution analysis, tree CO2 sequestering, greenness index analysis, terrain and water flow analysis, terrain shading mask creation and its export to climate and PV software (Meteonorm, PV*SOL, PVsyst).
 
 <p align="center">
   <img src="https://github.com/stgeorges/gismo/blob/master/resources/images/gismo_components_tabs.png" width="350"/>
