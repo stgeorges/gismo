@@ -87,7 +87,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Air Pollution"
 ghenv.Component.NickName = "AirPollution"
-ghenv.Component.Message = "VER 0.0.3\nFEB_10_2025"
+ghenv.Component.Message = "VER 0.0.3\nFEB_11_2025"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -97,7 +97,6 @@ except: pass
 
 import rhinoscriptsyntax as rs
 import Rhino.Geometry as rg
-import designscript as ds
 import scriptcontext as sc
 import Grasshopper
 import datetime
