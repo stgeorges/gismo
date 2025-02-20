@@ -4,7 +4,7 @@
 # 
 # This file is part of Gismo.
 # 
-# Copyright (c) 2020, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2025, Djordje Spasic <djordjedspasic@gmail.com>
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
 # Gismo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -33,7 +33,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Gismo"
 ghenv.Component.NickName = "Gismo"
-ghenv.Component.Message = "VER 0.0.3\nFEB_10_2025"
+ghenv.Component.Message = "VER 0.0.3\nFEB_20_2025"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.icon
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "0 | Gismo"
@@ -284,7 +284,7 @@ class mainComponent(object):
             try:
                 dummyShape = MapWinGIS.ShapeClass()
                 sc.sticky["MapWinGIS"] = ""  # "" is dummy value. Only the key name "MapWinGIS" is important
-            except Exception, e:
+            except Exception as e:
                 # the "Retrieving the COM class factory for component with CLSID" error appeared
                 iteropMapWinGIS_dll_folderPath = gdalDataPath_folderPath = None
                 validInputData = False
@@ -341,7 +341,7 @@ class Transform(object):
             if (obj2 == None):
                 try:
                     obj2 = copy.copy(obj)  # does not work on Rhino.Geometry.Leader
-                except Exception, e:
+                except Exception as e:
                     print "%s of type %s couldn't be copied" % (obj, type(obj))
         
         return obj2
@@ -487,7 +487,7 @@ class Preparation(object):
                 os.mkdir(folderPath)
                 folderCreated = True
                 return folderCreated
-            except Exception, e:
+            except Exception as e:
                 # invalid folderPath
                 folderCreated = False
                 return folderCreated
@@ -555,12 +555,12 @@ class Preparation(object):
             # try "secure http" download
             client = System.Net.WebClient()
             client.DownloadFile(downloadLink, downloadedFilePath)
-        except Exception, e:
+        except Exception as e:
             print "downloadFile_e1: ", e
             try:
                 # "secure http" failed, try "http" download:
                 filePathDummy, infoHeader = urllib.urlretrieve(downloadLink, downloadedFilePath)
-            except Exception, e:
+            except Exception as e:
                 print "downloadFile_e2: ", e
                 # downloading of file failed
                 fileDownloaded_success = False
@@ -582,8 +582,8 @@ class Preparation(object):
             try:
                 JSON_asStr = client.DownloadString(_link);
             except System.Net.WebException as ex:
-                #ex_str = str(ex)
-                #raise ValueError(ex_str)
+                # first downloading of url failed
+                print 'downloadUrl_e1: ', str(ex)
                 JSON_asStr = 'file failed'
         
         
@@ -592,9 +592,14 @@ class Preparation(object):
             # call url via Windows CommandPrompt
             cmd_str = 'curl -H "Accept: application/json" -X GET "{}"'.format(_link)  # do not change
             
-            # return the results of the call in 'JSONasString' variable
-            JSON_asStr2 = subprocess.Popen(cmd_str, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
-            return JSON_asStr2
+            try:
+                # return the results of the call in 'JSONasString' variable
+                JSON_asStr2 = subprocess.Popen(cmd_str, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
+                return JSON_asStr2
+            except Exception as e2:
+                # second downloading of url failed
+                print 'downloadUrl_e2: ', str(e2)
+                JSON_asStr = 'file failed'
         
         
         return JSON_asStr
@@ -649,7 +654,7 @@ class Preparation(object):
                 validLocationData = True
                 printMsg = "ok"
             
-            except Exception, e:
+            except Exception as e:
                 # something is wrong with "_location" input (the input is not from Ladybug "Import epw" component "location" ouput)
                 locationNameCorrected = latitude = longitude = timeZone = elevation = None
                 validLocationData = False
@@ -672,12 +677,12 @@ class Preparation(object):
             northVec.Rotate(-math.radians(float(north)),Rhino.Geometry.Vector3d.ZAxis)
             northVec.Unitize()
             return 2*math.pi-math.radians(float(north)), northVec
-        except Exception, e:
+        except Exception as e:
             try:
                 northVec = Rhino.Geometry.Vector3d(north)
                 northVec.Unitize()
                 return Rhino.Geometry.Vector3d.VectorAngle(Rhino.Geometry.Vector3d.YAxis, northVec, Rhino.Geometry.Plane.WorldXY), northVec
-            except Exception, e:
+            except Exception as e:
                 return 0, Rhino.Geometry.Vector3d.YAxis
     
     
@@ -1305,7 +1310,7 @@ class Preparation(object):
                 categoryName_n = category + "_" +str(int(maxInt)+1)
                 categoryL.Name = categoryName_n
                 categoryIndex = layerT.Add(categoryL)
-            except Exception, e:
+            except Exception as e:
                 categoryL.Name = category  + "_0"
                 categoryIndex = layerT.Add(categoryL)
                 maxInt = -1
