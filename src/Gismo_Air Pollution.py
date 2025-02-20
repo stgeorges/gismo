@@ -87,7 +87,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Air Pollution"
 ghenv.Component.NickName = "AirPollution"
-ghenv.Component.Message = "VER 0.0.3\nFEB_11_2025"
+ghenv.Component.Message = "VER 0.0.3\nFEB_20_2025"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
@@ -762,6 +762,9 @@ if sc.sticky.has_key("gismoGismo_released"):
                 createOutputDescriptions(_analysisType)
                 if _runIt:
                     values, airPollution, title, titleOriginPt, legend, legendPln, validPollutData, printMsg = main(_analysisType, _location, _APIkey, radius_, numOfCell_, current_, origin, _sleepInSecondPerAPIcall, legendBakePar_)
+                    if not validPollutData:
+                        print ' \n \n', printMsg
+                        ghenv.Component.AddRuntimeMessage(level, printMsg)
                 else:
                     print "All inputs are ok. Please set \"_runIt\" to True, in order to run the Air pollution component"
             else:
