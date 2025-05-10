@@ -32,7 +32,7 @@ https://openweathermap.org/api/air-pollution
 Provided by Gismo 0.0.3
     
     input:
-        _analysisType: Choose one of the terrain analysis types:
+        _analysisType: Choose one of the air pollution indices:
                        0 - Air Quality Index (AQI)
                        1 - Nitrogen dioxide (NO2)
                        2 - Particulate matter 10<=μm (PM10)
@@ -87,7 +87,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Air Pollution"
 ghenv.Component.NickName = "AirPollution"
-ghenv.Component.Message = "VER 0.0.3\nFEB_20_2025"
+ghenv.Component.Message = "VER 0.0.3\nMAY_10_2025"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "1 | OpenStreetMap"
