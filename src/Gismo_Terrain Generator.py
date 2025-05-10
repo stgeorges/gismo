@@ -4,7 +4,7 @@
 # 
 # This file is part of Gismo.
 # 
-# Copyright (c) 2021, Djordje Spasic <djordjedspasic@gmail.com>
+# Copyright (c) 2025, Djordje Spasic <djordjedspasic@gmail.com>
 # with assistance of Dr. Bojan Savric <savricb@geo.oregonstate.edu>
 # Gismo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #
@@ -38,7 +38,7 @@ Provided by Gismo 0.0.3
                    "timeZone" and "elevation" data from the location, are not important for the creation of a terrain.
         _APIkey: OpenTopography key in order to generate terrain data. It represents a text with numbers.
                  To obtain this key for free:
-                    1) go to the following link:  https://portal.opentopography.org/lidarAuthorizationInfo
+                    1) go to the following link:  https://portal.opentopography.org/myopentopo
                     2) go to the following link:  https://github.com/stgeorges/gismo/blob/master/resources/tutorials/Get_OpenTopo_APIkey.mp4
                     3) click on 'Download' and watch the video tutorial
                     4) repeat the steps in the tutorial
@@ -54,14 +54,21 @@ Provided by Gismo 0.0.3
                  If not supplied, default value of 100 meters will be used.
                  -
                  In meters.
-        source_: There are currently three terrain sources available:
+        source_: There are currently five terrain sources available:
                -
-               0 - NASADEM: only terrain from -55.9 to 59.9 latitude! Terrain ends at the sea level (no sea/river/lake floor terrain). Terrain resolution varies from 20 to 30 meters. Based mainly on modified SRTM, but also ASTER GDEM, NED
-               1 - AW3D30: only terrain! Terrain ends at the sea level (no sea/river/lake floor terrain). Terrain resolution varies from 20 to 30 meters. Based on Japanese ALOS dataset
-               2 - COP30: only terrain! Terrain ends at the sea level (no sea/river/lake floor terrain). Terrain resolution varies from 20 to 30 meters. Based on European WorldDEM dataset
-               3 - GMRT: terrain and underwater (sea/river/lake floor) terrain. Sea level is not presented. Terrain and underwater terrain resolution varies from 50 meter to 2000 meters.
+               0 - USGS1m: only terrain. Only for USA, Island of Hawai`i, Puerto Rico, US Virgin islands. Terrain resolution is 1 meter. Based on USGS. Requires Accademic (not regular) API key: https://opentopography.org/content/how-access-restricted-data-opentopography
                -
-               If nothing supplied, 0 will be used as a default (NASADEM terrain only).
+               1 - USGS10m: only terrain. Only for USA, all Hawaii islands, Puerto Rico, US and British Virgin islands, American Samoa, Alaska. Terrain resolution is 10 meters. Based on USGS.
+               -
+               2 - NASADEM: only terrain from -55.9 to 59.9 latitude. Terrain ends at the sea level (no sea/river/lake floor terrain). Terrain resolution varies from 20 to 30 meters. Based mainly on modified SRTM, but also ASTER GDEM, NED
+               -
+               3 - AW3D30: only terrain. Terrain ends at the sea level (no sea/river/lake floor terrain). Terrain resolution varies from 20 to 30 meters. Based on Japanese ALOS dataset
+               -
+               4 - COP30: only terrain. Terrain ends at the sea level (no sea/river/lake floor terrain). Terrain resolution varies from 20 to 30 meters. Based on European WorldDEM dataset
+               -
+               5 - GMRT: terrain and underwater (sea/ocean floor) terrain. Sea level is not presented. Terrain and underwater terrain resolution varies from 50 meter to 2000 meters.
+               -
+               If nothing supplied, 2 will be used as a default (NASADEM terrain only).
         type_: There are four terrain types:
                -
                0 - terrain will be created as a mesh with rectangular edges
@@ -115,7 +122,7 @@ Provided by Gismo 0.0.3
 
 ghenv.Component.Name = "Gismo_Terrain Generator"
 ghenv.Component.NickName = "TerrainGenerator"
-ghenv.Component.Message = "VER 0.0.3\nAUG_29_2021"
+ghenv.Component.Message = "VER 0.0.3\nMAY_07_2025"
 ghenv.Component.IconDisplayMode = ghenv.Component.IconDisplayMode.application
 ghenv.Component.Category = "Gismo"
 ghenv.Component.SubCategory = "2 | Terrain"
@@ -138,7 +145,7 @@ import os
 import gc
 
 
-def checkInputData(locationLatitudeD, opentopo_APIkey, maxVisibilityRadiusM, gridSize, source, _type, origin, north, standThickness, numOfContours, downloadTSVLink):
+def checkInputData(locationLatitudeD, locationLongitudeD, opentopo_APIkey, maxVisibilityRadiusM, gridSize, source, _type, origin, north, standThickness, numOfContours, downloadTSVLink):
     
     # check if MapWinGIS is properly installed
     gismoGismoComponentNotRan = False  # initial value
@@ -168,7 +175,7 @@ def checkInputData(locationLatitudeD, opentopo_APIkey, maxVisibilityRadiusM, gri
         maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
         validInputData = False
         printMsg = "\"_APIkey\" input has not been added. To obtain it for free:\n" + \
-                    "1) go to the following link:  https://portal.opentopography.org/lidarAuthorizationInfo\n" + \
+                    "1) go to the following link:  https://portal.opentopography.org/myopentopo\n" + \
                     "2) go to the following link:  https://github.com/stgeorges/gismo/blob/master/resources/tutorials/Get_OpenTopo_APIkey.mp4\n" + \
                     "3) click on 'Download' and watch the video tutorial\n" + \
                     "4) repeat the steps in the tutorial"
@@ -179,19 +186,25 @@ def checkInputData(locationLatitudeD, opentopo_APIkey, maxVisibilityRadiusM, gri
         source = 0  # default
         sourceLabel = "NASADEM"  # default
     elif (source == 0):
+        # USGS1m from 1 meter (only USA, Hawaii, Puerto Rico): only terrain
+        sourceLabel = "USGS1m"
+    elif (source == 1):
+        # USGS10m from 10 meter (only USA, all Hawaii islands, Puerto Rico, American Samoa, Alaska): only terrain
+        sourceLabel = "USGS10m"
+    elif (source == 2):
         # NASADEM 1 arc second: only terrain
         sourceLabel = "NASADEM"
-    elif (source == 1):
+    elif (source == 3):
         # ALOS 1 arc second (AW3D30): only terrain
         sourceLabel = "AW3D30"
-    elif (source == 2):
+    elif (source == 4):
         # COP30 1 arc second: only terrain
         sourceLabel = "COP30"
-    elif (source == 3):
+    elif (source == 5):
         # GMRT from 10 meter (0.33 arc-second) to 2000 meter (66.66 arc second): terrain and underwater terrain
         sourceLabel = "GMRT"
-    elif (source < 0) or (source > 3):
-        source = 0
+    elif (source < 0) or (source > 5):
+        source = 2
         sourceLabel = "NASADEM"
         print "source_ input only supports values 0 to 2.\n" + \
               "source_ input set to 0 (NASADEM = terrain only)."
@@ -258,29 +271,51 @@ def checkInputData(locationLatitudeD, opentopo_APIkey, maxVisibilityRadiusM, gri
     # correction of maxVisibilityRadiusM length due to light refraction can not be calculated, so it is assumed that arcLength = maxVisibilityRadiusM. maxVisibilityRadiusM variable will be used from now on instead of arcLength.
     
     
-    if (source == 0)  and  ((locationLatitudeD < -55.9) or (locationLatitudeD > 59.9)):
-        # NASADEM is limited to -56 to 61 latitude
+    if (source == 0)  and  ((locationLongitudeD < -162.46257240683292) or (locationLongitudeD > -63.772819560330355)   or   (locationLatitudeD > 49.5) or (locationLatitudeD < 17.25395365358238)):
+        # USGS1m limits:
+        # lon western than Hawaii islands; lon eastern than US Virgin islands; lat northern than Minessota; lat southern than US Virgin islands
+        # based on: https://portal.opentopography.org/raster?opentopoID=OTNED.012021.4269.3
         maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
         validInputData = False
-        printMsg = "The \"source_ = 0\" input (NASADEM) has range limits: from -55.9 South to 59.9 North latitude.\n" + \
+        printMsg = "The \"source_ = 0\" input (USGS1m) has range limits: Only supports USA, Island of Hawai`i, Puerto Rico, US Virgin islands.\n" + \
                    "Defined \"_location\" exceeds these limits.\n" + \
-                   "Try using either \"source_ = 1\" input or \"source_ = 2\" inputs, which have higher range limits (both from -82 South to 82 North latitude)."
+                   "Try using \"source_ = 1/2/3/4\" input instead, which have higher range limits."
         return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
     
-    if (source == 1)  and  ((locationLatitudeD < -82) or (locationLatitudeD > 82)):
-        # AW3D30 is limited to -82 to 80 latitude
+    if (source == 1)  and  ((locationLongitudeD > -63.772819560330355)   or   (locationLatitudeD < -14.478117392394656)):
+        # USGS10m limits:
+        # lon eastern than US Virgin islands; lat southern than American Samoa
+        # based on: https://portal.opentopography.org/datasetMetadata?otCollectionID=OT.012021.4269.1
         maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
         validInputData = False
-        printMsg = "The \"source_ = 1\" input (NASADEM) has range limits: from -82 South to 82 North latitude.\n" + \
+        printMsg = "The \"source_ = 1\" input (USGS1m) has range limits: Only supports USA, all Hawaii islands, Puerto Rico, US and British Virgin islands, American Samoa, Alaska.\n" + \
+                   "Defined \"_location\" exceeds these limits.\n" + \
+                   "Try using \"source_ = 2/3/4\" input instead, which have higher range limits."
+        return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
+    
+    if (source == 2)  and  ((locationLatitudeD < -56) or (locationLatitudeD > 60)):
+        # NASADEM is limited to -56 to 60 latitude
+        maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
+        validInputData = False
+        printMsg = "The \"source_ = 2\" input (NASADEM) has range limits: from -56 South to 60North latitude.\n" + \
+                   "Defined \"_location\" exceeds these limits.\n" + \
+                   "Try using either \"source_ = 3\" input or \"source_ = 4\" inputs, which have higher range limits (both from -82 South to 82 North latitude)."
+        return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
+    
+    if (source == 3)  and  ((locationLatitudeD < -82) or (locationLatitudeD > 82)):
+        # AW3D30 is limited to -82 to 82 latitude
+        maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
+        validInputData = False
+        printMsg = "The \"source_ = 3\" input (AW3D30) has range limits: from -82 South to 82 North latitude.\n" + \
                    "Defined \"_location\" exceeds these limits.\n" + \
                    "For now, no other Gismo \"source_\" supports latitude beyond this."
         return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
     
-    if (source == 2)  and  ((locationLatitudeD < -82) or (locationLatitudeD > 82)):
-        # GMRT is limited to -82 to 80 latitude
+    if (source == 5)  and  ((locationLatitudeD < -82) or (locationLatitudeD > 82)):
+        # GMRT is limited to -82 to 82 latitude
         maxVisibilityRadiusM = gridSize = source = sourceLabel = opentopo_APIkey = _type = typeLabel = origin = northRad = northDeg = standThickness = numOfContours = workingSubFolderPath = downloadTSVLink = unitConversionFactor = unitConversionFactor2 = None
         validInputData = False
-        printMsg = "The \"source_ = 2\" input (GMRT) has range limits: from -82 South to 82 North latitude.\n" + \
+        printMsg = "The \"source_ = 5\" input (GMRT) has range limits: from -82 South to 82 North latitude.\n" + \
                    "Defined \"_location\" exceeds these limits.\n" + \
                    "For now, no other Gismo \"source_\" supports latitude beyond this."
         return maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg
@@ -660,19 +695,29 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
                     latitudeTopD, dummyLongitudeTopD, latitudeBottomD, dummyLongitudeBottomD, dummyLatitudeLeftD, longitudeLeftD, dummyLatitudeRightD, longitudeRightD = gismo_gis.destinationLatLon(locationLatitudeD, locationLongitudeD, correctedMaskRadiusM)
                     # generate download link for raster region
                     
-                    if source == 0:
+                    
+                    if (source == 0):
+                        # based on: https://portal.opentopography.org/apidocs/#/Public/getUsgsDem
+                        downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/usgsdem?datasetName=USGS1m&south={}&north={}&west={}&east={}&outputFormat=GTiff&API_Key={}".format( latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD, opentopo_APIkey )  # USGS1m
+                    elif (source == 1):
+                        # based on: https://portal.opentopography.org/apidocs/#/Public/getUsgsDem
+                        downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/usgsdem?datasetName=USGS10m&south={}&north={}&west={}&east={}&outputFormat=GTiff&API_Key={}".format( latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD, opentopo_APIkey )  # USGS10m
+                    elif (source == 2):
                         # based on: https://portal.opentopography.org/apidocs/#/Public/getGlobalDem
+                        #downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/globaldem?demtype=SRTMGL1&south={}&north={}&west={}&east={}&outputFormat=GTiff&API_Key={}".format( latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD, opentopo_APIkey )  # SRTMGL1 1 arc second
                         downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/globaldem?demtype=NASADEM&south={}&north={}&west={}&east={}&outputFormat=GTiff&API_Key={}".format( latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD, opentopo_APIkey )  # NASADEM 1 arc second
-                    elif source == 1:
+                    elif (source == 3):
                         # based on: https://portal.opentopography.org/apidocs/#/Public/getGlobalDem
                         downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/globaldem?demtype=AW3D30&south={}&north={}&west={}&east={}&outputFormat=GTiff&API_Key={}".format( latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD, opentopo_APIkey )  # ALOS 1 arc second (AW3D30)
-                    elif source == 2:
+                    elif (source == 4):
                         # based on: https://portal.opentopography.org/apidocs/#/Public/getGlobalDem
                         downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/globaldem?demtype=COP30&south={}&north={}&west={}&east={}&outputFormat=GTiff&API_Key={}".format( latitudeBottomD, latitudeTopD, longitudeLeftD, longitudeRightD, opentopo_APIkey )  # COP30 1 arc second
-                    elif source == 3:
+                    elif (source == 5):
                         # based on: https://www.gmrt.org/services/gridserverinfo.php#!/services/getGMRTGridAttribution
-                        # 'opentopo_APIkey' is not needed for 'source == 3'
-                        downloadRasterLink_withCorrectedMaskRadiusKM = "http://www.gmrt.org/services/GridServer?north={}&west={}&east={}&south={}&layer=topo&format=geotiff&resolution=high".format( latitudeTopD,longitudeLeftD,longitudeRightD,latitudeBottomD )  # GMRT
+                        # 'opentopo_APIkey' is not needed for 'source == 5'
+                        #downloadRasterLink_withCorrectedMaskRadiusKM = "http://www.gmrt.org/services/GridServer?north={}&west={}&east={}&south={}&layer=topo&format=geotiff&resolution=high".format( latitudeTopD,longitudeLeftD,longitudeRightD,latitudeBottomD )  # GMRT
+                        downloadRasterLink_withCorrectedMaskRadiusKM = "https://portal.opentopography.org/API/globaldem?demtype=SRTM15Plus&south={}&north={}&west={}&east={}&outputFormat=GTiff&API_Key={}".format( latitudeTopD, longitudeLeftD, longitudeRightD, latitudeBottomD, opentopo_APIkey )  # GMRT
+                    
                     
                     
                     ####print 'downloadRasterLink_withCorrectedMaskRadiusKM: ', downloadRasterLink_withCorrectedMaskRadiusKM  # uncomment for actual download link
@@ -689,20 +734,32 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
                         rasterFilePath = "download failed"
                         terrainShadingMask = origin_0_0_0 = elevationM = None
                         valid_Obj_or_Raster_file = False
-                        printMsg = "This component requires topography data to be downloaded from opentopography.org as a prerequisite for creating a terrain. It has just failed to do that. Try the following three fixes:\n" + \
-                                   " \n" + \
-                                   "1) '_APIkey' is incorrect: \n" + \
-                                   "Go to the following link:  https://portal.opentopography.org/lidarAuthorizationInfo\n" + \
-                                   "and download the video tutorial on how to obtain a valid APIkey: \n" + \
-                                   "https://github.com/stgeorges/gismo/blob/master/resources/tutorials/Get_OpenTopo_APIkey.mp4\n" + \
-                                   " \n" + \
-                                   "2) Sometimes due to large number of requests, the component fails to download the topography data even if opentopography.org website and their services are up and running.\n" + \
-                                   "In this case, wait a couple of seconds and try reruning the component.\n" + \
-                                   " \n" + \
-                                   "3) opentopography.org website could be up and running, but their terrain service (RESTful Web service) may be down (this already happened before).\n" + \
-                                   "Try again in a couple of hours.\n" + \
-                                   " \n" + \
-                                   "If each of two mentioned advices fails, open a new topic about this issue on: www.grasshopper3d.com/group/gismo/forum."
+                        
+                        if (source == 0):
+                            printMsg = 'Free access to "source_"="USGS1m" is restricted only to accademics. If you obtained the "_APIkey" from opentopography.org - then it seems your "_APIkey", is not an academic one.\n' +\
+                                       '\n' +\
+                                       '1) If you are an US or international academic, check here how to abtain a free API key for academics:\n' +\
+                                       'https://opentopography.org/content/how-access-restricted-data-opentopography' +\
+                                       '\n\n' +\
+                                       '2) If you are not an academic, then:\n' +\
+                                       '2)a) Use some of other free terrain sources, by chaning the "source_" input of this component. Or:\n' +\
+                                       '2)b) Obtain a payed USGS1m API key:\n' +\
+                                       'https://opentopography.org/plus#payment_a'
+                        else:
+                            printMsg = "This component requires topography data to be downloaded from opentopography.org as a prerequisite for creating a terrain. It has just failed to do that. Try the following three fixes:\n" + \
+                                       " \n" + \
+                                       "1) '_APIkey' is incorrect: \n" + \
+                                       "Go to the following link:  https://portal.opentopography.org/myopentopo\n" + \
+                                       "and download the video tutorial on how to obtain a valid APIkey: \n" + \
+                                       "https://github.com/stgeorges/gismo/blob/master/resources/tutorials/Get_OpenTopo_APIkey.mp4\n" + \
+                                       " \n" + \
+                                       "2) Sometimes due to large number of requests, the component fails to download the topography data even if opentopography.org website and their services are up and running.\n" + \
+                                       "In this case, wait a couple of seconds and try reruning the component.\n" + \
+                                       " \n" + \
+                                       "3) opentopography.org website could be up and running, but their terrain service (RESTful Web service) may be down (this already happened before).\n" + \
+                                       "Try again in a couple of hours.\n" + \
+                                       " \n" + \
+                                       "If each of two mentioned advices fails, open a new topic about this issue on: www.grasshopper3d.com/group/gismo/forum."
                 
                 elif validVisibilityRadiusM == False:
                     # (correctedMaskRadiusM < 1) or (correctedMaskRadiusM < maxVisibilityRadiusM)
@@ -715,38 +772,64 @@ def checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink
     return terrainShadingMask, origin_0_0_0, fileName, objFilePath, rasterFilePath, rasterReprojectedFilePath, rasterReprojectedFileNamePlusExtension, vrtFilePath, elevationM, valid_Obj_or_Raster_file, printMsg
 
 
-def createTerrainMeshBrep(rasterFilePath, rasterReprojectedFilePath, locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM, unitConversionFactor2):
+def createTerrainMeshBrep(source, rasterFilePath, rasterReprojectedFilePath, locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM, unitConversionFactor2):
     
     # create "terrainMesh" and "terrrainBrep" from Opentopography data
     
-    # output crs data: outputCRS_UTMzone, northOrsouth
-    CRS_EPSG_code, outputCRS_UTMzone, northOrsouth = gismo_gis.calculate_CRS_UTMzone(locationLatitudeD, locationLongitudeD)
     
-    # reproject raster
-    utils = MapWinGIS.UtilsClass()
-    resamplingMethod = "-r bilinear"
-    bstrOptions = '-s_srs EPSG:4326 -t_srs "+proj=utm +zone=%s +%s +datum=WGS84 +ellps=WGS84" %s' % (outputCRS_UTMzone, northOrsouth, resamplingMethod)
-    reprojectGridResult = MapWinGIS.UtilsClass.GDALWarp(utils, rasterFilePath, rasterReprojectedFilePath, bstrOptions, None)
-    if (reprojectGridResult != True):
-        convertErrorNo = MapWinGIS.GlobalSettingsClass().GdalLastErrorNo
-        convertErrorMsg = MapWinGIS.GlobalSettingsClass().GdalLastErrorMsg
-        convertErrorType = MapWinGIS.GlobalSettingsClass().GdalLastErrorType
-        print "convertErrorNo: ", convertErrorNo
-        print "convertErrorMsg: ", convertErrorMsg
-        print "convertErrorType: ", convertErrorType
+    if (source == 0):
+        # a) USGS1m is always downloaded in Projected CRS (UTM NAD83)
+        
+        # open the downloaded raster
+        grid = MapWinGIS.GridClass()
+        dataType = MapWinGIS.GridDataType.DoubleDataType
+        fileTypeExtension = MapWinGIS.GridFileType.UseExtension
+        inRam = True
+        openGridSuccess = MapWinGIS.GridClass.Open(grid, rasterFilePath, dataType, inRam, fileTypeExtension, None)
+        if (openGridSuccess != True):
+            lastErrorCode_int = grid.LastErrorCode
+            gridErrorMsg = grid.ErrorMsg(lastErrorCode_int)
+            print "gridErrorMsg 1: ", gridErrorMsg
     
-    # open the reprojected raster
-    grid = MapWinGIS.GridClass()
-    dataType = MapWinGIS.GridDataType.DoubleDataType
-    fileTypeExtension = MapWinGIS.GridFileType.UseExtension
-    inRam = True
-    openGridSuccess = MapWinGIS.GridClass.Open(grid, rasterReprojectedFilePath, dataType, inRam, fileTypeExtension, None)
-    if (openGridSuccess != True):
-        gridErrorMsg = grid.ErrorMsg
-        print "gridErrorMsg: ", gridErrorMsg
+    else:
+        # b) source = 1 to 5. These sources are always downloaded in Geographic CRS, and requires to be projected to UTM
+        
+        # output crs data: outputCRS_UTMzone, northOrsouth
+        CRS_EPSG_code, outputCRS_UTMzone, northOrsouth = gismo_gis.calculate_CRS_UTMzone(locationLatitudeD, locationLongitudeD)
+        
+        # reproject raster
+        utils = MapWinGIS.UtilsClass()
+        resamplingMethod = "-r bilinear"
+        bstrOptions = '-s_srs EPSG:4326 -t_srs "+proj=utm +zone=%s +%s +datum=WGS84 +ellps=WGS84" %s' % (outputCRS_UTMzone, northOrsouth, resamplingMethod)
+        reprojectGridResult = MapWinGIS.UtilsClass.GDALWarp(utils, rasterFilePath, rasterReprojectedFilePath, bstrOptions, None)
+        if (reprojectGridResult != True):
+            convertErrorNo = MapWinGIS.GlobalSettingsClass().GdalLastErrorNo
+            convertErrorMsg = MapWinGIS.GlobalSettingsClass().GdalLastErrorMsg
+            convertErrorType = MapWinGIS.GlobalSettingsClass().GdalLastErrorType
+            print "convertErrorNo: ", convertErrorNo
+            print "convertErrorMsg: ", convertErrorMsg
+            print "convertErrorType: ", convertErrorType
+        
+        # open the reprojected raster
+        grid = MapWinGIS.GridClass()
+        dataType = MapWinGIS.GridDataType.DoubleDataType
+        fileTypeExtension = MapWinGIS.GridFileType.UseExtension
+        inRam = True
+        openGridSuccess = MapWinGIS.GridClass.Open(grid, rasterReprojectedFilePath, dataType, inRam, fileTypeExtension, None)
+        if (openGridSuccess != True):
+            lastErrorCode_int = grid.LastErrorCode
+            gridErrorMsg = grid.ErrorMsg(lastErrorCode_int)
+            print "gridErrorMsg 2: ", gridErrorMsg
     
     # numOfRows, numOfColumns, cellsizeX, cellsizeY
     header = grid.Header
+    
+    if (header == None):
+        # this happens when upper 'openGridSuccess = False'
+        infoMsg = "Downloaded terrain file failed.\n" +\
+                  "Create a new topic about this issue on: www.grasshopper3d.com/group/gismo/forum. And attach this .gh file."
+        raise ValueError(infoMsg)
+    
     numOfRows = header.NumberRows
     numOfColumns = header.NumberCols
     numOfCellsInX = numOfColumns
@@ -805,8 +888,9 @@ def createTerrainMeshBrep(rasterFilePath, rasterReprojectedFilePath, locationLat
     
     
     # deleting
-    #os.remove(rasterFilePath)  # downloaded .tif file
-    os.remove(rasterReprojectedFilePath)  # reprojected .tif file
+    if (source != 0):
+        os.remove(rasterReprojectedFilePath)  # reprojected .tif file
+    
     del pts
     gc.collect()
     
@@ -1125,13 +1209,13 @@ if sc.sticky.has_key("gismoGismo_released"):
         if validLocationData:
             fileNameIncomplete = locationName + "_" + str(locationLatitudeD) + "_" + str(locationLongitudeD) + "_TERRAIN"  # incomplete due to missing "_visibility=2KM_source=AW3D30" part (for example)
             heightM = 0; minVisibilityRadiusM = 0; maskStyle = 0; maskStyleLabel = "sph"; downloadUrl_ = None; downloadTSVLink = None;   gridSize_ = 10  # dummy value
-            maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg = checkInputData(locationLatitudeD, _APIkey, radius_, gridSize_, source_, type_, origin_, north_, standThickness_, numOfContours_, downloadTSVLink)
+            maxVisibilityRadiusM, gridSize, source, sourceLabel, opentopo_APIkey, _type, typeLabel, origin, northRad, northDeg, standThickness, numOfContours, workingSubFolderPath, downloadTSVLink, unitConversionFactor, unitConversionFactor2, validInputData, printMsg = checkInputData(locationLatitudeD, locationLongitudeD, _APIkey, radius_, gridSize_, source_, type_, origin_, north_, standThickness_, numOfContours_, downloadTSVLink)
             if validInputData:
                 if _runIt:
                     terrainShadingMaskUnscaledUnrotated, origin_0_0_0, fileName, objFilePath, rasterFilePath, rasterReprojectedFilePath, rasterReprojectedFileNamePlusExtension, vrtFilePath, elevationM, valid_Obj_or_Raster_file, printMsg = checkObjRasterFile(fileNameIncomplete, workingSubFolderPath, downloadTSVLink, heightM, minVisibilityRadiusM, maxVisibilityRadiusM, maskStyleLabel, source, sourceLabel, opentopo_APIkey)
                     if valid_Obj_or_Raster_file:
                         if (rasterFilePath != "needless") and (rasterFilePath != "download failed"):  # terrain shading mask NEEDS to be created
-                            terrainMesh, terrainBrep, locationPt, elevationM = createTerrainMeshBrep(rasterFilePath, rasterReprojectedFilePath, locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM, unitConversionFactor2)
+                            terrainMesh, terrainBrep, locationPt, elevationM = createTerrainMeshBrep(source, rasterFilePath, rasterReprojectedFilePath, locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM, unitConversionFactor2)
                             terrainUnoriginUnscaledUnrotated = split_createStand_colorTerrain(terrainMesh, terrainBrep, locationPt, origin, standThickness, unitConversionFactor2)
                         terrain, title, elevationContours = title_scalingRotating(terrainUnoriginUnscaledUnrotated, locationName, locationLatitudeD, locationLongitudeD, locationPt, maxVisibilityRadiusM, _type, sourceLabel, origin, northDeg, northRad, numOfContours, unitConversionFactor)
                         if bakeIt_: bakingGrouping(locationName, locationLatitudeD, locationLongitudeD, maxVisibilityRadiusM, sourceLabel, typeLabel, standThickness, terrain, title, elevationContours, origin)
